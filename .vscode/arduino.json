@@ -1,0 +1,13 @@
+{
+    "sketch": "spokeduino.ino",
+    "configuration": "cpu=atmega328old",
+    "board": "arduino:avr:nano",
+    "port": "COM3",
+    "output": "build",
+    "buildPreferences": [
+        [
+            "build.extra_flags",
+            "-D__AVR_ATmega328P__"
+        ]
+    ]
+}
