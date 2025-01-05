@@ -8,5 +8,6 @@
         ]
     ],
     "output": "Arduino Nano\\spokeduino\\build",
-    "sketch": "Arduino Nano\\spokeduino\\spokeduino.ino"
+    "sketch": "Arduino Nano\\spokeduino\\spokeduino.ino",
+    "configuration": "cpu=atmega328old"
 }

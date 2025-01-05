@@ -32,13 +32,11 @@
 
 #define GAUGE_TIMEOUT     90
 #define GAUGE_MUXWAIT     16
-#define SOFTWARE_VERSION 0.1
+#define SOFTWARE_VERSION 0.2
 
-#define PIN_PEDAL    PD6
-#define PIN_BTN_FUNC PD5
-#define PIN_BTN_UP   PD4
-#define PIN_BTN_DOWN PD3
-#define PIN_BTN_GO   PD2
+#define PIN_PEDAL     PD6
+#define PIN_BTN_FUNC  PD5
+#define PIN_BTN_FUNC2 PD4
 
 // The -14 converts the pin number to the ADC channel number
 #define PIN_GAUGE1_CLOCK A0 - 14
@@ -48,41 +46,14 @@
 #define PIN_GAUGE3_CLOCK A6 - 14
 #define PIN_GAUGE3_DATA  A7 - 14
 
-// Coefficients for the quadratic function
-static const float coefficient_a = -4.091e-7f;
-static const float coefficient_b = 0.00163f;
-static const float coefficient_c = 1.6497f;
-
-//LiquidCrystal_I2C lcd(0x27, 16, 2);  // I2C address 0x27
-LiquidCrystal_I2C lcd(0x27, 20, 2);  // I2C address 0x27
-
-// Save the old deflection value to reduce LCD flickering and data transfer over the serial port
+// Save the old values to reduce the data transfer over the serial port
 float gauge1_deflection_old = 0.1f;
 float gauge2_deflection_old = 0.1f;
 float gauge3_deflection_old = 0.1f;
 
-/**
- * @brief Calculates tension from a deflection using a quadratic equation.
- *
- * The equation is: a*x^2 + b*x + (c - deflection) = 0 and is solved for x:
- * T = (-b + sqrt(b^2 -4a * (c - deflection))) / 2a
- *
- * @param deflection  The measured deflection (mm).
- * @param a           The quadratic coefficient a.
- * @param b           The quadratic coefficient b.
- * @param c           The quadratic coefficient c.
- *
- * @return float The tension in Newton. Returns 0.0 if the discriminant or the root are negative.
- */
-float calculate_tension(float deflection, float a, float b, float c)
-{
-    float discriminant = b * b - 4 * a * (c - deflection);
-    if (discriminant < 0)
-        return 0.0f;  // No real roots
-
-    float tension = (-b + sqrt(discriminant)) / (2 * a);  // Use the positive root
-    return (tension > 0) ? tension : 0.0f;
-}
+int pedal_value_old = 0;
+int btn_func_value_old = 0;
+int btn_func2_value_old = 0;
 
 /**
  * @brief Reads the gauge by toggling ADMUX between two channels
@@ -157,37 +128,36 @@ float read_gauge(const uint8_t admux_channel_a, const uint8_t admux_channel_b, u
 /**
  * @brief Sends the gauge value to the serial output.
  *
- * @param gauge_number  Identifier for the gauge (for printing).
- * @param value         The gauge deflection value in mm.
+ * @param gauge_number      Identifier for the gauge (1, 2 or 3)
+ * @param deflection_value  The gauge deflection value in mm.
  */
-void send_gauge_value(const uint8_t gauge_number, float value)
+void send_gauge_value(const uint8_t gauge_number, float deflection_value)
 {
     Serial.print(gauge_number);
+    Serial.print(':');
+    Serial.print(deflection_value);
+    Serial.print('\n');
+}
+
+/**
+ * @brief Sends an input status value to the serial output.
+ *
+ * @param input_number      Identifier for the digital input
+ * @param value             The gauge deflection value in mm.
+ */
+void send_input_value(const uint8_t pin_number, int value)
+{
+    Serial.print(pin_number);
     Serial.print(':');
     Serial.print(value);
     Serial.print('\n');
 }
 
 /**
- * @brief Displays the gauge deflection and tension on the second row of the LCD.
- *
- * @param deflection  The current gauge deflection in mm.
- * @param tension     The calculated tension in N.
- */
-void display_main_gauge_value(float deflection, float tension)
-{
-    lcd.setCursor(0, 1);
-    lcd.print(deflection, 2);
-    lcd.print("mm ");
-    lcd.print(tension, 0);
-    lcd.print("N      ");
-}
-
-/**
  * @brief Runs the full job for a single gauge.
  *
  * Reads the gauge value, compares it to the old value, checks for a timeout,
- * sends updated data to the serial port and, for the first gauge, also the LCD.
+ * sends updated data to the serial port.
  *
  * @param admux_channel_a      The low channel
  * @param admux_channel_b      The high channel
@@ -204,13 +174,29 @@ void process_gauge(const uint8_t admux_channel_a, const uint8_t admux_channel_b,
 
     old_deflection_value = deflection_value;
     send_gauge_value(gauge_number, deflection_value);
-
-    if (gauge_number != 1)
-        return;
-
-    display_main_gauge_value(deflection_value, calculate_tension(deflection_value, coefficient_a, coefficient_b, coefficient_c));
 }
 
+
+/**
+ * @brief Runs the full job for a single digital input.
+ *
+ * Reads the input value, compares it to the old value,
+ * sends updated data to the serial port and.
+ *
+ * @param pin_number  The number of the pin
+ * @param old_value   The previous valid detection value reference
+ */
+void process_pin(const uint8_t pin_number, int& old_value)
+{
+    int value = digitalRead(pin_number);
+
+    // Skip unchanged values
+    if (value == old_value)
+        return;
+
+    old_value = value;
+    send_input_value(pin_number, value);
+}
 
 /**
  * @brief Initializes the hardware and peripherals.
@@ -230,21 +216,22 @@ void setup()
     // Enable the internal pullup resistor for all controller inputs
     pinMode(PIN_PEDAL, INPUT_PULLUP);
     pinMode(PIN_BTN_FUNC, INPUT_PULLUP);
-    pinMode(PIN_BTN_UP, INPUT_PULLUP);
-    pinMode(PIN_BTN_DOWN, INPUT_PULLUP);
-    pinMode(PIN_BTN_GO, INPUT_PULLUP);
+    pinMode(PIN_BTN_FUNC2, INPUT_PULLUP);
 
-    lcd.init();
-    lcd.backlight();
-    lcd.setCursor(0, 0);
-    lcd.print("Sapim Race");
+    // Reset all checked digital input values
+    pedal_value_old = digitalRead(PIN_PEDAL);
+    btn_func_value_old = digitalRead(PIN_BTN_FUNC);
+    btn_func2_value_old = digitalRead(PIN_BTN_FUNC2);
 }
 
 
 void loop()
 {
-    process_gauge(PIN_GAUGE1_CLOCK, PIN_GAUGE1_DATA, 1, gauge1_deflection_old);
-    process_gauge(PIN_GAUGE2_CLOCK, PIN_GAUGE2_DATA, 2, gauge2_deflection_old);
-    process_gauge(PIN_GAUGE3_CLOCK, PIN_GAUGE3_DATA, 3, gauge3_deflection_old);
+    process_pin(PIN_PEDAL, pedal_value_old);
+    process_pin(PIN_BTN_FUNC, btn_func_value_old);
+    process_pin(PIN_BTN_FUNC2, btn_func2_value_old);
+    process_gauge(PIN_GAUGE1_CLOCK, PIN_GAUGE1_DATA, 0, gauge1_deflection_old);
+    process_gauge(PIN_GAUGE2_CLOCK, PIN_GAUGE2_DATA, 1, gauge2_deflection_old);
+    process_gauge(PIN_GAUGE3_CLOCK, PIN_GAUGE3_DATA, 2, gauge3_deflection_old);
     delay(50);
 }
