@@ -27,8 +27,6 @@
 #include <avr/builtins.h>
 #include <math.h>
 #include <stdarg.h>
-#include <Wire.h>
-#include <LiquidCrystal_I2C.h>
 
 #define GAUGE_TIMEOUT     90
 #define GAUGE_MUXWAIT     16
