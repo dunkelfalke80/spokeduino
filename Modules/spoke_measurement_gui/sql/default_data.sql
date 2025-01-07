@@ -48,6 +48,7 @@ INSERT INTO spokes (manufacturer_id, type_id, gauge, weight, name, dimensions) V
 (1, 1, 14, 7.0, 'Strong', '2.3/2.0'),
 --  Double butted
 (1, 2, 14, 5.7, 'Race', '2.0/1.8/2.0'),
+(1, 2, 14, 5.2, 'Sprint', '2.0/1.7/2.0'),
 (1, 2, 14, 4.8, 'D-Light', '2.0/1.65/2.0'),
 (1, 2, 14, 4.4, 'Laser', '2.0/1.5/2.0'),
 (1, 2, 15, 3.6, 'Super Spoke', '1.8/1.4/1.8'),
