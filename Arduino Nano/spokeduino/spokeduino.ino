@@ -134,7 +134,7 @@ void send_gauge_value(const uint8_t gauge_number, float deflection_value)
     Serial.print(gauge_number);
     Serial.print(':');
     Serial.print(deflection_value);
-    Serial.print('\n');
+    Serial.print("\r\n");
 }
 
 /**
@@ -148,7 +148,7 @@ void send_input_value(const uint8_t pin_number, int value)
     Serial.print(pin_number);
     Serial.print(':');
     Serial.print(value);
-    Serial.print('\n');
+    Serial.print("\r\n");
 }
 
 /**
