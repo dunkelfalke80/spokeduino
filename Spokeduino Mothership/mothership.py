@@ -72,12 +72,25 @@ class SpokeduinoApp(QMainWindow):
         """
         # Create and Edit Spoke Buttons
         self.ui.pushButtonCreateNewSpoke.clicked.connect(self.create_new_spoke)
+        self.ui.pushButtonCreateNewSpokeMeasurement.clicked.connect(
+            self.create_new_spoke
+        )
         self.ui.pushButtonEditSpoke.clicked.connect(self.edit_spoke)
         self.ui.pushButtonDeleteSpoke.clicked.connect(self.delete_spoke)
 
         # Manufacturer-related buttons
+        self.ui.lineEditNewManufacturerMeasurement.textChanged.connect(
+            self.toggle_new_manufacturer_buttons
+        )
+        self.ui.lineEditNewManufacturerDatabase.textChanged.connect(
+            self.toggle_new_manufacturer_buttons
+        )
+        self.ui.pushButtonNewManufacturerMeasurement.clicked.connect(
+            self.create_new_manufacturer
+        )
         self.ui.pushButtonNewManufacturerDatabase.clicked.connect(
-            self.create_new_manufacturer)
+            self.create_new_manufacturer
+        )
         self.ui.lineEditNewManufacturerDatabase.textChanged.connect(
             self.toggle_new_manufacturer_button)
 
@@ -455,8 +468,16 @@ class SpokeduinoApp(QMainWindow):
         Enable or disable pushButtonNewManufacturerDatabase
         based on lineEditNewManufacturerDatabase.
         """
+        is_measurement_filled = bool(
+            self.ui.lineEditNewManufacturerMeasurement.text())
+        is_database_filled = bool(
+            self.ui.lineEditNewManufacturerDatabase.text())
+
+        self.ui.pushButtonNewManufacturerMeasurement.setEnabled(
+            is_measurement_filled
+        )
         self.ui.pushButtonNewManufacturerDatabase.setEnabled(
-            bool(self.ui.lineEditNewManufacturerDatabase.text()))
+            is_database_filled)
 
     def toggle_spoke_buttons(self) -> None:
         """
@@ -479,7 +500,11 @@ class SpokeduinoApp(QMainWindow):
         """
         Insert a new manufacturer into the manufacturers table and select it.
         """
-        manufacturer_name = self.ui.lineEditNewManufacturerDatabase.text()
+        manufacturer_name = (
+            self.ui.lineEditNewManufacturerDatabase.text()
+            if self.sender() == self.ui.pushButtonNewManufacturerDatabase
+            else self.ui.lineEditNewManufacturerMeasurement.text()
+        )
         if not manufacturer_name:
             return
 
@@ -506,14 +531,43 @@ class SpokeduinoApp(QMainWindow):
         """
         Insert a new spoke into the spokes table for the selected manufacturer.
         """
-        manufacturer_id = \
+        manufacturer_id = (
             self.ui.comboBoxSelectSpokeManufacturerDatabase.currentData()
-        spoke_name = self.ui.lineEditNewSpokeName.text()
-        type_id = self.ui.comboBoxSelectNewSpokeType.currentData()
-        gauge = self.ui.lineEditNewSpokeGauge.text()
-        weight = self.ui.lineEditNewSpokeWeight.text()
-        dimension = self.ui.lineEditNewSpokeDimension.text()
-        comment = self.ui.lineEditNewSpokeComment.text()
+            if
+            self.sender() == self.ui.pushButtonCreateNewSpoke
+            else
+            self.ui.comboBoxSelectSpokeManufacturerMeasurement.currentData()
+        )
+        spoke_name = (
+            self.ui.lineEditNewSpokeName.text()
+            if self.sender() == self.ui.pushButtonCreateNewSpoke
+            else self.ui.lineEditNewSpokeNameMeasurement.text()
+        )
+        type_id = (
+            self.ui.comboBoxSelectNewSpokeType.currentData()
+            if self.sender() == self.ui.pushButtonCreateNewSpoke
+            else self.ui.comboBoxSelectNewSpokeTypeMeasurement.currentData()
+        )
+        gauge = (
+            self.ui.lineEditNewSpokeGauge.text()
+            if self.sender() == self.ui.pushButtonCreateNewSpoke
+            else self.ui.lineEditNewSpokeGaugeMeasurement.text()
+        )
+        weight = (
+            self.ui.lineEditNewSpokeWeight.text()
+            if self.sender() == self.ui.pushButtonCreateNewSpoke
+            else self.ui.lineEditNewSpokeWeightMeasurement.text()
+        )
+        dimension = (
+            self.ui.lineEditNewSpokeDimension.text()
+            if self.sender() == self.ui.pushButtonCreateNewSpoke
+            else self.ui.lineEditNewSpokeDimensionMeasurement.text()
+        )
+        comment = (
+            self.ui.lineEditNewSpokeComment.text()
+            if self.sender() == self.ui.pushButtonCreateNewSpoke
+            else self.ui.lineEditNewSpokeCommentMeasurement.text()
+        )
 
         try:
             connection: sqlite3.Connection = sqlite3.connect(self.db_path)
