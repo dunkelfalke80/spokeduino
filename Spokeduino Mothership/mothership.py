@@ -1,6 +1,6 @@
 import sys
 import sqlite3
-from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import QApplication, QMainWindow, QHeaderView
 from PySide6.QtCore import Qt, QAbstractTableModel
 from mothership_main_ui import Ui_mainWindow
 
@@ -26,7 +26,7 @@ class SpokeduinoTableModel(QAbstractTableModel):
 
     def headerData(self, section: int, orientation: Qt.Orientation, role: int = Qt.ItemDataRole.DisplayRole):
         if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Horizontal:
+            if orientation == Qt.Orientation.Horizontal:
                 return self._headers[section]
         return None
 
@@ -66,7 +66,8 @@ class SpokeduinoApp(QMainWindow):
     def load_manufacturers(self) -> None:
         """
         Load all manufacturer names from the database and populate the
-        comboBoxSelectSpokeManufacturerDatabase dropdown.
+        comboBoxSelectSpokeManufacturerDatabase dropdown. Automatically loads
+        spokes for the first manufacturer.
         """
         try:
             connection: sqlite3.Connection = sqlite3.connect(self.database_path)
@@ -76,11 +77,15 @@ class SpokeduinoApp(QMainWindow):
             manufacturers = cursor.fetchall()
 
             self.ui.comboBoxSelectSpokeManufacturerDatabase.clear()
-            self.ui.comboBoxSelectSpokeManufacturerDatabase.addItem("Select Manufacturer", -1)
             for manufacturer in manufacturers:
                 self.ui.comboBoxSelectSpokeManufacturerDatabase.addItem(manufacturer[1], manufacturer[0])
 
             connection.close()
+
+            # Automatically load spokes for the first manufacturer
+            if manufacturers:
+                self.ui.comboBoxSelectSpokeManufacturerDatabase.setCurrentIndex(0)
+                self.load_spokes_for_selected_manufacturer()
         except sqlite3.Error as e:
             print(f"Database error: {e}")
         except Exception as e:
@@ -93,25 +98,31 @@ class SpokeduinoApp(QMainWindow):
         """
         manufacturer_id = self.ui.comboBoxSelectSpokeManufacturerDatabase.currentData()
 
-        if manufacturer_id == -1:
-            # Clear the table if no manufacturer is selected
-            self.ui.tableViewSpokesDatabase.setModel(None)
-            return
-
         try:
             connection: sqlite3.Connection = sqlite3.connect(self.database_path)
             cursor: sqlite3.Cursor = connection.cursor()
 
             query = (
-                "SELECT name, gauge, weight, dimensions, comment "
-                "FROM spokes WHERE manufacturer_id = ?"
+                "SELECT s.name, t.type, s.gauge, s.weight, s.dimensions, s.comment "
+                "FROM spokes s "
+                "JOIN types t ON s.type_id = t.id "
+                "WHERE s.manufacturer_id = ?"
             )
             cursor.execute(query, (manufacturer_id,))
             spokes = cursor.fetchall()
 
-            headers = ["Name", "Gauge", "Weight", "Dimensions", "Comment"]
+            headers = ["Name", "Type", "Gauge", "Weight", "Dimensions", "Comment"]
             model = SpokeduinoTableModel(spokes, headers)
             self.ui.tableViewSpokesDatabase.setModel(model)
+
+            # Adjust column widths
+            header = self.ui.tableViewSpokesDatabase.horizontalHeader()
+            header.setSectionResizeMode(0, QHeaderView.ResizeMode.Stretch)  # Name
+            header.setSectionResizeMode(1, QHeaderView.ResizeMode.ResizeToContents)  # Type
+            header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  # Gauge
+            header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # Weight
+            header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)  # Dimensions
+            header.setSectionResizeMode(5, QHeaderView.ResizeMode.Stretch)  # Comment
 
             connection.close()
         except sqlite3.Error as e:
