@@ -1,3 +1,5 @@
+PRAGMA foreign_keys = ON;
+
 INSERT INTO manufacturers (id, name) VALUES
 (0, 'Custom'),
 (1, 'Sapim'),
@@ -5,7 +7,7 @@ INSERT INTO manufacturers (id, name) VALUES
 (3, 'Pillar'),
 (4, 'cnSpoke'),
 (5, 'Alpina'),
-(6, 'Wheelsmith');
+(6, 'Wheelsmith'),
 (7, 'Berd');
 
 INSERT INTO tensioners (id, name) VALUES
