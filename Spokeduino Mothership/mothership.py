@@ -1,3 +1,6 @@
+import inspect
+import logging
+import os
 import sys
 import sqlite3
 from PySide6.QtCore import Qt
@@ -8,6 +11,10 @@ from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QAbstractItemView
 from mothership_main_ui import Ui_mainWindow
+
+
+def get_line_info() -> str:
+    return f"{inspect.stack()[1][2]}:{inspect.stack()[1][3]}"
 
 
 class SpokeduinoTableModel(QAbstractTableModel):
@@ -54,7 +61,8 @@ class SpokeduinoApp(QMainWindow):
         self.ui = Ui_mainWindow()
         self.ui.setupUi(self)
         self.setup_signals_and_slots()
-        self.db_path: str = "spokeduino.sqlite"
+        self.current_path: str = os.path.dirname(os.path.realpath(sys.argv[0]))
+        self.db_path: str = f"{self.current_path}/spokeduino.sqlite"
         self.current_spokes: list[list[str]] = []  # Store current spokes data
         self.load_manufacturers()
 
@@ -66,7 +74,7 @@ class SpokeduinoApp(QMainWindow):
         self.ui.pushButtonCreateNewSpoke.clicked.connect(self.create_new_spoke)
         self.ui.pushButtonEditSpoke.clicked.connect(self.edit_spoke)
         self.ui.pushButtonDeleteSpoke.clicked.connect(self.delete_spoke)
-        
+
         # Manufacturer-related buttons
         self.ui.pushButtonNewManufacturerDatabase.clicked.connect(
             self.create_new_manufacturer)
@@ -90,6 +98,11 @@ class SpokeduinoApp(QMainWindow):
             self.update_spoke_details)
         self.ui.comboBoxSelectSpoke.currentIndexChanged.connect(
             self.select_spoke_row)
+        self.ui.comboBoxSelectSpoke.currentIndexChanged.connect(
+            self.sync_spoke_selection)
+        self.ui.comboBoxSelectSpokeMeasurement.currentIndexChanged.connect(
+            self.sync_spoke_selection
+        )
         self.ui.tableViewSpokesDatabase.clicked.connect(
             self.select_spoke_from_table)
 
@@ -105,6 +118,17 @@ class SpokeduinoApp(QMainWindow):
             self.toggle_spoke_buttons)
         self.ui.lineEditNewSpokeDimensionMeasurement.textChanged.connect(
             self.toggle_spoke_buttons)
+
+        # Manufacturer-related buttons and combo boxes
+        self.ui.comboBoxSelectSpokeManufacturerDatabase.\
+            currentIndexChanged.connect(
+                self.load_spokes_for_selected_manufacturer)
+        self.ui.comboBoxSelectSpokeManufacturerMeasurement.\
+            currentIndexChanged.connect(
+                self.sync_manufacturer_selection)
+        self.ui.comboBoxSelectSpokeManufacturerDatabase.\
+            currentIndexChanged.connect(
+                self.sync_manufacturer_selection)
 
         self.ui.comboBoxSelectSpokeMeasurement.currentIndexChanged.connect(
             self.update_spoke_details)
@@ -129,14 +153,15 @@ class SpokeduinoApp(QMainWindow):
             self.ui.lineEditNewSpokeDimension.setText(spoke[4])
             self.ui.lineEditNewSpokeComment.setText(spoke[5])
 
-            self.ui.lineEditSpokeNameMeasurement.setText(spoke[0])
-            self.ui.comboBoxSpokeTypeMeasurement.setCurrentText(spoke[1])
-            self.ui.lineEditSpokeGaugeMeasurement.setText(str(spoke[2]))
-            self.ui.lineEditSpokeWeightMeasurement.setText(str(spoke[3]))
-            self.ui.lineEditSpokeDimensionMeasurement.setText(spoke[4])
-            self.ui.lineEditSpokeCommentMeasurement.setText(spoke[5])
+            self.ui.lineEditNewSpokeNameMeasurement.setText(spoke[0])
+            self.ui.comboBoxSelectNewSpokeTypeMeasurement.setCurrentText(
+                spoke[1])
+            self.ui.lineEditNewSpokeGaugeMeasurement.setText(str(spoke[2]))
+            self.ui.lineEditNewSpokeWeightMeasurement.setText(str(spoke[3]))
+            self.ui.lineEditNewSpokeDimensionMeasurement.setText(spoke[4])
+            self.ui.lineEditNewSpokeCommentMeasurement.setText(spoke[5])
         else:
-            self.clear_spoke_details()                    
+            self.clear_spoke_details()
 
     def clear_spoke_details(self) -> None:
         """
@@ -148,25 +173,76 @@ class SpokeduinoApp(QMainWindow):
             self.ui.lineEditNewSpokeWeight,
             self.ui.lineEditNewSpokeDimension,
             self.ui.lineEditNewSpokeComment,
-            self.ui.lineEditSpokeNameMeasurement,
-            self.ui.lineEditSpokeGaugeMeasurement,
-            self.ui.lineEditSpokeWeightMeasurement,
-            self.ui.lineEditSpokeDimensionMeasurement,
-            self.ui.lineEditSpokeCommentMeasurement
+            self.ui.lineEditNewSpokeNameMeasurement,
+            self.ui.lineEditNewSpokeGaugeMeasurement,
+            self.ui.lineEditNewSpokeWeightMeasurement,
+            self.ui.lineEditNewSpokeDimensionMeasurement,
+            self.ui.lineEditNewSpokeCommentMeasurement
         ]:
             widget.clear()
 
         self.ui.comboBoxSelectNewSpokeType.setCurrentIndex(-1)
-        self.ui.comboBoxSpokeTypeMeasurement.setCurrentIndex(-1)
+        self.ui.comboBoxSelectNewSpokeTypeMeasurement.setCurrentIndex(-1)
 
     def synchronize_comboboxes(self, combo_box, value) -> None:
         """
         Synchronize the value of combo boxes between the two tabs.
         """
         if combo_box == self.ui.comboBoxSelectSpoke:
-            self.ui.comboBoxSpokeMeasurement.setCurrentText(value)
+            self.ui.comboBoxSelectSpokeMeasurement.setCurrentText(value)
         elif combo_box == self.ui.comboBoxSpokeMeasurement:
-            self.ui.comboBoxSelectSpoke.setCurrentText(value)                  
+            self.ui.comboBoxSelectSpoke.setCurrentText(value)
+
+    def sync_spoke_selection(self) -> None:
+        """
+        Synchronize the spoke selection between the Database Tab and
+        Measurement Tab.
+        """
+        selected_spoke_id = (
+            self.ui.comboBoxSelectSpoke.currentData()
+            if self.sender() == self.ui.comboBoxSelectSpoke
+            else self.ui.comboBoxSelectSpokeMeasurement.currentData()
+        )
+
+        # Update both combo boxes
+        self.ui.comboBoxSelectSpoke.setCurrentIndex(
+            self.ui.comboBoxSelectSpoke.findData(selected_spoke_id)
+        )
+        self.ui.comboBoxSelectSpokeMeasurement.setCurrentIndex(
+            self.ui.comboBoxSelectSpokeMeasurement.findData(selected_spoke_id)
+        )
+
+        # Update fields
+        self.update_spoke_details()
+
+    def sync_manufacturer_selection(self) -> None:
+        """
+        Synchronize the manufacturer selection between the
+        Database Tab and Measurement Tab. Trigger loading
+        of spokes for the selected manufacturer.
+        """
+        selected_manufacturer_id = (
+            self.ui.comboBoxSelectSpokeManufacturerDatabase.currentData()
+            if
+            self.sender() == self.ui.comboBoxSelectSpokeManufacturerDatabase
+            else
+            self.ui.comboBoxSelectSpokeManufacturerMeasurement.currentData()
+        )
+
+        # Update both combo boxes
+        self.ui.comboBoxSelectSpokeManufacturerDatabase.setCurrentIndex(
+            self.ui.comboBoxSelectSpokeManufacturerDatabase.findData(
+                selected_manufacturer_id
+            )
+        )
+        self.ui.comboBoxSelectSpokeManufacturerMeasurement.setCurrentIndex(
+            self.ui.comboBoxSelectSpokeManufacturerMeasurement.findData(
+                selected_manufacturer_id
+            )
+        )
+
+        # Load spokes for the selected manufacturer
+        self.load_spokes_for_selected_manufacturer()
 
     def load_manufacturers(self) -> None:
         """
@@ -181,32 +257,41 @@ class SpokeduinoApp(QMainWindow):
             cursor.execute("SELECT id, name FROM manufacturers")
             manufacturers = cursor.fetchall()
 
-            combo_manufacturer = \
-                self.ui.comboBoxSelectSpokeManufacturerDatabase
+            self.ui.comboBoxSelectSpokeManufacturerDatabase.clear()
+            self.ui.comboBoxSelectSpokeManufacturerMeasurement.clear()
 
-            combo_manufacturer.clear()
             for manufacturer in manufacturers:
-                combo_manufacturer.addItem(manufacturer[1], manufacturer[0])
+                self.ui.comboBoxSelectSpokeManufacturerDatabase.addItem(
+                    manufacturer[1], manufacturer[0])
+                self.ui.comboBoxSelectSpokeManufacturerMeasurement.addItem(
+                    manufacturer[1], manufacturer[0]
+                )
 
             # Load spoke types
             cursor.execute("SELECT id, type FROM types")
             spoke_types = cursor.fetchall()
 
             self.ui.comboBoxSelectNewSpokeType.clear()
+            self.ui.comboBoxSelectNewSpokeTypeMeasurement.clear()
             for spoke_type in spoke_types:
                 self.ui.comboBoxSelectNewSpokeType.addItem(
+                    spoke_type[1], spoke_type[0])
+                self.ui.comboBoxSelectNewSpokeTypeMeasurement.addItem(
                     spoke_type[1], spoke_type[0])
 
             connection.close()
 
             # Automatically load spokes for the first manufacturer
             if manufacturers:
-                combo_manufacturer.setCurrentIndex(0)
+                self.ui.comboBoxSelectSpokeManufacturerDatabase.\
+                    setCurrentIndex(0)
+                self.ui.comboBoxSelectSpokeManufacturerMeasurement.\
+                    setCurrentIndex(0)
                 self.load_spokes_for_selected_manufacturer()
         except sqlite3.Error as e:
-            print(f"Database error: {e}")
+            logging.error(f"{get_line_info()}: Database error: {e}")
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            logging.error(f"{get_line_info()}: Unexpected error: {e}")
 
     def load_spokes_for_selected_manufacturer(self) -> None:
         """
@@ -239,6 +324,7 @@ class SpokeduinoApp(QMainWindow):
                 "Weight",
                 "Dimensions",
                 "Comment"]
+
             # Exclude ID
             self.current_spokes = [list(spoke[:-1]) for spoke in spokes]
             model = SpokeduinoTableModel(self.current_spokes, headers)
@@ -246,9 +332,13 @@ class SpokeduinoApp(QMainWindow):
 
             # Populate comboBoxSelectSpoke
             self.ui.comboBoxSelectSpoke.clear()
+            self.ui.comboBoxSelectSpokeMeasurement.clear()
             for spoke in spokes:
                 # Name and ID
-                self.ui.comboBoxSelectSpoke.addItem(spoke[0], spoke[-1])
+                self.ui.comboBoxSelectSpoke.addItem(
+                    spoke[0], spoke[-1])
+                self.ui.comboBoxSelectSpokeMeasurement.addItem(
+                    spoke[0], spoke[-1])
 
             # Adjust column widths
             header = self.ui.tableViewSpokesDatabase.horizontalHeader()
@@ -271,9 +361,9 @@ class SpokeduinoApp(QMainWindow):
                 QAbstractItemView.SelectionBehavior.SelectRows)
             connection.close()
         except sqlite3.Error as e:
-            print(f"Database error: {e}")
+            logging.error(f"{get_line_info()}: Database error: {e}")
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            logging.error(f"{get_line_info()}: Unexpected error: {e}")
 
     def sort_by_column(self, column: int) -> None:
         """
@@ -339,9 +429,9 @@ class SpokeduinoApp(QMainWindow):
 
             connection.close()
         except sqlite3.Error as e:
-            print(f"Database error: {e}")
+            logging.error(f"{get_line_info()}: Database error: {e}")
         except Exception as e:
-            print(f"Unexpected error: {e}")
+            logging.error(f"{get_line_info()}: Unexpected error: {e}")
 
     def unselect_spoke(self) -> None:
         """
@@ -410,7 +500,7 @@ class SpokeduinoApp(QMainWindow):
                     new_manufacturer_id)
             )
         except sqlite3.Error as e:
-            print(f"Database error: {e}")
+            logging.error(f"{get_line_info()}: Database error: {e}")
 
     def create_new_spoke(self) -> None:
         """
@@ -446,7 +536,7 @@ class SpokeduinoApp(QMainWindow):
                 self.ui.comboBoxSelectSpoke.findData(new_spoke_id)
             )
         except sqlite3.Error as e:
-            print(f"Database error: {e}")
+            logging.error(f"{get_line_info()}: Database error: {e}")
 
     def edit_spoke(self) -> None:
         """
@@ -480,7 +570,7 @@ class SpokeduinoApp(QMainWindow):
 
             self.load_spokes_for_selected_manufacturer()
         except sqlite3.Error as e:
-            print(f"Database error: {e}")
+            logging.error(f"{get_line_info()}: Database error: {e}")
 
     def delete_spoke(self) -> None:
         """
@@ -500,7 +590,7 @@ class SpokeduinoApp(QMainWindow):
 
             self.load_spokes_for_selected_manufacturer()
         except sqlite3.Error as e:
-            print(f"Database error: {e}")
+            logging.error(f"{get_line_info()}: Database error: {e}")
 
 
 def main() -> None:
