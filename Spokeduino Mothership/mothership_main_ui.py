@@ -625,6 +625,19 @@ class Ui_mainWindow(object):
 
         self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonEditSpoke)
 
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayoutSpokeButtonsDatabase.addItem(self.horizontalSpacer)
+
+        self.pushButtonClearSpoke = QPushButton(self.groupBoxSpokeDatabase)
+        self.pushButtonClearSpoke.setObjectName(u"pushButtonClearSpoke")
+        sizePolicy2.setHeightForWidth(self.pushButtonClearSpoke.sizePolicy().hasHeightForWidth())
+        self.pushButtonClearSpoke.setSizePolicy(sizePolicy2)
+        icon8 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditUndo))
+        self.pushButtonClearSpoke.setIcon(icon8)
+
+        self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonClearSpoke)
+
 
         self.verticalLayoutSpokeDatabase.addLayout(self.horizontalLayoutSpokeButtonsDatabase)
 
@@ -675,8 +688,8 @@ class Ui_mainWindow(object):
 
         self.pushButtonMeasurementCalculateFormula = QPushButton(self.groupBoxMeasurementFormula)
         self.pushButtonMeasurementCalculateFormula.setObjectName(u"pushButtonMeasurementCalculateFormula")
-        icon8 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.SyncSynchronizing))
-        self.pushButtonMeasurementCalculateFormula.setIcon(icon8)
+        icon9 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.SyncSynchronizing))
+        self.pushButtonMeasurementCalculateFormula.setIcon(icon9)
 
         self.horizontalLayoutFormula.addWidget(self.pushButtonMeasurementCalculateFormula)
 
@@ -716,8 +729,8 @@ class Ui_mainWindow(object):
 
         self.pushButtonSaveMeasurement = QPushButton(self.groupBoxMeasurement)
         self.pushButtonSaveMeasurement.setObjectName(u"pushButtonSaveMeasurement")
-        icon9 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentSave))
-        self.pushButtonSaveMeasurement.setIcon(icon9)
+        icon10 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentSave))
+        self.pushButtonSaveMeasurement.setIcon(icon10)
 
         self.horizontalLayoutMeasurementsButtons.addWidget(self.pushButtonSaveMeasurement)
 
@@ -925,8 +938,8 @@ class Ui_mainWindow(object):
         self.pushButtonMeasureSpoke.setObjectName(u"pushButtonMeasureSpoke")
         sizePolicy2.setHeightForWidth(self.pushButtonMeasureSpoke.sizePolicy().hasHeightForWidth())
         self.pushButtonMeasureSpoke.setSizePolicy(sizePolicy2)
-        icon10 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentProperties))
-        self.pushButtonMeasureSpoke.setIcon(icon10)
+        icon11 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentProperties))
+        self.pushButtonMeasureSpoke.setIcon(icon11)
 
         self.horizontalLayoutSpokeButtonsMeasurement.addWidget(self.pushButtonMeasureSpoke)
 
@@ -1252,7 +1265,7 @@ class Ui_mainWindow(object):
 
         self.retranslateUi(mainWindow)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(mainWindow)
@@ -1297,6 +1310,7 @@ class Ui_mainWindow(object):
         self.groupBoxSpokeCommentSpokeDatabase.setTitle(QCoreApplication.translate("mainWindow", u"Comment", None))
         self.pushButtonCreateNewSpoke.setText(QCoreApplication.translate("mainWindow", u"Create", None))
         self.pushButtonEditSpoke.setText(QCoreApplication.translate("mainWindow", u"Edit", None))
+        self.pushButtonClearSpoke.setText(QCoreApplication.translate("mainWindow", u"Clear", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.databaseTab), QCoreApplication.translate("mainWindow", u"Browse the spoke database", None))
         self.groupBoxMeasurement.setTitle(QCoreApplication.translate("mainWindow", u"Measurement", None))
         self.groupBoxMeasurementFormula.setTitle(QCoreApplication.translate("mainWindow", u"Formula", None))
