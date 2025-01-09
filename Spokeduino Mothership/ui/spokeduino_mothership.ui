@@ -33,13 +33,13 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="tensionTab">
        <attribute name="title">
         <string>Tension a wheel</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
+       <layout class="QHBoxLayout" name="horizontalLayoutTensionTabTop">
         <item>
          <layout class="QHBoxLayout" name="horizontalLayoutTensionTab" stretch="1,1,10">
           <item>
@@ -216,7 +216,7 @@
                  <property name="title">
                   <string>Spoke amount</string>
                  </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_5">
+                 <layout class="QVBoxLayout" name="verticalLayoutSpokeAmountRight">
                   <property name="spacing">
                    <number>6</number>
                   </property>
@@ -320,6 +320,9 @@
                <property name="spacing">
                 <number>6</number>
                </property>
+               <item>
+                <widget class="QGraphicsView" name="graphicsViewDiagram"/>
+               </item>
               </layout>
              </item>
              <item>
@@ -401,7 +404,7 @@
        <attribute name="title">
         <string>Browse the spoke database</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_3">
+       <layout class="QHBoxLayout" name="horizontalLayoutDatabaseTop">
         <item>
          <layout class="QHBoxLayout" name="horizontalLayoutDatabase" stretch="2,0,1">
           <item>
@@ -411,7 +414,7 @@
               <property name="title">
                <string>Spokes</string>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_16" stretch="0,1">
+              <layout class="QVBoxLayout" name="verticalLayoutFilterDatabase" stretch="0,1">
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayoutFilterDatabase" stretch="10,0,1,5">
                  <item>
@@ -717,7 +720,7 @@
                <property name="title">
                 <string>Name</string>
                </property>
-               <layout class="QVBoxLayout" name="verticalLayout_7">
+               <layout class="QVBoxLayout" name="verticalLayoutEditNewSpokeName">
                 <item>
                  <widget class="QLineEdit" name="lineEditNewSpokeName">
                   <property name="sizePolicy">
@@ -940,7 +943,7 @@
        <attribute name="title">
         <string>Measure a new spoke</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_10">
+       <layout class="QHBoxLayout" name="horizontalLayoutMeasurementTop">
         <item>
          <layout class="QHBoxLayout" name="horizontalLayoutMeasurement" stretch="2,0,1">
           <item>
@@ -950,7 +953,7 @@
               <property name="title">
                <string>Measurement</string>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_15" stretch="0,0,0,0">
+              <layout class="QVBoxLayout" name="verticalLayoutManufacturer" stretch="0,0,0,0">
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayoutManufacturerLeft" stretch="5">
                  <item>
@@ -963,7 +966,7 @@
                  <property name="title">
                   <string>Formula</string>
                  </property>
-                 <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="1,0,0">
+                 <layout class="QHBoxLayout" name="horizontalLayoutFormula" stretch="1,0,0">
                   <item>
                    <widget class="QLineEdit" name="lineEditFormula"/>
                   </item>
@@ -1190,7 +1193,7 @@
                <property name="title">
                 <string>Name</string>
                </property>
-               <layout class="QVBoxLayout" name="verticalLayout_9">
+               <layout class="QVBoxLayout" name="verticalLayoutSpokeNameMeasurement">
                 <item>
                  <widget class="QLineEdit" name="lineEditNewSpokeNameMeasurement">
                   <property name="sizePolicy">
@@ -1289,7 +1292,7 @@
                <property name="title">
                 <string>Dimension</string>
                </property>
-               <layout class="QVBoxLayout" name="verticalLayout_13">
+               <layout class="QVBoxLayout" name="verticalLayoutSpokeDimensionMeasurement">
                 <item>
                  <widget class="QLineEdit" name="lineEditNewSpokeDimensionMeasurement">
                   <property name="sizePolicy">
@@ -1308,7 +1311,7 @@
                <property name="title">
                 <string>Comment</string>
                </property>
-               <layout class="QVBoxLayout" name="verticalLayoutCommentMeasurement">
+               <layout class="QVBoxLayout" name="verticalLayoutSpokeCommentMeasurement">
                 <item>
                  <widget class="QLineEdit" name="lineEditNewSpokeCommentMeasurement">
                   <property name="sizePolicy">
@@ -1395,9 +1398,9 @@
        <attribute name="title">
         <string>Setup</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout_6">
+       <layout class="QHBoxLayout" name="horizontalLayoutSetup">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutSetup">
+         <layout class="QHBoxLayout" name="horizontalLayoutSetupLeft">
           <item>
            <layout class="QVBoxLayout" name="verticalLayoutSetupLeft" stretch="1,1,0,1,1">
             <item>
@@ -1417,7 +1420,7 @@
               <property name="title">
                <string>Language</string>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_8">
+              <layout class="QVBoxLayout" name="verticalLayoutSetupLaguage">
                <item>
                 <widget class="QComboBox" name="comboBoxSelectLanguage">
                  <property name="sizePolicy">
@@ -1448,7 +1451,7 @@
               <property name="title">
                <string>Spokeduino port</string>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_12">
+              <layout class="QVBoxLayout" name="verticalLayoutSelectPort">
                <item>
                 <widget class="QComboBox" name="comboBoxSelectPort">
                  <property name="sizePolicy">
@@ -1492,7 +1495,7 @@
               <property name="title">
                <string>Tensiometer</string>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_10" stretch="0,0">
+              <layout class="QVBoxLayout" name="verticalLayoutTensiometer" stretch="0,0">
                <item>
                 <widget class="QComboBox" name="comboBoxTensiometer">
                  <property name="sizePolicy">
@@ -1522,7 +1525,7 @@
                    <property name="title">
                     <string>New tensiometer</string>
                    </property>
-                   <layout class="QVBoxLayout" name="verticalLayout_11">
+                   <layout class="QVBoxLayout" name="verticalLayoutNewTensiometer">
                     <item>
                      <widget class="QLineEdit" name="lineEditNewTensiometer">
                       <property name="sizePolicy">
@@ -1585,13 +1588,13 @@
               <property name="title">
                <string>Directions</string>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_2">
+              <layout class="QVBoxLayout" name="verticalLayoutMeasurementDirection">
                <item>
                 <widget class="QGroupBox" name="groupBoxSpokeMeasurementDirection">
                  <property name="title">
                   <string>Spoke measurement direction</string>
                  </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_6">
+                 <layout class="QVBoxLayout" name="verticalLayoutMeasurementDirectionDown">
                   <item>
                    <widget class="QRadioButton" name="radioButtonSpokeMeasurementDirectionDown">
                     <property name="text">
@@ -1617,7 +1620,7 @@
                  <property name="title">
                   <string>Wheel rotation direction</string>
                  </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_3">
+                 <layout class="QVBoxLayout" name="verticalLayoutRotationDirectionClockwise">
                   <item>
                    <widget class="QRadioButton" name="radioButtonWheelRotationDirectionClockwise">
                     <property name="text">
@@ -1643,7 +1646,7 @@
                  <property name="title">
                   <string>Wheel measurement direction</string>
                  </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_4">
+                 <layout class="QVBoxLayout" name="verticalLayoutMeasurementTypeLeftRight">
                   <item>
                    <widget class="QRadioButton" name="radioButtonWheelMeasurementTypeLeftRight">
                     <property name="text">
@@ -1713,7 +1716,7 @@
               <property name="title">
                <string>Unit</string>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayout_17" stretch="0,0,0">
+              <layout class="QVBoxLayout" name="verticalLayoutButtonNewton" stretch="0,0,0">
                <item>
                 <widget class="QRadioButton" name="radioButtonNewton">
                  <property name="sizePolicy">
@@ -1792,7 +1795,7 @@
                  <property name="title">
                   <string>Newton</string>
                  </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_19">
+                 <layout class="QVBoxLayout" name="verticalLayoutConverterNewton">
                   <item>
                    <widget class="QLineEdit" name="lineEditTensionConverterNewton">
                     <property name="sizePolicy">
@@ -1823,7 +1826,7 @@
                  <property name="title">
                   <string>kgF</string>
                  </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_20">
+                 <layout class="QVBoxLayout" name="verticalLayoutConverterKgF">
                   <item>
                    <widget class="QLineEdit" name="lineEditTensionConverterKgF">
                     <property name="sizePolicy">
