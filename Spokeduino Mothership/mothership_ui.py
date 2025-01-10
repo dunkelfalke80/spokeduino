@@ -1157,6 +1157,7 @@ class Ui_mainWindow(object):
         self.radioButtonNewton.setSizePolicy(sizePolicy3)
 
         self.verticalLayoutButtonNewton.addWidget(self.radioButtonNewton)
+        self.radioButtonNewton.setChecked(True)
 
         self.radioButtonKgF = QRadioButton(self.groupBoxUnitSetup)
         self.radioButtonKgF.setObjectName(u"radioButtonKgF")

@@ -1,8 +1,7 @@
-import inspect
 import logging
 import os
 import sys
-import sqlite3
+from database_manager import DatabaseManager
 from sql_queries import SQLQueries
 from typing import cast, Any, Tuple
 from PySide6.QtCore import Qt
@@ -13,10 +12,6 @@ from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QAbstractItemView
 from mothership_ui import Ui_mainWindow
-
-
-def get_line_info() -> str:
-    return f"{inspect.stack()[1][2]}:{inspect.stack()[1][3]}"
 
 
 class SpokeduinoTableModel(QAbstractTableModel):
@@ -68,14 +63,19 @@ class SpokeduinoApp(QMainWindow):
             logging.error(f"Database file not found at: {self.db_path}")
             sys.exit("Error: Database file not found.")
 
+        self.__db: DatabaseManager = DatabaseManager(self.db_path)
+
+        # For vacuuming on exit
+        self.db_changed: bool = False
+
         # Reducing verbosity
-        self._rm_stretch: QHeaderView.ResizeMode = \
+        self.__rm_stretch: QHeaderView.ResizeMode = \
             QHeaderView.ResizeMode.Stretch
-        self._rm_shrink: QHeaderView.ResizeMode =\
+        self.__rm_shrink: QHeaderView.ResizeMode =\
             QHeaderView.ResizeMode.ResizeToContents
-        self._select_rows: QAbstractItemView.SelectionBehavior = \
+        self.__select_rows: QAbstractItemView.SelectionBehavior = \
             QAbstractItemView.SelectionBehavior.SelectRows
-        self._select_single: QAbstractItemView.SelectionMode = \
+        self.__select_single: QAbstractItemView.SelectionMode = \
             QAbstractItemView.SelectionMode.SingleSelection
 
         self.ui = Ui_mainWindow()
@@ -197,6 +197,15 @@ class SpokeduinoApp(QMainWindow):
         header: QHeaderView = self.ui.tableViewSpokesDatabase.horizontalHeader()
         header.sectionClicked.connect(self.sort_by_column)
 
+    def closeEvent(self, event) -> None:
+        """
+        Handle the close event for the main window.
+        Run VACUUM if the database has been modified.
+        """
+        if self.db_changed:
+            self.__db.vacuum()
+        event.accept()
+
     def update_fields(self, spoke=None) -> None:
         """
         Update the fields and comboboxes on both tabs
@@ -304,7 +313,7 @@ class SpokeduinoApp(QMainWindow):
         Load all tensiometers from the database
         and populate comboBoxTensiometer.
         """
-        tensiometers: list[Any] = self.execute_select(
+        tensiometers: list[Any] = self.__db.execute_select(
             query=SQLQueries.GET_TENSIOMETERS)
         if not tensiometers:
             return
@@ -319,7 +328,7 @@ class SpokeduinoApp(QMainWindow):
         the dropdowns. Automatically loads spokes for the first manufacturer.
         """
         # Load manufacturers
-        manufacturers: list[Any] = self.execute_select(
+        manufacturers: list[Any] = self.__db.execute_select(
             query=SQLQueries.GET_MANUFACTURERS)
         if not manufacturers:
             return
@@ -334,7 +343,7 @@ class SpokeduinoApp(QMainWindow):
             )
 
         # Load types
-        spoke_types: list[Any] = self.execute_select(
+        spoke_types: list[Any] = self.__db.execute_select(
             query=SQLQueries.GET_TYPES)
         if not spoke_types:
             return
@@ -366,7 +375,7 @@ class SpokeduinoApp(QMainWindow):
             return
         manufacturer_id = int(manufacturer_id)
 
-        spokes: list[Any] = self.execute_select(
+        spokes: list[Any] = self.__db.execute_select(
             query=SQLQueries.GET_SPOKES_BY_MANUFACTURER,
             params=(manufacturer_id,))
         if not spokes:
@@ -398,16 +407,16 @@ class SpokeduinoApp(QMainWindow):
 
         # Adjust column widths
         resize_mode = view.horizontalHeader().setSectionResizeMode
-        resize_mode(0, self._rm_stretch)  # Name
-        resize_mode(1, self._rm_stretch)  # Type
-        resize_mode(2, self._rm_shrink)   # Gauge
-        resize_mode(3, self._rm_shrink)   # Weight
-        resize_mode(4, self._rm_stretch)  # Dimensions
-        resize_mode(5, self._rm_stretch)  # Comment
+        resize_mode(0, self.__rm_stretch)  # Name
+        resize_mode(1, self.__rm_stretch)  # Type
+        resize_mode(2, self.__rm_shrink)   # Gauge
+        resize_mode(3, self.__rm_shrink)   # Weight
+        resize_mode(4, self.__rm_stretch)  # Dimensions
+        resize_mode(5, self.__rm_stretch)  # Comment
 
         # Configure table behavior
-        view.setSelectionBehavior(self._select_rows)
-        view.setSelectionMode(self._select_single)
+        view.setSelectionBehavior(self.__select_rows)
+        view.setSelectionMode(self.__select_single)
 
     def load_measurements_for_selected_spoke(self) -> None:
         """
@@ -424,7 +433,7 @@ class SpokeduinoApp(QMainWindow):
         spoke_id = int(spoke_id)
         tensiometer_id = int(tensiometer_id)
 
-        measurements: list[Any] = self.execute_select(
+        measurements: list[Any] = self.__db.execute_select(
             query=SQLQueries.GET_MEASUREMENTS,
             params=(spoke_id, tensiometer_id))
         if not measurements:
@@ -441,13 +450,13 @@ class SpokeduinoApp(QMainWindow):
         view.setModel(model)
 
         # Configure table behavior
-        view.setSelectionBehavior(self._select_rows)
-        view.setSelectionMode(self._select_single)
+        view.setSelectionBehavior(self.__select_rows)
+        view.setSelectionMode(self.__select_single)
 
         # Set column headers
         view.horizontalHeader().\
             setSectionResizeMode(
-            self._rm_shrink
+            self.__rm_shrink
         )
         view.horizontalHeader().\
             setStretchLastSection(True)
@@ -466,7 +475,7 @@ class SpokeduinoApp(QMainWindow):
             selected_index.row(),
             model.header_count()).data())
 
-        _ = self.execute_query(
+        _ = self.__db.execute_query(
                     query=SQLQueries.DELETE_MEASUREMENT,
                     params=(measurement_id,),
                 )
@@ -523,7 +532,7 @@ class SpokeduinoApp(QMainWindow):
             return
         spoke_id = int(spoke_id)
 
-        spokes: list[Any] = self.execute_select(
+        spokes: list[Any] = self.__db.execute_select(
             query=SQLQueries.GET_SPOKES_BY_ID,
             params=(spoke_id,))
         if not spokes:
@@ -608,7 +617,7 @@ class SpokeduinoApp(QMainWindow):
         if not tensiometer_name:
             return
 
-        _ = self.execute_query(
+        _ = self.__db.execute_query(
             query=SQLQueries.ADD_TENSIOMETER,
             params=(tensiometer_name,),
         )
@@ -625,7 +634,7 @@ class SpokeduinoApp(QMainWindow):
         if not manufacturer_name:
             return
 
-        new_manufacturer_id: int | None = self.execute_query(
+        new_manufacturer_id: int | None = self.__db.execute_query(
             query=SQLQueries.ADD_MANUFACTURER,
             params=(manufacturer_name,),
         )
@@ -663,35 +672,8 @@ class SpokeduinoApp(QMainWindow):
                     self.ui.lineEditSpokeComment2.text() or ""
 
         except ValueError as e:
-            logging.error(f"{get_line_info()}: Invalid data provided: {e}")
+            logging.error(f"Invalid data provided: {e}")
             raise
-
-    def execute_select(self, query: str, params: tuple = ()) -> list[Any]:
-        """
-        Execute a SELECT query and return all results.
-        """
-        try:
-            with sqlite3.connect(self.db_path) as connection:
-                cursor: sqlite3.Cursor = connection.cursor()
-                cursor.execute(query, params)
-                return cursor.fetchall()
-        except sqlite3.Error as e:
-            logging.error(f"{get_line_info()}: SQL error: {e}\nQuery: {query}")
-            return []
-
-    def execute_query(self, query: str, params: tuple = ()) -> int | None:
-        """
-        Execute an INSERT, UPDATE, or DELETE query and return the last row ID.
-        """
-        try:
-            with sqlite3.connect(self.db_path) as connection:
-                cursor: sqlite3.Cursor = connection.cursor()
-                cursor.execute(query, params)
-                connection.commit()
-                return cursor.lastrowid
-        except sqlite3.Error as e:
-            logging.error(f"{get_line_info()}: SQL error: {e}\nQuery: {query}")
-            return None
 
     def create_new_spoke(self) -> None:
         """
@@ -714,7 +696,7 @@ class SpokeduinoApp(QMainWindow):
         dimension,\
         comment = self.get_database_spoke_data(from_database)
 
-        new_spoke_id: int | None = self.execute_query(
+        new_spoke_id: int | None = self.__db.execute_query(
             query=SQLQueries.ADD_SPOKE,
             params=(manufacturer_id, spoke_name, type_id, gauge, weight, dimension, comment),
         )
@@ -748,7 +730,7 @@ class SpokeduinoApp(QMainWindow):
         dimension,\
         comment = self.get_database_spoke_data(True)
 
-        _ = self.execute_query(
+        _ = self.__db.execute_query(
             query=SQLQueries.MODIFY_SPOKE,
             params=(spoke_name, type_id, gauge, weight,
                     dimension, comment, spoke_id),
@@ -764,7 +746,7 @@ class SpokeduinoApp(QMainWindow):
             return
         spoke_id = int(spoke_id)
 
-        _ = self.execute_query(
+        _ = self.__db.execute_query(
             query=SQLQueries.DELETE_SPOKE,
             params=(spoke_id,)
         )
