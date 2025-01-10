@@ -44,7 +44,7 @@ CREATE TABLE spokes
 CREATE TABLE measurements
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tensioner_id INTEGER NOT NULL,
+    tensiometer_id INTEGER NOT NULL,
     spoke_id INTEGER NOT NULL,
     tension_300N DECIMAL(5, 2) DEFAULT 0.00,
     tension_400N DECIMAL(5, 2) DEFAULT 0.00,
@@ -62,16 +62,23 @@ CREATE TABLE measurements
     tension_1600N DECIMAL(5, 2) DEFAULT 0.00,
     formula TEXT DEFAULT '',
     comment TEXT DEFAULT '',
-    FOREIGN KEY (tensioner_id) 
-        REFERENCES tensioners(id)
+    FOREIGN KEY (tensiometer_id) 
+        REFERENCES tensiometers(id)
         ON DELETE CASCADE,
     FOREIGN KEY (spoke_id) 
         REFERENCES spokes(id)
         ON DELETE CASCADE
 );
 
+-- Settings table
+CREATE TABLE settings 
+(
+	key TEXT PRIMARY KEY,
+	value TEXT
+)
+
 -- Indexes for optimization
 CREATE INDEX idx_manufacturer_id ON spokes(manufacturer_id);
 CREATE INDEX idx_type_id ON spokes(type_id);
-CREATE INDEX idx_tensioner_id ON measurements(tensioner_id);
+CREATE INDEX idx_tensiometer_id ON measurements(tensimeter_id);
 CREATE INDEX idx_spoke_id ON measurements(spoke_id);

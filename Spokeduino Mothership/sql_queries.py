@@ -1,9 +1,22 @@
 class SQLQueries:
+    GET_SETTINGS: str = """
+                SELECT
+                    key, value
+                FROM settings"""
+
+    GET_SINGLE_SETTING: str = """
+                SELECT
+                    value
+                FROM
+                    settings
+                WHERE
+                    key = ?"""
+
     GET_TENSIOMETERS: str = """
                 SELECT
                     id, name
                 FROM
-                    tensioners"""
+                    tensiometers"""
 
     GET_MANUFACTURERS: str = """
                 SELECT
@@ -46,7 +59,7 @@ class SQLQueries:
                 WHERE
                     spoke_id = ?
                 AND
-                    tensioner_id = ?"""
+                    tensiometer_id = ?"""
 
     ADD_TENSIOMETER: str = """
                 INSERT INTO
@@ -86,3 +99,11 @@ class SQLQueries:
                     measurements
                 WHERE
                     id = ?"""
+
+    UPSERT_SETTING: str =  """
+                INSERT INTO
+                    settings (key, value)
+                VALUES
+                    (?, ?)
+                ON CONFLICT(key) DO UPDATE SET
+                    value=excluded.value"""

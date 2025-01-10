@@ -1,13 +1,20 @@
 import logging
 import os
+import serial
+import serial.tools.list_ports
 import sys
+from serial.tools.list_ports_common import ListPortInfo
 from database_manager import DatabaseManager
 from sql_queries import SQLQueries
 from typing import cast, Any, Tuple
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QAbstractTableModel
+from PySide6.QtCore import QCoreApplication
 from PySide6.QtCore import QModelIndex
-from PySide6.QtWidgets import QApplication, QComboBox, QTableView
+from PySide6.QtCore import QTranslator
+from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QComboBox
+from PySide6.QtWidgets import QTableView
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QAbstractItemView
@@ -78,12 +85,21 @@ class SpokeduinoApp(QMainWindow):
         self.__select_single: QAbstractItemView.SelectionMode = \
             QAbstractItemView.SelectionMode.SingleSelection
 
-        self.ui = Ui_mainWindow()
-        self.ui.setupUi(self)
+        self.translator = QTranslator()
+        self.current_language = "en"
+        self.setup_ui()
+        self.setup_language()
+        self.populate_language_combobox()
+        self.load_available_com_ports()
+        self.load_tensiometers()
         self.setup_signals_and_slots()
-        # Store current spokes data
+        self.load_settings()
         self.current_spokes: list[list[str]] = []
         self.load_manufacturers()
+
+    def setup_ui(self):
+        self.ui = Ui_mainWindow()
+        self.ui.setupUi(self)
 
     def setup_signals_and_slots(self) -> None:
         """
@@ -193,6 +209,61 @@ class SpokeduinoApp(QMainWindow):
             self.select_measurement_row
         )
 
+        # Language selection
+        self.ui.comboBoxSelectLanguage.currentTextChanged.connect(
+            lambda language: self.save_setting("language", language)
+        )
+        self.ui.comboBoxSelectLanguage.currentTextChanged.connect(
+            lambda language: self.change_language(language.lower())
+        )
+
+        # Spokeduino port selection
+        self.ui.comboBoxSpokeduinoPort.currentTextChanged.connect(
+            lambda port: self.save_setting("spokeduino_port", port)
+        )
+
+        # Tensiometer selection
+        self.ui.comboBoxTensiometer.currentIndexChanged.connect(
+            lambda index: self.save_setting(
+                "tensiometer_id",
+                str(self.ui.comboBoxTensiometer.itemData(index))
+            )
+        )
+
+        # Measurement units
+        self.ui.radioButtonNewton.toggled.connect(
+            lambda checked: self.save_setting("unit", "Newton") if checked else None
+        )
+        self.ui.radioButtonKgF.toggled.connect(
+            lambda checked: self.save_setting("unit", "kgF") if checked else None
+        )
+        self.ui.radioButtonLbF.toggled.connect(
+            lambda checked: self.save_setting("unit", "lbF") if checked else None
+        )
+
+        # Directional settings
+        self.ui.radioButtonSpokeMeasurementDirectionDown.toggled.connect(
+            lambda checked: self.save_setting("spoke_direction", "down") if checked else None
+        )
+        self.ui.radioButtonSpokeMeasurementDirectionUp.toggled.connect(
+            lambda checked: self.save_setting("spoke_direction", "up") if checked else None
+        )
+        self.ui.radioButtonWheelRotationDirectionClockwise.toggled.connect(
+            lambda checked: self.save_setting("rotation_direction", "clockwise") if checked else None
+        )
+        self.ui.radioButtonWheelRotationDirectionAnticlockwise.toggled.connect(
+            lambda checked: self.save_setting("rotation_direction", "anticlockwise") if checked else None
+        )
+        self.ui.radioButtonWheelMeasurementTypeSideBySide.toggled.connect(
+            lambda checked: self.save_setting("measurement_type", "side_by_side") if checked else None
+        )
+        self.ui.radioButtonWheelMeasurementTypeLeftRight.toggled.connect(
+            lambda checked: self.save_setting("measurement_type", "left_right") if checked else None
+        )
+        self.ui.radioButtonWheelMeasurementTypRightLeft.toggled.connect(
+            lambda checked: self.save_setting("measurement_type", "right_left") if checked else None
+        )
+
         # Table sorting
         header: QHeaderView = self.ui.tableViewSpokesDatabase.horizontalHeader()
         header.sectionClicked.connect(self.sort_by_column)
@@ -205,6 +276,139 @@ class SpokeduinoApp(QMainWindow):
         if self.db_changed:
             self.__db.vacuum()
         event.accept()
+
+    def setup_language(self) -> None:
+        """
+        Load initial translations based on current language settings
+        """
+        i18n_path: str = os.path.join(self.current_path, "i18n", f"{self.current_language}.qm")
+        if self.translator.load(i18n_path):
+            QCoreApplication.installTranslator(self.translator)
+
+    def change_language(self, language_code: str | None = None) -> None:
+        """
+        Reload translations for new language settings.
+        """
+        if not language_code:
+            language_code = self.ui.comboBoxSelectLanguage.currentData()
+
+        if not language_code:
+            logging.error("No language code selected or available.")
+            return
+
+        i18n_path: str = os.path.join(self.current_path, "i18n", f"{language_code}.qm")
+        if self.translator.load(i18n_path):
+            QCoreApplication.installTranslator(self.translator)
+            self.ui.retranslateUi(self)
+            self.save_setting("language", language_code)
+            logging.info(f"Language changed to: {language_code}")
+        else:
+            logging.error(f"Failed to loopenad translation file: {i18n_path}")
+
+    def load_available_com_ports(self) -> None:
+        """
+        Detect available COM ports and populate comboBoxSpokeduinoPort.
+        """
+        self.ui.comboBoxSpokeduinoPort.clear()
+        ports: list[ListPortInfo] = serial.tools.list_ports.comports()
+        for port in ports:
+            self.ui.comboBoxSpokeduinoPort.addItem(port.device)
+
+        # Load settings for selected port
+        spokeduino_port: list[str] = self.__db.execute_select(
+            query=SQLQueries.GET_SINGLE_SETTING,
+            params=("spokeduino_port",),)
+        if not spokeduino_port:
+            return
+
+        index: int = self.ui.comboBoxSpokeduinoPort.findText(spokeduino_port[0][0])
+        if index != -1:
+            self.ui.comboBoxSpokeduinoPort.setCurrentIndex(index)
+
+
+    def save_setting(self, key: str, value: str) -> None:
+        """
+        Save a single setting in the database.
+        If the setting already exists, update it; otherwise, insert it.
+        """
+        self.__db.execute_query(
+            query=SQLQueries.UPSERT_SETTING,
+            params=(key, value))
+
+    def load_settings(self) -> None:
+        """
+        Load settings from the database and update the UI accordingly.
+        """
+        settings: list[Any] = self.__db.execute_select(
+            query=SQLQueries.GET_SETTINGS)
+        settings_dict: dict[str, str] = {
+            key: value for key,
+            value in settings}
+
+        # Load language selection
+        language: str = settings_dict.get("language", "en")
+        index: int = self.ui.comboBoxSelectLanguage.findText(language)
+        if index != -1:
+            self.ui.comboBoxSelectLanguage.setCurrentIndex(index)
+            self.change_language(language)
+
+        # Load Spokeduino port
+        spokeduino_port: str = settings_dict.get("spokeduino_port", "")
+        index = self.ui.comboBoxSpokeduinoPort.findText(spokeduino_port)
+        if index != -1:
+            self.ui.comboBoxSpokeduinoPort.setCurrentIndex(index)
+
+        # Load Tensiometer selection
+        tensiometer_id: str | None = settings_dict.get("tensiometer_id")
+        if tensiometer_id:
+            index = self.ui.comboBoxTensiometer.findData(int(tensiometer_id))
+            if index != -1:
+                self.ui.comboBoxTensiometer.setCurrentIndex(index)
+
+        # Load measurement units
+        unit: str = settings_dict.get("unit", "Newton")
+        if unit == "Newton":
+            self.ui.radioButtonNewton.setChecked(True)
+        elif unit == "kgF":
+            self.ui.radioButtonKgF.setChecked(True)
+        elif unit == "lbF":
+            self.ui.radioButtonLbF.setChecked(True)
+
+        # Load directional settings
+        measurement_direction: str = settings_dict.get("spoke_direction", "down")
+        if measurement_direction == "down":
+            self.ui.radioButtonSpokeMeasurementDirectionDown.setChecked(True)
+        else:
+            self.ui.radioButtonSpokeMeasurementDirectionUp.setChecked(True)
+
+        rotation_direction: str = settings_dict.get("rotation_direction", "clockwise")
+        if rotation_direction == "clockwise":
+            self.ui.radioButtonWheelRotationDirectionClockwise.setChecked(True)
+        else:
+            self.ui.radioButtonWheelRotationDirectionAnticlockwise.setChecked(True)
+
+        measurement_type: str = settings_dict.get("measurement_type", "side_by_side")
+        if measurement_type == "side_by_side":
+            self.ui.radioButtonWheelMeasurementTypeSideBySide.setChecked(True)
+        elif measurement_type == "left_right":
+            self.ui.radioButtonWheelMeasurementTypeLeftRight.setChecked(True)
+        elif measurement_type == "right_left":
+            self.ui.radioButtonWheelMeasurementTypRightLeft.setChecked(True)
+
+    def populate_language_combobox(self) -> None:
+        """
+        Populate the language combobox dynamically from the available .qm files.
+        """
+        self.ui.comboBoxSelectLanguage.clear()
+        i18n_path: str = os.path.join(self.current_path, "i18n")
+        if not os.path.exists(i18n_path):
+            logging.error(f"i18n directory not found at: {i18n_path}")
+            return
+
+        for filename in os.listdir(i18n_path):
+            if filename.endswith(".qm"):
+                language_code: str = os.path.splitext(filename)[0]  # Extract language code
+                self.ui.comboBoxSelectLanguage.addItem(language_code)
 
     def update_fields(self, spoke=None) -> None:
         """
@@ -617,10 +821,16 @@ class SpokeduinoApp(QMainWindow):
         if not tensiometer_name:
             return
 
+        self.ui.lineEditNewTensiometer.clear()
         _ = self.__db.execute_query(
             query=SQLQueries.ADD_TENSIOMETER,
             params=(tensiometer_name,),
         )
+        self.load_tensiometers()
+
+        index: int = self.ui.comboBoxTensiometer.findText(tensiometer_name)
+        if index != -1:
+            self.ui.comboBoxTensiometer.setCurrentIndex(index)
 
     def create_new_manufacturer(self) -> None:
         """

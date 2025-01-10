@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'spokeduino_mothershipXgvBjm.ui'
+## Form generated from reading UI file 'spokeduino_mothershipvSkQkQ.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.1
 ##
@@ -27,7 +27,7 @@ class Ui_mainWindow(object):
     def setupUi(self, mainWindow):
         if not mainWindow.objectName():
             mainWindow.setObjectName(u"mainWindow")
-        mainWindow.resize(1024, 768)
+        mainWindow.resize(1171, 768)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -1155,9 +1155,9 @@ class Ui_mainWindow(object):
         self.radioButtonNewton.setObjectName(u"radioButtonNewton")
         sizePolicy3.setHeightForWidth(self.radioButtonNewton.sizePolicy().hasHeightForWidth())
         self.radioButtonNewton.setSizePolicy(sizePolicy3)
+        self.radioButtonNewton.setChecked(True)
 
         self.verticalLayoutButtonNewton.addWidget(self.radioButtonNewton)
-        self.radioButtonNewton.setChecked(True)
 
         self.radioButtonKgF = QRadioButton(self.groupBoxUnitSetup)
         self.radioButtonKgF.setObjectName(u"radioButtonKgF")
@@ -1259,7 +1259,7 @@ class Ui_mainWindow(object):
         mainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(mainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1171, 33))
+        self.menubar.setGeometry(QRect(0, 0, 1171, 22))
         self.menuHelp = QMenu(self.menubar)
         self.menuHelp.setObjectName(u"menuHelp")
         mainWindow.setMenuBar(self.menubar)
@@ -1350,7 +1350,7 @@ class Ui_mainWindow(object):
         self.pushButtonNewTensiometer.setText(QCoreApplication.translate("mainWindow", u"Create", None))
         self.groupBoxDirectionsSetup.setTitle(QCoreApplication.translate("mainWindow", u"Directions", None))
         self.groupBoxSpokeMeasurementDirection.setTitle(QCoreApplication.translate("mainWindow", u"Spoke measurement direction", None))
-        self.radioButtonSpokeMeasurementDirectionDown.setText(QCoreApplication.translate("mainWindow", u"From high to low ", None))
+        self.radioButtonSpokeMeasurementDirectionDown.setText(QCoreApplication.translate("mainWindow", u"From high to low", None))
         self.radioButtonSpokeMeasurementDirectionUp.setText(QCoreApplication.translate("mainWindow", u"From low to high", None))
         self.groupBoxWheelRotationDirection.setTitle(QCoreApplication.translate("mainWindow", u"Wheel rotation direction", None))
         self.radioButtonWheelRotationDirectionClockwise.setText(QCoreApplication.translate("mainWindow", u"Clockwise", None))
