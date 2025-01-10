@@ -10,7 +10,7 @@ INSERT INTO manufacturers (id, name) VALUES
 (6, 'Wheelsmith'),
 (7, 'Berd');
 
-INSERT INTO tensioners (id, name) VALUES
+INSERT INTO tensiometers (id, name) VALUES
 (0, 'Toopre TL-P11'),
 (1, 'ZTTO TC-02');
 

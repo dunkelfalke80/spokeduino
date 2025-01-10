@@ -7,8 +7,8 @@ CREATE TABLE manufacturers
     name TEXT NOT NULL UNIQUE
 );
 
--- Tensioners table
-CREATE TABLE tensioners
+-- Tensiometer table
+CREATE TABLE tensiometers
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE
