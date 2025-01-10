@@ -11,8 +11,9 @@ INSERT INTO manufacturers (id, name) VALUES
 (7, 'Berd');
 
 INSERT INTO tensiometers (id, name) VALUES
-(0, 'Toopre TL-P11'),
-(1, 'ZTTO TC-02');
+(0, 'Toopre TL-P3'),
+(1, 'Toopre TL-P11'),
+(2, 'ZTTO TC-02');
 
 INSERT INTO types (id, type) VALUES
 (0, 'Straight'),
