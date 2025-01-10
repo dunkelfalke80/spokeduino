@@ -62,20 +62,28 @@ class SpokeduinoApp(QMainWindow):
         Initialize the main application window.
         """
         super().__init__()
+        self.current_path: str = os.path.dirname(os.path.realpath(sys.argv[0]))
         self.db_path: str = f"{self.current_path}/spokeduino.sqlite"
         if not os.path.exists(self.db_path):
             logging.error(f"Database file not found at: {self.db_path}")
             sys.exit("Error: Database file not found.")
 
+        # Reducing verbosity
+        self._rm_stretch: QHeaderView.ResizeMode = \
+            QHeaderView.ResizeMode.Stretch
+        self._rm_shrink: QHeaderView.ResizeMode =\
+            QHeaderView.ResizeMode.ResizeToContents
+        self._select_rows: QAbstractItemView.SelectionBehavior = \
+            QAbstractItemView.SelectionBehavior.SelectRows
+        self._select_single: QAbstractItemView.SelectionMode = \
+            QAbstractItemView.SelectionMode.SingleSelection
+
         self.ui = Ui_mainWindow()
         self.ui.setupUi(self)
         self.setup_signals_and_slots()
-        self.current_path: str = os.path.dirname(os.path.realpath(sys.argv[0]))
-        self.current_spokes: list[list[str]] = []  # Store current spokes data
+        # Store current spokes data
+        self.current_spokes: list[list[str]] = []
         self.load_manufacturers()
-        self._rm_stretch: QHeaderView.ResizeMode = self._rm_stretch
-        self._rm_shrink: QHeaderView.ResizeMode = self._rm_shrink
-
 
     def setup_signals_and_slots(self) -> None:
         """
@@ -131,20 +139,21 @@ class SpokeduinoApp(QMainWindow):
 
         # Synchronize combobox and table for spokes
         self.ui.comboBoxSpoke.currentIndexChanged.connect(
-            self.update_spoke_details)
-        self.ui.comboBoxSpoke2.currentIndexChanged.connect(
-            self.update_spoke_details)
-
-        self.ui.comboBoxSpoke.currentIndexChanged.connect(
-            self.select_spoke_row)
-        self.ui.comboBoxSpoke2.currentIndexChanged.connect(
-            self.select_spoke_row)
-
-        self.ui.comboBoxSpoke.currentIndexChanged.connect(
             self.sync_spoke_selection)
         self.ui.comboBoxSpoke2.currentIndexChanged.connect(
             self.sync_spoke_selection
         )
+
+        self.ui.comboBoxSpoke.currentIndexChanged.connect(
+            self.update_spoke_details)
+        self.ui.comboBoxSpoke2.currentIndexChanged.connect(
+            self.update_spoke_details)
+
+        self.ui.comboBoxSpoke.currentIndexChanged.connect(
+            self.select_spoke_row)
+        self.ui.comboBoxSpoke2.currentIndexChanged.connect(
+            self.select_spoke_row)
+
         self.ui.tableViewSpokesDatabase.clicked.connect(
             self.select_spoke_from_table)
 
@@ -271,11 +280,8 @@ class SpokeduinoApp(QMainWindow):
         """
         combo1: QComboBox = self.ui.comboBoxManufacturer
         combo2: QComboBox = self.ui.comboBoxManufacturer2
-        selected_manufacturer_id: int = (
-            int(combo1.currentData())
-            if self.sender() == combo1
-            else int(combo2.currentData())
-        )
+        sender: QComboBox = cast(QComboBox, self.sender())
+        selected_manufacturer_id: int = sender.currentData()
 
         if combo1.currentData() != selected_manufacturer_id:
             combo1.blockSignals(True)
@@ -392,7 +398,6 @@ class SpokeduinoApp(QMainWindow):
 
         # Adjust column widths
         resize_mode = view.horizontalHeader().setSectionResizeMode
-        # reducing line length
         resize_mode(0, self._rm_stretch)  # Name
         resize_mode(1, self._rm_stretch)  # Type
         resize_mode(2, self._rm_shrink)   # Gauge
@@ -400,8 +405,9 @@ class SpokeduinoApp(QMainWindow):
         resize_mode(4, self._rm_stretch)  # Dimensions
         resize_mode(5, self._rm_stretch)  # Comment
 
-        view.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows)
+        # Configure table behavior
+        view.setSelectionBehavior(self._select_rows)
+        view.setSelectionMode(self._select_single)
 
     def load_measurements_for_selected_spoke(self) -> None:
         """
@@ -435,12 +441,8 @@ class SpokeduinoApp(QMainWindow):
         view.setModel(model)
 
         # Configure table behavior
-        view.setSelectionBehavior(
-            QAbstractItemView.SelectionBehavior.SelectRows
-        )
-        view.setSelectionMode(
-            QAbstractItemView.SelectionMode.SingleSelection
-        )
+        view.setSelectionBehavior(self._select_rows)
+        view.setSelectionMode(self._select_single)
 
         # Set column headers
         view.horizontalHeader().\
@@ -454,12 +456,12 @@ class SpokeduinoApp(QMainWindow):
         """
         Delete the currently selected measurement from the measurements table.
         """
-        measurements_table: QTableView = self.ui.tableViewMeasurements
-        selected_index: QModelIndex = measurements_table.currentIndex()
+        view: QTableView = self.ui.tableViewMeasurements
+        selected_index: QModelIndex = view.currentIndex()
         if not selected_index.isValid():
             return
 
-        model: SpokeduinoTableModel = cast(SpokeduinoTableModel, measurements_table.model())
+        model: SpokeduinoTableModel = cast(SpokeduinoTableModel, view.model())
         measurement_id: int = int(model.index(
             selected_index.row(),
             model.header_count()).data())
@@ -468,7 +470,7 @@ class SpokeduinoApp(QMainWindow):
                     query=SQLQueries.DELETE_MEASUREMENT,
                     params=(measurement_id,),
                 )
-        measurements_table.clearSelection()
+        view.clearSelection()
         self.load_measurements_for_selected_spoke()
 
     def sort_by_column(self, column: int) -> None:
@@ -493,15 +495,16 @@ class SpokeduinoApp(QMainWindow):
         and synchronize the comboboxes.
         """
         spoke_id: int | None = self.ui.comboBoxSpoke.currentData()
+        view: QTableView = self.ui.tableViewSpokesDatabase
         if spoke_id is None:
-            self.ui.tableViewSpokesDatabase.clearSelection()
+            view.clearSelection()
             return
 
         spoke_id = int(spoke_id)
 
         for row, spoke in enumerate(self.current_spokes):
             if spoke_id == self.ui.comboBoxSpoke.itemData(row):
-                self.ui.tableViewSpokesDatabase.selectRow(row)
+                view.selectRow(row)
                 self.synchronize_comboboxes(
                     self.ui.comboBoxSpoke,
                     self.ui.comboBoxSpoke.currentText())
@@ -512,14 +515,16 @@ class SpokeduinoApp(QMainWindow):
         Update the spoke details fields when a spoke is
         selected in comboBoxSpoke.
         """
-        spoke_id: int | None = self.ui.comboBoxSpoke.currentData()
+        sender: QComboBox = cast(QComboBox, self.sender())
+        spoke_id: int | None = sender.currentData()
+
         if spoke_id is None:
             self.clear_spoke_details()
             return
         spoke_id = int(spoke_id)
 
         spokes: list[Any] = self.execute_select(
-            query=SQLQueries.GET_SPOKES_BY_MANUFACTURER,
+            query=SQLQueries.GET_SPOKES_BY_ID,
             params=(spoke_id,))
         if not spokes:
             return
@@ -731,6 +736,7 @@ class SpokeduinoApp(QMainWindow):
         Update the selected spoke with new values from the detail fields.
         """
         spoke_id: int | None = self.ui.comboBoxSpoke.currentData()
+
         if spoke_id is None:
             return
         spoke_id = int(spoke_id)
