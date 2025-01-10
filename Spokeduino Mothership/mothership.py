@@ -12,7 +12,7 @@ from PySide6.QtCore import QAbstractTableModel
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtCore import QModelIndex
 from PySide6.QtCore import QTranslator
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QLineEdit
 from PySide6.QtWidgets import QComboBox
 from PySide6.QtWidgets import QTableView
 from PySide6.QtWidgets import QMainWindow
@@ -263,6 +263,11 @@ class SpokeduinoApp(QMainWindow):
         self.ui.radioButtonWheelMeasurementTypRightLeft.toggled.connect(
             lambda checked: self.save_setting("measurement_type", "right_left") if checked else None
         )
+
+        # Unit converter
+        self.ui.lineEditTensionConverterNewton.textChanged.connect(lambda: self.convert_units_realtime("newton"))
+        self.ui.lineEditTensionConverterKgF.textChanged.connect(lambda: self.convert_units_realtime("kgf"))
+        self.ui.lineEditTensionConverterLbF.textChanged.connect(lambda: self.convert_units_realtime("lbf"))
 
         # Table sorting
         header: QHeaderView = self.ui.tableViewSpokesDatabase.horizontalHeader()
@@ -961,6 +966,63 @@ class SpokeduinoApp(QMainWindow):
             params=(spoke_id,)
         )
         self.load_spokes_for_selected_manufacturer()
+
+    def convert_units(self, value: float, source: str) -> Tuple[float, float, float]:
+        """
+        Convert units
+        :param value: The value to be converted.
+        :param source: The unit type that triggered the conversion.
+        :return the values in newton, kgf and lbf.
+        """
+        if source == "newton":
+            return (value,
+                    value * 0.1019716213,
+                    value * 0.2248089431)
+        elif source == "kgf":
+            return (value / 0.1019716213,
+                value,
+                value * 2.2046226218)
+        elif source == "lbf":
+            return (value / 0.2248089431,
+                    value / 2.2046226218,
+                    value)
+        else:
+            return 0.0, 0.0, 0.0
+
+    def convert_units_realtime(self, source: str) -> None:
+        """
+        Convert units in real time
+        :param source: The unit type that triggered the conversion.
+        """
+        try:
+            # Read input values
+            if source == "newton":
+                value = float(self.ui.lineEditTensionConverterNewton.text() or 0)
+                newton, kgf, lbf = self.convert_units(value, source)
+                self.ui.lineEditTensionConverterKgF.setText(f"{kgf:.4f}")
+                self.ui.lineEditTensionConverterLbF.setText(f"{lbf:.4f}")
+            elif source == "kgf":
+                value = float(self.ui.lineEditTensionConverterKgF.text() or 0)
+                newton, kgf, lbf = self.convert_units(value, source)
+                self.ui.lineEditTensionConverterNewton.setText(f"{newton:.4f}")
+                self.ui.lineEditTensionConverterLbF.setText(f"{lbf:.4f}")
+            elif source == "lbf":
+                value = float(self.ui.lineEditTensionConverterLbF.text() or 0)
+                newton, kgf, lbf = self.convert_units(value, source)
+                self.ui.lineEditTensionConverterNewton.setText(f"{newton:.4f}")
+                self.ui.lineEditTensionConverterKgF.setText(f"{kgf:.4f}")
+        except ValueError:
+            # Clear the other textboxes if the input is invalid
+            if source == "newton":
+                self.ui.lineEditTensionConverterKgF.clear()
+                self.ui.lineEditTensionConverterLbF.clear()
+            elif source == "kgf":
+                self.ui.lineEditTensionConverterNewton.clear()
+                self.ui.lineEditTensionConverterLbF.clear()
+            elif source == "lbf":
+                self.ui.lineEditTensionConverterNewton.clear()
+                self.ui.lineEditTensionConverterKgF.clear()
+
 
 def main() -> None:
     """
