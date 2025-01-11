@@ -32,8 +32,8 @@ class SQLQueries:
 
     GET_SPOKES: str = """
                 SELECT
-                    s.name, t.type, s.gauge, s.weight,
-                    s.dimensions, s.comment, s.id
+                    s.id, s.name, t.type, s.gauge,
+                    s.weight, s.dimensions, s.comment
                 FROM
                     spokes s
                 JOIN

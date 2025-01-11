@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'spokeduino_mothershipZHAwaC.ui'
+## Form generated from reading UI file 'spokeduino_mothershipigvClE.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.1
 ##
@@ -71,6 +71,13 @@ class Ui_mainWindow(object):
 
         self.horizontalLayoutFilterDatabase.addWidget(self.lineEditFilterName)
 
+        self.comboBoxFilterType = QComboBox(self.groupBoxListSpokesDatabase)
+        self.comboBoxFilterType.setObjectName(u"comboBoxFilterType")
+        sizePolicy1.setHeightForWidth(self.comboBoxFilterType.sizePolicy().hasHeightForWidth())
+        self.comboBoxFilterType.setSizePolicy(sizePolicy1)
+
+        self.horizontalLayoutFilterDatabase.addWidget(self.comboBoxFilterType)
+
         self.horizontalSpacerFilter = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayoutFilterDatabase.addItem(self.horizontalSpacerFilter)
@@ -82,16 +89,8 @@ class Ui_mainWindow(object):
 
         self.horizontalLayoutFilterDatabase.addWidget(self.lineEditFilterGauge)
 
-        self.comboBoxFilterType = QComboBox(self.groupBoxListSpokesDatabase)
-        self.comboBoxFilterType.setObjectName(u"comboBoxFilterType")
-        sizePolicy1.setHeightForWidth(self.comboBoxFilterType.sizePolicy().hasHeightForWidth())
-        self.comboBoxFilterType.setSizePolicy(sizePolicy1)
-
-        self.horizontalLayoutFilterDatabase.addWidget(self.comboBoxFilterType)
-
         self.horizontalLayoutFilterDatabase.setStretch(0, 10)
-        self.horizontalLayoutFilterDatabase.setStretch(2, 1)
-        self.horizontalLayoutFilterDatabase.setStretch(3, 5)
+        self.horizontalLayoutFilterDatabase.setStretch(3, 1)
 
         self.verticalLayoutFilterDatabase.addLayout(self.horizontalLayoutFilterDatabase)
 

@@ -51,9 +51,19 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayoutFilterDatabase" stretch="0,1">
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayoutFilterDatabase" stretch="10,0,1,5">
+                <layout class="QHBoxLayout" name="horizontalLayoutFilterDatabase" stretch="10,0,0,1">
                  <item>
                   <widget class="QLineEdit" name="lineEditFilterName">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QComboBox" name="comboBoxFilterType">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -77,16 +87,6 @@
                  </item>
                  <item>
                   <widget class="QLineEdit" name="lineEditFilterGauge">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QComboBox" name="comboBoxFilterType">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                      <horstretch>0</horstretch>

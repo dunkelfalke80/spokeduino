@@ -7,10 +7,11 @@ from serial.tools.list_ports_common import ListPortInfo
 from database_manager import DatabaseManager
 from sql_queries import SQLQueries
 from typing import cast, Any, Tuple
+from table_model import SpokeduinoTableModel
 from PySide6.QtCore import Qt
-from PySide6.QtCore import QAbstractTableModel
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtCore import QModelIndex
+from PySide6.QtCore import QTimer
 from PySide6.QtCore import QTranslator
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtGui import QStandardItem
@@ -21,37 +22,6 @@ from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QAbstractItemView
 from mothership_ui import Ui_mainWindow
-
-
-class SpokeduinoTableModel(QAbstractTableModel):
-    """
-    Table model for displaying spokes data in a QTableView.
-    """
-    def __init__(self, data: list[list[str]], headers: list[str]) -> None:
-        super().__init__()
-        self._data: list[list[str]] = data
-        self._headers: list[str] = headers
-
-    def rowCount(self, parent=None) -> int:
-        return len(self._data)
-
-    def columnCount(self, parent=None) -> int:
-        return len(self._headers)
-
-    def data(self, index, role=Qt.ItemDataRole.DisplayRole) -> str | None:
-        if role == Qt.ItemDataRole.DisplayRole:
-            return self._data[index.row()][index.column()]
-        return None
-
-    def headerData(self, section: int, orientation: Qt.Orientation,
-                   role: int = Qt.ItemDataRole.DisplayRole) -> str | None:
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return self._headers[section]
-        return None
-
-    def header_count(self) -> int:
-        return len(self._headers)
 
 
 class SpokeduinoApp(QMainWindow):
@@ -108,6 +78,9 @@ class SpokeduinoApp(QMainWindow):
     def setup_ui(self):
         self.ui = Ui_mainWindow()
         self.ui.setupUi(self)
+        self.align_filters_with_table()
+        # Ugly hack
+        QTimer.singleShot(100, self.align_filters_with_table)
 
     def setup_signals_and_slots(self) -> None:
         """
@@ -116,24 +89,19 @@ class SpokeduinoApp(QMainWindow):
         # Create and Edit Spoke Buttons
         self.ui.pushButtonCreateSpoke.clicked.connect(self.create_new_spoke)
         self.ui.pushButtonCreateSpoke2.clicked.connect(
-            self.create_new_spoke
-        )
+            self.create_new_spoke)
         self.ui.pushButtonEditSpoke.clicked.connect(self.modify_spoke)
         self.ui.pushButtonDeleteSpoke.clicked.connect(self.delete_spoke)
 
         # Manufacturer-related buttons
         self.ui.lineEditNewManufacturer.textChanged.connect(
-            self.toggle_new_manufacturer_button
-        )
+            self.toggle_new_manufacturer_button)
         self.ui.lineEditNewManufacturer2.textChanged.connect(
-            self.toggle_new_manufacturer_button
-        )
+            self.toggle_new_manufacturer_button)
         self.ui.pushButtonNewManufacturer.clicked.connect(
-            self.create_new_manufacturer
-        )
+            self.create_new_manufacturer)
         self.ui.pushButtonNewManufacturer2.clicked.connect(
-            self.create_new_manufacturer
-        )
+            self.create_new_manufacturer)
 
         # Synchronize fields and buttons
         self.ui.lineEditName.textChanged.connect(
@@ -165,21 +133,30 @@ class SpokeduinoApp(QMainWindow):
         self.ui.comboBoxSpoke.currentIndexChanged.connect(
             self.sync_spoke_selection)
         self.ui.comboBoxSpoke2.currentIndexChanged.connect(
-            self.sync_spoke_selection
-        )
-
+            self.sync_spoke_selection)
         self.ui.comboBoxSpoke.currentIndexChanged.connect(
             self.update_spoke_details)
         self.ui.comboBoxSpoke2.currentIndexChanged.connect(
             self.update_spoke_details)
-
         self.ui.comboBoxSpoke.currentIndexChanged.connect(
             self.select_spoke_row)
         self.ui.comboBoxSpoke2.currentIndexChanged.connect(
             self.select_spoke_row)
-
         self.ui.tableViewSpokesDatabase.clicked.connect(
             self.select_spoke_from_table)
+
+        # Filters
+        self.ui.tabWidget.currentChanged.connect(
+            lambda: QTimer.singleShot(
+                100,
+                self.align_filters_with_table))
+        self.ui.lineEditFilterName.textChanged.connect(self.filter_table)
+        self.ui.comboBoxFilterType.currentTextChanged.connect(
+            self.filter_table)
+        self.ui.lineEditFilterGauge.textChanged.connect(self.filter_table)
+        header = self.ui.tableViewSpokesDatabase.horizontalHeader()
+        header.sectionResized.connect(self.align_filters_with_table)
+        header.sectionMoved.connect(self.align_filters_with_table)
 
         # Manufacturer-related buttons and combo boxes
         self.ui.comboBoxManufacturer.\
@@ -197,17 +174,13 @@ class SpokeduinoApp(QMainWindow):
 
         # Tensiometer-related signals
         self.ui.comboBoxTensiometer.currentIndexChanged.connect(
-            self.load_measurements_for_selected_spoke
-        )
+            self.load_measurements_for_selected_spoke)
         self.ui.lineEditNewTensiometer.textChanged.connect(
-            self.toggle_new_tensiometer_button
-        )
+            self.toggle_new_tensiometer_button)
         self.ui.pushButtonNewTensiometer.clicked.connect(
-            self.create_new_tensiometer
-        )
+            self.create_new_tensiometer)
         self.ui.pushButtonMultipleTensiometers.clicked.connect(
-            self.toggle_multi_tensiometer_mode
-        )
+            self.toggle_multi_tensiometer_mode)
         self.ui.pushButtonMultipleTensiometers.setCheckable(True)
 
         # Measurement-related signals
@@ -215,92 +188,79 @@ class SpokeduinoApp(QMainWindow):
             self.delete_measurement)
         self.ui.pushButtonAddMeasurement.clicked.connect(
             lambda: self.ui.tabWidget.setCurrentIndex(
-                self.ui.tabWidget.indexOf(self.ui.measurementTab)
-            )
-        )
+                self.ui.tabWidget.indexOf(self.ui.measurementTab)))
         self.ui.tableViewMeasurements.clicked.connect(
-            self.select_measurement_row
-        )
+            self.select_measurement_row)
 
         # Use spokes
         self.ui.pushButtonUseLeft.clicked.connect(
-            lambda: self.use_spoke(True)
-        )
+            lambda: self.use_spoke(True))
         self.ui.pushButtonUseRight.clicked.connect(
-            lambda: self.use_spoke(False)
-        )
+            lambda: self.use_spoke(False))
 
         # Language selection
         self.ui.comboBoxSelectLanguage.currentTextChanged.connect(
-            lambda language: self.save_setting("language", language)
-        )
+            lambda language: self.save_setting("language", language))
         self.ui.comboBoxSelectLanguage.currentTextChanged.connect(
-            lambda language: self.change_language(language.lower())
-        )
+            lambda language: self.change_language(language.lower()))
 
         # Spokeduino port selection
         self.ui.comboBoxSpokeduinoPort.currentTextChanged.connect(
-            lambda port: self.save_setting("spokeduino_port", port)
-        )
+            lambda port: self.save_setting("spokeduino_port", port))
 
         # Tensiometer selection
         self.ui.comboBoxTensiometer.currentIndexChanged.connect(
             lambda index: self.save_setting(
                 "tensiometer_id",
-                str(self.ui.comboBoxTensiometer.itemData(index))
-            )
-        )
+                str(self.ui.comboBoxTensiometer.itemData(index))))
 
         # Measurement units
         self.ui.radioButtonNewton.toggled.connect(
             lambda checked:
-                self.save_setting("unit", "Newton") if checked else None
-        )
+                self.save_setting("unit", "Newton") if checked else None)
         self.ui.radioButtonKgF.toggled.connect(
             lambda checked:
-                self.save_setting("unit", "kgF") if checked else None
-        )
+                self.save_setting("unit", "kgF") if checked else None)
         self.ui.radioButtonLbF.toggled.connect(
             lambda checked:
-                self.save_setting("unit", "lbF") if checked else None
-        )
+                self.save_setting("unit", "lbF") if checked else None)
 
         # Directional settings
         self.ui.radioButtonMeasurementDown.toggled.connect(
             lambda checked:
-                self.save_setting("spoke_direction",
-                                  "down") if checked else None
-        )
+                self.save_setting(
+                    "spoke_direction",
+                    "down") if checked else None)
         self.ui.radioButtonMeasurementUp.toggled.connect(
             lambda checked:
-                self.save_setting("spoke_direction",
-                                  "up") if checked else None
-        )
+                self.save_setting(
+                    "spoke_direction",
+                    "up") if checked else None)
         self.ui.radioButtonRotationClockwise.toggled.connect(
             lambda checked:
-                self.save_setting("rotation_direction",
-                                  "clockwise") if checked else None
-        )
+                self.save_setting(
+                    "rotation_direction",
+                    "clockwise") if checked else None)
         self.ui.radioButtonRotationAnticlockwise.toggled.connect(
             lambda checked:
-                self.save_setting("rotation_direction",
-                                  "anticlockwise") if checked else None
-        )
+                self.save_setting(
+                    "rotation_direction",
+                    "anticlockwise") if checked else None)
         self.ui.radioButtonSideBySide.toggled.connect(
             lambda checked:
-                self.save_setting("measurement_type",
-                                  "side_by_side") if checked else None
-        )
+                self.save_setting(
+                    "measurement_type",
+                    "side_by_side") if checked else None)
         self.ui.radioButtonLeftRight.toggled.connect(
             lambda checked:
-                self.save_setting("measurement_type",
-                                  "left_right") if checked else None
-        )
+                self.save_setting(
+                    "measurement_type",
+                    "left_right") if checked else None)
         self.ui.radioButtonRightLeft.toggled.connect(
             lambda checked:
-                self.save_setting("measurement_type",
-                                  "right_left") if checked else None
-        )
+                self.save_setting(
+                    "measurement_type",
+                    "right_left") if checked else None)
 
         # Unit converter
         self.ui.lineEditConverterNewton.textChanged.connect(
@@ -314,6 +274,14 @@ class SpokeduinoApp(QMainWindow):
         header: QHeaderView = \
             self.ui.tableViewSpokesDatabase.horizontalHeader()
         header.sectionClicked.connect(self.sort_by_column)
+
+    def resizeEvent(self, event) -> None:
+        """
+        Handle window resize event for the main Window.
+        Realigns filter fields with the table headers.
+        """
+        super().resizeEvent(event)
+        self.align_filters_with_table()
 
     def closeEvent(self, event) -> None:
         """
@@ -463,25 +431,25 @@ class SpokeduinoApp(QMainWindow):
                 language_code: str = os.path.splitext(filename)[0]
                 self.ui.comboBoxSelectLanguage.addItem(language_code)
 
-    def update_fields(self, spoke=None) -> None:
+    def update_fields(self, spoke: list[str]) -> None:
         """
         Update the fields and comboboxes on both tabs
         with the provided spoke data.
         If no spoke is provided, clear the fields.
         """
         if spoke:
-            self.ui.lineEditName.setText(spoke[0])
-            self.ui.lineEditName2.setText(spoke[0])
-            self.ui.comboBoxType.setCurrentText(spoke[1])
-            self.ui.comboBoxType2.setCurrentText(spoke[1])
+            self.ui.lineEditName.setText(str(spoke[0]))
+            self.ui.lineEditName2.setText(str(spoke[0]))
+            self.ui.comboBoxType.setCurrentText(str(spoke[1]))
+            self.ui.comboBoxType2.setCurrentText(str(spoke[1]))
             self.ui.lineEditGauge.setText(str(spoke[2]))
             self.ui.lineEditGauge2.setText(str(spoke[2]))
             self.ui.lineEditWeight.setText(str(spoke[3]))
             self.ui.lineEditWeight2.setText(str(spoke[3]))
-            self.ui.lineEditDimension.setText(spoke[4])
-            self.ui.lineEditDimension2.setText(spoke[4])
-            self.ui.lineEditSpokeComment.setText(spoke[5])
-            self.ui.lineEditSpokeComment2.setText(spoke[5])
+            self.ui.lineEditDimension.setText(str(spoke[4]))
+            self.ui.lineEditDimension2.setText(str(spoke[4]))
+            self.ui.lineEditSpokeComment.setText(str(spoke[5]))
+            self.ui.lineEditSpokeComment2.setText(str(spoke[5]))
         else:
             self.clear_spoke_details()
 
@@ -648,7 +616,7 @@ class SpokeduinoApp(QMainWindow):
             "Comment"]
 
         # Exclude ID
-        self.current_spokes = [list(spoke[:-1]) for spoke in spokes]
+        self.current_spokes = [(spoke[0], list(spoke[1:])) for spoke in spokes]
         model = SpokeduinoTableModel(self.current_spokes, headers)
         view: QTableView = self.ui.tableViewSpokesDatabase
         view.setModel(model)
@@ -659,9 +627,9 @@ class SpokeduinoApp(QMainWindow):
         for spoke in spokes:
             # Name and ID
             self.ui.comboBoxSpoke.addItem(
-                spoke[0], spoke[-1])
+                spoke[1], spoke[0])
             self.ui.comboBoxSpoke2.addItem(
-                spoke[0], spoke[-1])
+                spoke[1], spoke[0])
 
         # Adjust column widths
         resize_mode = view.horizontalHeader().setSectionResizeMode
@@ -675,6 +643,7 @@ class SpokeduinoApp(QMainWindow):
         # Configure table behavior
         view.setSelectionBehavior(self.__select_rows)
         view.setSelectionMode(self.__select_single)
+        self.populate_filter_type()
 
     def load_measurements_for_selected_spoke(self) -> None:
         """
@@ -744,37 +713,42 @@ class SpokeduinoApp(QMainWindow):
         """
         Sort the tableViewSpokesDatabase by the specified column.
         """
-        self.current_spokes.sort(key=lambda x: x[column])
+        self.current_spokes.sort(key=lambda x: x[1][column])
         self.ui.tableViewSpokesDatabase.model().layoutChanged.emit()
 
     def select_spoke_from_table(self, index: QModelIndex) -> None:
         """
         Select the corresponding spoke in comboBoxSpoke
-        when a row is clicked.
+        when a table row is clicked.
         """
-        row: int = index.row()
-        spoke_name: str = self.current_spokes[row][0]
-        self.ui.comboBoxSpoke.setCurrentText(spoke_name)
+        row = index.row()
+        model: SpokeduinoTableModel = cast(
+            SpokeduinoTableModel,
+            self.ui.tableViewSpokesDatabase.model())
+        spoke_id = model.get_id(row)
+
+        if spoke_id is not None:
+            combo_index = self.ui.comboBoxSpoke.findData(spoke_id)
+            if combo_index != -1:
+                self.ui.comboBoxSpoke.setCurrentIndex(combo_index)
 
     def select_spoke_row(self) -> None:
         """
         Select the corresponding row in tableViewSpokesDatabase
-        and synchronize the comboboxes.
+        based on the combobox.
         """
         spoke_id: int | None = self.ui.comboBoxSpoke.currentData()
-        view: QTableView = self.ui.tableViewSpokesDatabase
         if spoke_id is None:
-            view.clearSelection()
+            self.ui.tableViewSpokesDatabase.clearSelection()
             return
 
-        spoke_id = int(spoke_id)
+        model: SpokeduinoTableModel = cast(
+            SpokeduinoTableModel,
+            self.ui.tableViewSpokesDatabase.model())
 
-        for row, spoke in enumerate(self.current_spokes):
-            if spoke_id == self.ui.comboBoxSpoke.itemData(row):
-                view.selectRow(row)
-                self.synchronize_comboboxes(
-                    self.ui.comboBoxSpoke,
-                    self.ui.comboBoxSpoke.currentText())
+        for row in range(model.rowCount()):
+            if model.get_id(row) == spoke_id:
+                self.ui.tableViewSpokesDatabase.selectRow(row)
                 break
 
     def update_spoke_details(self) -> None:
@@ -796,7 +770,7 @@ class SpokeduinoApp(QMainWindow):
         if not spokes:
             return
 
-        self.update_fields(spokes[0])
+        self.update_fields(spokes[0][1:])
 
     def unselect_spoke(self) -> None:
         """
@@ -1024,12 +998,11 @@ class SpokeduinoApp(QMainWindow):
             params=(manufacturer_id, spoke_name,
                     type_id, gauge, weight, dimension, comment),
         )
-        self.load_spokes_for_selected_manufacturer()
-
         if new_spoke_id is None:
             return
         new_spoke_id = int(new_spoke_id)
 
+        self.load_spokes_for_selected_manufacturer()
         self.ui.comboBoxSpoke.setCurrentIndex(
             self.ui.comboBoxSpoke.findData(new_spoke_id)
         )
@@ -1072,6 +1045,9 @@ class SpokeduinoApp(QMainWindow):
             params=(spoke_id,)
         )
         self.load_spokes_for_selected_manufacturer()
+        # Clear selection
+        self.ui.comboBoxSpoke.setCurrentIndex(-1)
+        self.ui.tableViewSpokesDatabase.clearSelection()
 
     def convert_units(
             self, value: float, source: str) -> Tuple[float, float, float]:
@@ -1148,48 +1124,118 @@ class SpokeduinoApp(QMainWindow):
                 self.ui.lineEditConverterNewton.clear()
                 self.ui.lineEditConverterKgF.clear()
 
-    def get_selected_spoke_details_and_formula(self) -> tuple[str, str]:
-        """
-        Retrieve the details and formula of the currently selected spoke.
-        :return: Tuple containing formatted string with spoke details.
-        """
-        spoke_id = self.ui.comboBoxSpoke.currentData()
-        if not spoke_id:
-            return "", ""
-
-        # Fetch spoke details and formula from the database
-        spoke = self.__db.execute_select(
-            SQLQueries.GET_SPOKES_BY_ID,
-            params=(spoke_id,)
-        )
-        if not spoke:
-            return "", ""
-
-        # Extract and format details
-        name, _, gauge, _, dimensions, comment, formula, *_ = spoke[0]
-        details = (
-            f"Name: {name}\n"
-            f"Gauge: {gauge}\n"
-            f"Dimensions: {dimensions}\n"
-            f"Comment: {comment}"
-        )
-        return details, formula
-
     def use_spoke(self, left: bool) -> None:
         """
         Write the selected spoke details to plainTextEditSelectedSpoke
         and save the formula for the spoke.
         """
-        spoke_details, formula = self.get_selected_spoke_details_and_formula()
-        if not spoke_details:
+        spoke_id = self.ui.comboBoxSpoke.currentData()
+        if not spoke_id:
             return
+
+        # Fetch spoke details and formula from the database
+        spoke: list[Any] = self.__db.execute_select(
+            SQLQueries.GET_SPOKES_BY_ID,
+            params=(spoke_id,)
+        )
+
+        tensiometer_id: int | None = self.ui.comboBoxTensiometer.currentData()
+        if tensiometer_id is None:
+            return
+        tensiometer_id = int(tensiometer_id)
+
+        # measurements: list[Any] = self.__db.execute_select(
+        #    query=SQLQueries.GET_MEASUREMENTS,
+        #    params=(spoke_id, tensiometer_id))
+        # if not measurements:
+        #    return
+
+        # Extract and format details
+        _, name, _, gauge, _, dimensions, comment, *_ = spoke[0]
+
+        spoke_details = (
+            f"Name: {name}\n"
+            f"Gauge: {gauge}\n"
+            f"Dimensions: {dimensions}\n"
+            f"Comment: {comment}"
+        )
 
         if left:
             self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
-            self.left_spoke_formula = formula
+            # self.left_spoke_formula = formula
         else:
             self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
-            self.right_spoke_formula = formula
+            # self.right_spoke_formula = formula
+
+    def align_filters_with_table(self):
+        """
+        Align filter fields with tableViewSpokesDatabase columns.
+        """
+        if not self.ui.tableViewSpokesDatabase.isVisible():
+            return
+
+        header = self.ui.tableViewSpokesDatabase.horizontalHeader()
+
+        # Get column positions and sizes
+        offset_x = self.ui.tableViewSpokesDatabase.geometry().x() + \
+            header.sectionPosition(0)
+        name_pos = header.sectionPosition(0) + offset_x
+        name_width = header.sectionSize(0)
+        type_pos = header.sectionPosition(1) + offset_x
+        type_width = header.sectionSize(1)
+        gauge_pos = header.sectionPosition(2) + offset_x
+        gauge_width = header.sectionSize(2)
+
+        # Update filter field positions and sizes
+        self.ui.lineEditFilterName.setGeometry(
+            name_pos,
+            self.ui.lineEditFilterName.y(),
+            name_width,
+            self.ui.lineEditFilterName.height())
+        self.ui.comboBoxFilterType.setGeometry(
+            type_pos,
+            self.ui.comboBoxFilterType.y(),
+            type_width,
+            self.ui.comboBoxFilterType.height())
+        self.ui.lineEditFilterGauge.setGeometry(
+            gauge_pos,
+            self.ui.lineEditFilterGauge.y(),
+            gauge_width,
+            self.ui.lineEditFilterGauge.height())
+
+    def filter_table(self):
+        """
+        Filter tableViewSpokesDatabase based on filter inputs.
+        """
+        name_filter = self.ui.lineEditFilterName.text().lower()
+        type_filter = self.ui.comboBoxFilterType.currentText().lower()
+        gauge_filter = self.ui.lineEditFilterGauge.text().lower()
+
+        # Apply filters to the data
+        filtered_data = [
+            spoke for spoke in self.current_spokes
+            # Match Name
+            if (name_filter in spoke[1][0].lower()) and
+            # Match Type
+            (type_filter in spoke[1][1].lower() if type_filter else True) and
+            # Match Gauge
+            (gauge_filter in str(spoke[1][2]).lower()
+                if gauge_filter else True)
+        ]
+
+        # Update the table model with filtered data
+        headers = ["Name", "Type", "Gauge", "Weight", "Dimensions", "Comment"]
+        model = SpokeduinoTableModel(filtered_data, headers)
+        self.ui.tableViewSpokesDatabase.setModel(model)
+
+    def populate_filter_type(self):
+        """
+        Populate comboBoxFilterType with unique spoke types.
+        """
+        types = {spoke[1][1] for spoke in self.current_spokes}
+        self.ui.comboBoxFilterType.clear()
+        self.ui.comboBoxFilterType.addItem("")  # Empty means no filter is set
+        self.ui.comboBoxFilterType.addItems(sorted(types))
 
 
 def main() -> None:
