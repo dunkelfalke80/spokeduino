@@ -89,7 +89,9 @@ class SpokeduinoApp(QMainWindow):
         self.__select_single: QAbstractItemView.SelectionMode = \
             QAbstractItemView.SelectionMode.SingleSelection
 
-        self.multi_tensiometer_enabled = False  # Tracks multi-selection mode
+        self.multi_tensiometer_enabled: bool = False
+        self.left_spoke_formula: str = ""
+        self.right_spoke_formula: str = ""
 
         self.translator = QTranslator()
         self.current_language = "en"
@@ -218,6 +220,14 @@ class SpokeduinoApp(QMainWindow):
         )
         self.ui.tableViewMeasurements.clicked.connect(
             self.select_measurement_row
+        )
+
+        # Use spokes
+        self.ui.pushButtonUseLeft.clicked.connect(
+            lambda: self.use_spoke(True)
+        )
+        self.ui.pushButtonUseRight.clicked.connect(
+            lambda: self.use_spoke(False)
         )
 
         # Language selection
@@ -1099,8 +1109,8 @@ class SpokeduinoApp(QMainWindow):
                 self.ui.lineEditConverterKgF.blockSignals(True)
                 self.ui.lineEditConverterLbF.blockSignals(True)
 
-                self.ui.lineEditConverterKgF.setText(f"{kgf:.4f}")
-                self.ui.lineEditConverterLbF.setText(f"{lbf:.4f}")
+                self.ui.lineEditConverterKgF.setText(f"{kgf:.2f}")
+                self.ui.lineEditConverterLbF.setText(f"{lbf:.2f}")
 
                 self.ui.lineEditConverterKgF.blockSignals(False)
                 self.ui.lineEditConverterLbF.blockSignals(False)
@@ -1110,8 +1120,8 @@ class SpokeduinoApp(QMainWindow):
                 self.ui.lineEditConverterNewton.blockSignals(True)
                 self.ui.lineEditConverterLbF.blockSignals(True)
 
-                self.ui.lineEditConverterNewton.setText(f"{newton:.4f}")
-                self.ui.lineEditConverterLbF.setText(f"{lbf:.4f}")
+                self.ui.lineEditConverterNewton.setText(f"{newton:.2f}")
+                self.ui.lineEditConverterLbF.setText(f"{lbf:.2f}")
 
                 self.ui.lineEditConverterNewton.blockSignals(False)
                 self.ui.lineEditConverterLbF.blockSignals(False)
@@ -1121,8 +1131,8 @@ class SpokeduinoApp(QMainWindow):
                 self.ui.lineEditConverterKgF.blockSignals(True)
                 self.ui.lineEditConverterNewton.blockSignals(True)
 
-                self.ui.lineEditConverterNewton.setText(f"{newton:.4f}")
-                self.ui.lineEditConverterKgF.setText(f"{kgf:.4f}")
+                self.ui.lineEditConverterNewton.setText(f"{newton:.2f}")
+                self.ui.lineEditConverterKgF.setText(f"{kgf:.2f}")
 
                 self.ui.lineEditConverterKgF.blockSignals(False)
                 self.ui.lineEditConverterNewton.blockSignals(False)
@@ -1137,6 +1147,49 @@ class SpokeduinoApp(QMainWindow):
             elif source == "lbf":
                 self.ui.lineEditConverterNewton.clear()
                 self.ui.lineEditConverterKgF.clear()
+
+    def get_selected_spoke_details_and_formula(self) -> tuple[str, str]:
+        """
+        Retrieve the details and formula of the currently selected spoke.
+        :return: Tuple containing formatted string with spoke details.
+        """
+        spoke_id = self.ui.comboBoxSpoke.currentData()
+        if not spoke_id:
+            return "", ""
+
+        # Fetch spoke details and formula from the database
+        spoke = self.__db.execute_select(
+            SQLQueries.GET_SPOKES_BY_ID,
+            params=(spoke_id,)
+        )
+        if not spoke:
+            return "", ""
+
+        # Extract and format details
+        name, _, gauge, _, dimensions, comment, formula, *_ = spoke[0]
+        details = (
+            f"Name: {name}\n"
+            f"Gauge: {gauge}\n"
+            f"Dimensions: {dimensions}\n"
+            f"Comment: {comment}"
+        )
+        return details, formula
+
+    def use_spoke(self, left: bool) -> None:
+        """
+        Write the selected spoke details to plainTextEditSelectedSpoke
+        and save the formula for the spoke.
+        """
+        spoke_details, formula = self.get_selected_spoke_details_and_formula()
+        if not spoke_details:
+            return
+
+        if left:
+            self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
+            self.left_spoke_formula = formula
+        else:
+            self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
+            self.right_spoke_formula = formula
 
 
 def main() -> None:

@@ -133,7 +133,7 @@
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayoutMeasurementsButtonsDatabase">
                  <item>
-                  <widget class="QPushButton" name="pushButtonUseMeasurementLeft">
+                  <widget class="QPushButton" name="pushButtonUseLeft">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
                      <horstretch>0</horstretch>
@@ -149,7 +149,7 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButtonUseMeasurementRight">
+                  <widget class="QPushButton" name="pushButtonUseRight">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
                      <horstretch>0</horstretch>

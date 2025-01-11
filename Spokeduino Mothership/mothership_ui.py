@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'spokeduino_mothershipIgwKQf.ui'
+## Form generated from reading UI file 'spokeduino_mothershipZHAwaC.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.1
 ##
@@ -124,26 +124,26 @@ class Ui_mainWindow(object):
 
         self.horizontalLayoutMeasurementsButtonsDatabase = QHBoxLayout()
         self.horizontalLayoutMeasurementsButtonsDatabase.setObjectName(u"horizontalLayoutMeasurementsButtonsDatabase")
-        self.pushButtonUseMeasurementLeft = QPushButton(self.groupBoxListMeasurementsDatabase)
-        self.pushButtonUseMeasurementLeft.setObjectName(u"pushButtonUseMeasurementLeft")
+        self.pushButtonUseLeft = QPushButton(self.groupBoxListMeasurementsDatabase)
+        self.pushButtonUseLeft.setObjectName(u"pushButtonUseLeft")
         sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.pushButtonUseMeasurementLeft.sizePolicy().hasHeightForWidth())
-        self.pushButtonUseMeasurementLeft.setSizePolicy(sizePolicy2)
+        sizePolicy2.setHeightForWidth(self.pushButtonUseLeft.sizePolicy().hasHeightForWidth())
+        self.pushButtonUseLeft.setSizePolicy(sizePolicy2)
         icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoPrevious))
-        self.pushButtonUseMeasurementLeft.setIcon(icon)
+        self.pushButtonUseLeft.setIcon(icon)
 
-        self.horizontalLayoutMeasurementsButtonsDatabase.addWidget(self.pushButtonUseMeasurementLeft)
+        self.horizontalLayoutMeasurementsButtonsDatabase.addWidget(self.pushButtonUseLeft)
 
-        self.pushButtonUseMeasurementRight = QPushButton(self.groupBoxListMeasurementsDatabase)
-        self.pushButtonUseMeasurementRight.setObjectName(u"pushButtonUseMeasurementRight")
-        sizePolicy2.setHeightForWidth(self.pushButtonUseMeasurementRight.sizePolicy().hasHeightForWidth())
-        self.pushButtonUseMeasurementRight.setSizePolicy(sizePolicy2)
+        self.pushButtonUseRight = QPushButton(self.groupBoxListMeasurementsDatabase)
+        self.pushButtonUseRight.setObjectName(u"pushButtonUseRight")
+        sizePolicy2.setHeightForWidth(self.pushButtonUseRight.sizePolicy().hasHeightForWidth())
+        self.pushButtonUseRight.setSizePolicy(sizePolicy2)
         icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoNext))
-        self.pushButtonUseMeasurementRight.setIcon(icon1)
+        self.pushButtonUseRight.setIcon(icon1)
 
-        self.horizontalLayoutMeasurementsButtonsDatabase.addWidget(self.pushButtonUseMeasurementRight)
+        self.horizontalLayoutMeasurementsButtonsDatabase.addWidget(self.pushButtonUseRight)
 
         self.horizontalSpacerMeasurementsBottom = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -1301,8 +1301,8 @@ class Ui_mainWindow(object):
         self.actionBuild_a_wheel.setText(QCoreApplication.translate("mainWindow", u"Build a wheel", None))
         self.groupBoxListSpokesDatabase.setTitle(QCoreApplication.translate("mainWindow", u"Spokes", None))
         self.groupBoxListMeasurementsDatabase.setTitle(QCoreApplication.translate("mainWindow", u"Measurements", None))
-        self.pushButtonUseMeasurementLeft.setText(QCoreApplication.translate("mainWindow", u"Use on the left", None))
-        self.pushButtonUseMeasurementRight.setText(QCoreApplication.translate("mainWindow", u"Use on the right", None))
+        self.pushButtonUseLeft.setText(QCoreApplication.translate("mainWindow", u"Use on the left", None))
+        self.pushButtonUseRight.setText(QCoreApplication.translate("mainWindow", u"Use on the right", None))
         self.pushButtonAddMeasurement.setText(QCoreApplication.translate("mainWindow", u"Add measurement", None))
         self.pushButtonDeleteMeasurement.setText(QCoreApplication.translate("mainWindow", u"Delete measurement", None))
         self.pushButtonDeleteSpoke.setText(QCoreApplication.translate("mainWindow", u"Delete spoke", None))
