@@ -147,6 +147,6 @@ if __name__ == "__main__":
     fit = PiecewiseQuarticFit(example_measurements)
 
     # Evaluate tension for a given deflection
-    deflection_value = 2.55  # Example deflection
+    deflection_value = 3.06  # Example deflection
     tension = fit.evaluate(deflection_value)
     print(f"Tension for {deflection_value} mm deflection: {tension:.2f} N")
