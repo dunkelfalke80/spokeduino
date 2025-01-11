@@ -12,7 +12,9 @@ from PySide6.QtCore import QAbstractTableModel
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtCore import QModelIndex
 from PySide6.QtCore import QTranslator
-from PySide6.QtWidgets import QApplication, QLineEdit
+from PySide6.QtGui import QStandardItemModel
+from PySide6.QtGui import QStandardItem
+from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QComboBox
 from PySide6.QtWidgets import QTableView
 from PySide6.QtWidgets import QMainWindow
@@ -51,6 +53,7 @@ class SpokeduinoTableModel(QAbstractTableModel):
     def header_count(self) -> int:
         return len(self._headers)
 
+
 class SpokeduinoApp(QMainWindow):
     """
     Main application class for Spokeduino Mothership.
@@ -66,11 +69,12 @@ class SpokeduinoApp(QMainWindow):
         super().__init__()
         self.current_path: str = os.path.dirname(os.path.realpath(sys.argv[0]))
         self.db_path: str = f"{self.current_path}/spokeduino.sqlite"
-        if not os.path.exists(self.db_path):
-            logging.error(f"Database file not found at: {self.db_path}")
-            sys.exit("Error: Database file not found.")
 
-        self.__db: DatabaseManager = DatabaseManager(self.db_path)
+        # Initialize database
+        schema_file = os.path.join(self.current_path, "sql", "init_schema.sql")
+        data_file = os.path.join(self.current_path, "sql", "default_data.sql")
+        self.__db = DatabaseManager(self.db_path)
+        self.__db.initialize_database(schema_file, data_file)
 
         # For vacuuming on exit
         self.db_changed: bool = False
@@ -84,6 +88,8 @@ class SpokeduinoApp(QMainWindow):
             QAbstractItemView.SelectionBehavior.SelectRows
         self.__select_single: QAbstractItemView.SelectionMode = \
             QAbstractItemView.SelectionMode.SingleSelection
+
+        self.multi_tensiometer_enabled = False  # Tracks multi-selection mode
 
         self.translator = QTranslator()
         self.current_language = "en"
@@ -195,7 +201,12 @@ class SpokeduinoApp(QMainWindow):
             self.toggle_new_tensiometer_button
         )
         self.ui.pushButtonNewTensiometer.clicked.connect(
-            self.create_new_tensiometer)
+            self.create_new_tensiometer
+        )
+        self.ui.pushButtonMultipleTensiometers.clicked.connect(
+            self.toggle_multi_tensiometer_mode
+        )
+        self.ui.pushButtonMultipleTensiometers.setCheckable(True)
 
         # Measurement-related signals
         self.ui.pushButtonDeleteMeasurement.clicked.connect(
@@ -232,45 +243,66 @@ class SpokeduinoApp(QMainWindow):
 
         # Measurement units
         self.ui.radioButtonNewton.toggled.connect(
-            lambda checked: self.save_setting("unit", "Newton") if checked else None
+            lambda checked:
+                self.save_setting("unit", "Newton") if checked else None
         )
         self.ui.radioButtonKgF.toggled.connect(
-            lambda checked: self.save_setting("unit", "kgF") if checked else None
+            lambda checked:
+                self.save_setting("unit", "kgF") if checked else None
         )
         self.ui.radioButtonLbF.toggled.connect(
-            lambda checked: self.save_setting("unit", "lbF") if checked else None
+            lambda checked:
+                self.save_setting("unit", "lbF") if checked else None
         )
 
         # Directional settings
-        self.ui.radioButtonSpokeMeasurementDirectionDown.toggled.connect(
-            lambda checked: self.save_setting("spoke_direction", "down") if checked else None
+        self.ui.radioButtonMeasurementDown.toggled.connect(
+            lambda checked:
+                self.save_setting("spoke_direction",
+                                  "down") if checked else None
         )
-        self.ui.radioButtonSpokeMeasurementDirectionUp.toggled.connect(
-            lambda checked: self.save_setting("spoke_direction", "up") if checked else None
+        self.ui.radioButtonMeasurementUp.toggled.connect(
+            lambda checked:
+                self.save_setting("spoke_direction",
+                                  "up") if checked else None
         )
-        self.ui.radioButtonWheelRotationDirectionClockwise.toggled.connect(
-            lambda checked: self.save_setting("rotation_direction", "clockwise") if checked else None
+        self.ui.radioButtonRotationClockwise.toggled.connect(
+            lambda checked:
+                self.save_setting("rotation_direction",
+                                  "clockwise") if checked else None
         )
-        self.ui.radioButtonWheelRotationDirectionAnticlockwise.toggled.connect(
-            lambda checked: self.save_setting("rotation_direction", "anticlockwise") if checked else None
+        self.ui.radioButtonRotationAnticlockwise.toggled.connect(
+            lambda checked:
+                self.save_setting("rotation_direction",
+                                  "anticlockwise") if checked else None
         )
-        self.ui.radioButtonWheelMeasurementTypeSideBySide.toggled.connect(
-            lambda checked: self.save_setting("measurement_type", "side_by_side") if checked else None
+        self.ui.radioButtonSideBySide.toggled.connect(
+            lambda checked:
+                self.save_setting("measurement_type",
+                                  "side_by_side") if checked else None
         )
-        self.ui.radioButtonWheelMeasurementTypeLeftRight.toggled.connect(
-            lambda checked: self.save_setting("measurement_type", "left_right") if checked else None
+        self.ui.radioButtonLeftRight.toggled.connect(
+            lambda checked:
+                self.save_setting("measurement_type",
+                                  "left_right") if checked else None
         )
-        self.ui.radioButtonWheelMeasurementTypRightLeft.toggled.connect(
-            lambda checked: self.save_setting("measurement_type", "right_left") if checked else None
+        self.ui.radioButtonRightLeft.toggled.connect(
+            lambda checked:
+                self.save_setting("measurement_type",
+                                  "right_left") if checked else None
         )
 
         # Unit converter
-        self.ui.lineEditTensionConverterNewton.textChanged.connect(lambda: self.convert_units_realtime("newton"))
-        self.ui.lineEditTensionConverterKgF.textChanged.connect(lambda: self.convert_units_realtime("kgf"))
-        self.ui.lineEditTensionConverterLbF.textChanged.connect(lambda: self.convert_units_realtime("lbf"))
+        self.ui.lineEditConverterNewton.textChanged.connect(
+            lambda: self.convert_units_realtime("newton"))
+        self.ui.lineEditConverterKgF.textChanged.connect(
+            lambda: self.convert_units_realtime("kgf"))
+        self.ui.lineEditConverterLbF.textChanged.connect(
+            lambda: self.convert_units_realtime("lbf"))
 
         # Table sorting
-        header: QHeaderView = self.ui.tableViewSpokesDatabase.horizontalHeader()
+        header: QHeaderView = \
+            self.ui.tableViewSpokesDatabase.horizontalHeader()
         header.sectionClicked.connect(self.sort_by_column)
 
     def closeEvent(self, event) -> None:
@@ -286,7 +318,8 @@ class SpokeduinoApp(QMainWindow):
         """
         Load initial translations based on current language settings
         """
-        i18n_path: str = os.path.join(self.current_path, "i18n", f"{self.current_language}.qm")
+        i18n_path: str = os.path.join(
+            self.current_path, "i18n", f"{self.current_language}.qm")
         if self.translator.load(i18n_path):
             QCoreApplication.installTranslator(self.translator)
 
@@ -301,7 +334,8 @@ class SpokeduinoApp(QMainWindow):
             logging.error("No language code selected or available.")
             return
 
-        i18n_path: str = os.path.join(self.current_path, "i18n", f"{language_code}.qm")
+        i18n_path: str = os.path.join(
+            self.current_path, "i18n", f"{language_code}.qm")
         if self.translator.load(i18n_path):
             QCoreApplication.installTranslator(self.translator)
             self.ui.retranslateUi(self)
@@ -326,10 +360,10 @@ class SpokeduinoApp(QMainWindow):
         if not spokeduino_port:
             return
 
-        index: int = self.ui.comboBoxSpokeduinoPort.findText(spokeduino_port[0][0])
+        index: int = self.ui.comboBoxSpokeduinoPort.findText(
+            spokeduino_port[0][0])
         if index != -1:
             self.ui.comboBoxSpokeduinoPort.setCurrentIndex(index)
-
 
     def save_setting(self, key: str, value: str) -> None:
         """
@@ -380,29 +414,33 @@ class SpokeduinoApp(QMainWindow):
             self.ui.radioButtonLbF.setChecked(True)
 
         # Load directional settings
-        measurement_direction: str = settings_dict.get("spoke_direction", "down")
+        measurement_direction: str = settings_dict.get(
+            "spoke_direction", "down")
         if measurement_direction == "down":
-            self.ui.radioButtonSpokeMeasurementDirectionDown.setChecked(True)
+            self.ui.radioButtonMeasurementDown.setChecked(True)
         else:
-            self.ui.radioButtonSpokeMeasurementDirectionUp.setChecked(True)
+            self.ui.radioButtonMeasurementUp.setChecked(True)
 
-        rotation_direction: str = settings_dict.get("rotation_direction", "clockwise")
+        rotation_direction: str = settings_dict.get(
+            "rotation_direction", "clockwise")
         if rotation_direction == "clockwise":
-            self.ui.radioButtonWheelRotationDirectionClockwise.setChecked(True)
+            self.ui.radioButtonRotationClockwise.setChecked(True)
         else:
-            self.ui.radioButtonWheelRotationDirectionAnticlockwise.setChecked(True)
+            self.ui.radioButtonRotationAnticlockwise.setChecked(True)
 
-        measurement_type: str = settings_dict.get("measurement_type", "side_by_side")
+        measurement_type: str = settings_dict.get(
+            "measurement_type", "side_by_side")
         if measurement_type == "side_by_side":
-            self.ui.radioButtonWheelMeasurementTypeSideBySide.setChecked(True)
+            self.ui.radioButtonSideBySide.setChecked(True)
         elif measurement_type == "left_right":
-            self.ui.radioButtonWheelMeasurementTypeLeftRight.setChecked(True)
+            self.ui.radioButtonLeftRight.setChecked(True)
         elif measurement_type == "right_left":
-            self.ui.radioButtonWheelMeasurementTypRightLeft.setChecked(True)
+            self.ui.radioButtonRightLeft.setChecked(True)
 
     def populate_language_combobox(self) -> None:
         """
-        Populate the language combobox dynamically from the available .qm files.
+        Populate the language combobox dynamically
+        from the available .qm files.
         """
         self.ui.comboBoxSelectLanguage.clear()
         i18n_path: str = os.path.join(self.current_path, "i18n")
@@ -412,7 +450,7 @@ class SpokeduinoApp(QMainWindow):
 
         for filename in os.listdir(i18n_path):
             if filename.endswith(".qm"):
-                language_code: str = os.path.splitext(filename)[0]  # Extract language code
+                language_code: str = os.path.splitext(filename)[0]
                 self.ui.comboBoxSelectLanguage.addItem(language_code)
 
     def update_fields(self, spoke=None) -> None:
@@ -578,7 +616,8 @@ class SpokeduinoApp(QMainWindow):
         Load all spokes for the currently selected manufacturer and populate
         the tableViewSpokesDatabase and comboBoxSpoke.
         """
-        manufacturer_id: int | None = self.ui.comboBoxManufacturer.currentData()
+        manufacturer_id: int | None = \
+            self.ui.comboBoxManufacturer.currentData()
 
         if manufacturer_id is None:
             return
@@ -818,6 +857,66 @@ class SpokeduinoApp(QMainWindow):
             required_fields_filled and
             self.ui.comboBoxSpoke.currentIndex() >= 0)
 
+    def toggle_multi_tensiometer_mode(self) -> None:
+        """
+        Enable or disable multi-selection mode for comboBoxTensiometer.
+        """
+        if not self.multi_tensiometer_enabled:
+            # Enable multi-selection mode
+            self.multi_tensiometer_enabled = True
+            self.ui.comboBoxTensiometer.clear()
+            self.ui.pushButtonMultipleTensiometers.setChecked(True)
+
+            # Use a QStandardItemModel to allow checkboxes
+            model = QStandardItemModel(self.ui.comboBoxTensiometer)
+            for tensiometer in self.__db.execute_select(
+                    SQLQueries.GET_TENSIOMETERS):
+                item = QStandardItem(tensiometer[1])
+                item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
+                item.setData(Qt.Unchecked, Qt.CheckStateRole)
+                # Store tensiometer ID
+                item.setData(tensiometer[0], Qt.UserRole)
+                model.appendRow(item)
+
+            self.ui.comboBoxTensiometer.setModel(model)
+            # Disable manual typing
+            self.ui.comboBoxTensiometer.setEditable(False)
+        else:
+            # Disable multi-selection mode
+            self.multi_tensiometer_enabled = False
+            self.ui.pushButtonMultipleTensiometers.setChecked(False)
+            self.selected_tensiometers = []
+
+            # Restore single-selection mode
+            self.ui.comboBoxTensiometer.clear()
+            self.load_tensiometers()  # Reload from database
+
+            # Restore the original tensiometer
+            tensiometer_id: list[str] = self.__db.execute_select(
+                query=SQLQueries.GET_SINGLE_SETTING,
+                params=("tensiometer_id",),)
+            if not tensiometer_id:
+                return
+
+            index: int = self.ui.comboBoxTensiometer.findData(
+                tensiometer_id[0][0])
+            if index != -1:
+                self.ui.comboBoxTensiometer.setCurrentIndex(index)
+
+    def get_selected_tensiometers(self) -> list[int]:
+        """
+        Retrieve the IDs of all tensiometers that are checked in the combobox.
+        :return: List of selected tensiometer IDs.
+        """
+        model = self.ui.comboBoxTensiometer.model()
+        selected_ids = []
+        for row in range(model.rowCount()):
+            item = model.item(row)
+            if item.checkState() == Qt.Checked:
+                # Retrieve stored ID
+                selected_ids.append(item.data(Qt.UserRole))
+        return selected_ids
+
     def create_new_tensiometer(self) -> None:
         """
         Insert a new tensiometer into the tensiometers table.
@@ -866,24 +965,26 @@ class SpokeduinoApp(QMainWindow):
             self.ui.comboBoxManufacturer.findData(
                 new_manufacturer_id))
 
-    def get_database_spoke_data(self, from_database: bool) -> Tuple[int, int, float, str, str, str]:
+    def get_database_spoke_data(
+            self, from_database: bool
+            ) -> Tuple[int, int, float, str, str, str]:
         """
         DRY helper
         """
         try:
             if from_database:
-                return int(self.ui.comboBoxType.currentData()),\
-                    int(self.ui.lineEditGauge.text() or 0),\
-                    float(self.ui.lineEditWeight.text() or 0.0),\
-                    self.ui.lineEditName.text() or "",\
-                    self.ui.lineEditDimension.text() or "",\
+                return int(self.ui.comboBoxType.currentData()), \
+                    int(self.ui.lineEditGauge.text() or 0), \
+                    float(self.ui.lineEditWeight.text() or 0.0), \
+                    self.ui.lineEditName.text() or "", \
+                    self.ui.lineEditDimension.text() or "", \
                     self.ui.lineEditSpokeComment.text() or ""
             else:
-                return int(self.ui.comboBoxType2.currentData()),\
-                    int(self.ui.lineEditGauge2.text() or 0),\
-                    float(self.ui.lineEditWeight2.text() or 0.0),\
-                    self.ui.lineEditName2.text() or "",\
-                    self.ui.lineEditDimension2.text() or "",\
+                return int(self.ui.comboBoxType2.currentData()), \
+                    int(self.ui.lineEditGauge2.text() or 0), \
+                    float(self.ui.lineEditWeight2.text() or 0.0), \
+                    self.ui.lineEditName2.text() or "", \
+                    self.ui.lineEditDimension2.text() or "", \
                     self.ui.lineEditSpokeComment2.text() or ""
 
         except ValueError as e:
@@ -904,16 +1005,14 @@ class SpokeduinoApp(QMainWindow):
             return
         manufacturer_id = int(manufacturer_id)
 
-        type_id,\
-        gauge,\
-        weight,\
-        spoke_name,\
-        dimension,\
-        comment = self.get_database_spoke_data(from_database)
+        type_id, gauge, weight, \
+            spoke_name, dimension, comment = \
+            self.get_database_spoke_data(from_database)
 
         new_spoke_id: int | None = self.__db.execute_query(
             query=SQLQueries.ADD_SPOKE,
-            params=(manufacturer_id, spoke_name, type_id, gauge, weight, dimension, comment),
+            params=(manufacturer_id, spoke_name,
+                    type_id, gauge, weight, dimension, comment),
         )
         self.load_spokes_for_selected_manufacturer()
 
@@ -938,12 +1037,9 @@ class SpokeduinoApp(QMainWindow):
             return
         spoke_id = int(spoke_id)
 
-        type_id,\
-        gauge,\
-        weight,\
-        spoke_name,\
-        dimension,\
-        comment = self.get_database_spoke_data(True)
+        type_id, gauge, weight, \
+            spoke_name, dimension, comment = \
+            self.get_database_spoke_data(True)
 
         _ = self.__db.execute_query(
             query=SQLQueries.MODIFY_SPOKE,
@@ -967,7 +1063,8 @@ class SpokeduinoApp(QMainWindow):
         )
         self.load_spokes_for_selected_manufacturer()
 
-    def convert_units(self, value: float, source: str) -> Tuple[float, float, float]:
+    def convert_units(
+            self, value: float, source: str) -> Tuple[float, float, float]:
         """
         Convert units
         :param value: The value to be converted.
@@ -980,8 +1077,8 @@ class SpokeduinoApp(QMainWindow):
                     value * 0.2248089431)
         elif source == "kgf":
             return (value / 0.1019716213,
-                value,
-                value * 2.2046226218)
+                    value,
+                    value * 2.2046226218)
         elif source == "lbf":
             return (value / 0.2248089431,
                     value / 2.2046226218,
@@ -997,31 +1094,49 @@ class SpokeduinoApp(QMainWindow):
         try:
             # Read input values
             if source == "newton":
-                value = float(self.ui.lineEditTensionConverterNewton.text() or 0)
+                value = float(self.ui.lineEditConverterNewton.text() or 0)
                 newton, kgf, lbf = self.convert_units(value, source)
-                self.ui.lineEditTensionConverterKgF.setText(f"{kgf:.4f}")
-                self.ui.lineEditTensionConverterLbF.setText(f"{lbf:.4f}")
+                self.ui.lineEditConverterKgF.blockSignals(True)
+                self.ui.lineEditConverterLbF.blockSignals(True)
+
+                self.ui.lineEditConverterKgF.setText(f"{kgf:.4f}")
+                self.ui.lineEditConverterLbF.setText(f"{lbf:.4f}")
+
+                self.ui.lineEditConverterKgF.blockSignals(False)
+                self.ui.lineEditConverterLbF.blockSignals(False)
             elif source == "kgf":
-                value = float(self.ui.lineEditTensionConverterKgF.text() or 0)
+                value = float(self.ui.lineEditConverterKgF.text() or 0)
                 newton, kgf, lbf = self.convert_units(value, source)
-                self.ui.lineEditTensionConverterNewton.setText(f"{newton:.4f}")
-                self.ui.lineEditTensionConverterLbF.setText(f"{lbf:.4f}")
+                self.ui.lineEditConverterNewton.blockSignals(True)
+                self.ui.lineEditConverterLbF.blockSignals(True)
+
+                self.ui.lineEditConverterNewton.setText(f"{newton:.4f}")
+                self.ui.lineEditConverterLbF.setText(f"{lbf:.4f}")
+
+                self.ui.lineEditConverterNewton.blockSignals(False)
+                self.ui.lineEditConverterLbF.blockSignals(False)
             elif source == "lbf":
-                value = float(self.ui.lineEditTensionConverterLbF.text() or 0)
+                value = float(self.ui.lineEditConverterLbF.text() or 0)
                 newton, kgf, lbf = self.convert_units(value, source)
-                self.ui.lineEditTensionConverterNewton.setText(f"{newton:.4f}")
-                self.ui.lineEditTensionConverterKgF.setText(f"{kgf:.4f}")
+                self.ui.lineEditConverterKgF.blockSignals(True)
+                self.ui.lineEditConverterNewton.blockSignals(True)
+
+                self.ui.lineEditConverterNewton.setText(f"{newton:.4f}")
+                self.ui.lineEditConverterKgF.setText(f"{kgf:.4f}")
+
+                self.ui.lineEditConverterKgF.blockSignals(False)
+                self.ui.lineEditConverterNewton.blockSignals(False)
         except ValueError:
             # Clear the other textboxes if the input is invalid
             if source == "newton":
-                self.ui.lineEditTensionConverterKgF.clear()
-                self.ui.lineEditTensionConverterLbF.clear()
+                self.ui.lineEditConverterKgF.clear()
+                self.ui.lineEditConverterLbF.clear()
             elif source == "kgf":
-                self.ui.lineEditTensionConverterNewton.clear()
-                self.ui.lineEditTensionConverterLbF.clear()
+                self.ui.lineEditConverterNewton.clear()
+                self.ui.lineEditConverterLbF.clear()
             elif source == "lbf":
-                self.ui.lineEditTensionConverterNewton.clear()
-                self.ui.lineEditTensionConverterKgF.clear()
+                self.ui.lineEditConverterNewton.clear()
+                self.ui.lineEditConverterKgF.clear()
 
 
 def main() -> None:

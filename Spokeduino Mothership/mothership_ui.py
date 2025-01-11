@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'spokeduino_mothershipvSkQkQ.ui'
+## Form generated from reading UI file 'spokeduino_mothershipIgwKQf.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.1
 ##
@@ -1016,12 +1016,26 @@ class Ui_mainWindow(object):
         self.groupBoxTensiometer.setMinimumSize(QSize(250, 0))
         self.verticalLayoutTensiometer = QVBoxLayout(self.groupBoxTensiometer)
         self.verticalLayoutTensiometer.setObjectName(u"verticalLayoutTensiometer")
+        self.horizontalLayout_3 = QHBoxLayout()
+        self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.comboBoxTensiometer = QComboBox(self.groupBoxTensiometer)
         self.comboBoxTensiometer.setObjectName(u"comboBoxTensiometer")
         sizePolicy3.setHeightForWidth(self.comboBoxTensiometer.sizePolicy().hasHeightForWidth())
         self.comboBoxTensiometer.setSizePolicy(sizePolicy3)
 
-        self.verticalLayoutTensiometer.addWidget(self.comboBoxTensiometer)
+        self.horizontalLayout_3.addWidget(self.comboBoxTensiometer)
+
+        self.pushButtonMultipleTensiometers = QPushButton(self.groupBoxTensiometer)
+        self.pushButtonMultipleTensiometers.setObjectName(u"pushButtonMultipleTensiometers")
+        sizePolicy2.setHeightForWidth(self.pushButtonMultipleTensiometers.sizePolicy().hasHeightForWidth())
+        self.pushButtonMultipleTensiometers.setSizePolicy(sizePolicy2)
+        icon12 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditSelectAll))
+        self.pushButtonMultipleTensiometers.setIcon(icon12)
+
+        self.horizontalLayout_3.addWidget(self.pushButtonMultipleTensiometers)
+
+
+        self.verticalLayoutTensiometer.addLayout(self.horizontalLayout_3)
 
         self.horizontalLayoutNewTensiometer = QHBoxLayout()
         self.horizontalLayoutNewTensiometer.setObjectName(u"horizontalLayoutNewTensiometer")
@@ -1079,16 +1093,16 @@ class Ui_mainWindow(object):
         self.groupBoxSpokeMeasurementDirection.setObjectName(u"groupBoxSpokeMeasurementDirection")
         self.verticalLayoutMeasurementDirectionDown = QVBoxLayout(self.groupBoxSpokeMeasurementDirection)
         self.verticalLayoutMeasurementDirectionDown.setObjectName(u"verticalLayoutMeasurementDirectionDown")
-        self.radioButtonSpokeMeasurementDirectionDown = QRadioButton(self.groupBoxSpokeMeasurementDirection)
-        self.radioButtonSpokeMeasurementDirectionDown.setObjectName(u"radioButtonSpokeMeasurementDirectionDown")
-        self.radioButtonSpokeMeasurementDirectionDown.setChecked(True)
+        self.radioButtonMeasurementDown = QRadioButton(self.groupBoxSpokeMeasurementDirection)
+        self.radioButtonMeasurementDown.setObjectName(u"radioButtonMeasurementDown")
+        self.radioButtonMeasurementDown.setChecked(True)
 
-        self.verticalLayoutMeasurementDirectionDown.addWidget(self.radioButtonSpokeMeasurementDirectionDown)
+        self.verticalLayoutMeasurementDirectionDown.addWidget(self.radioButtonMeasurementDown)
 
-        self.radioButtonSpokeMeasurementDirectionUp = QRadioButton(self.groupBoxSpokeMeasurementDirection)
-        self.radioButtonSpokeMeasurementDirectionUp.setObjectName(u"radioButtonSpokeMeasurementDirectionUp")
+        self.radioButtonMeasurementUp = QRadioButton(self.groupBoxSpokeMeasurementDirection)
+        self.radioButtonMeasurementUp.setObjectName(u"radioButtonMeasurementUp")
 
-        self.verticalLayoutMeasurementDirectionDown.addWidget(self.radioButtonSpokeMeasurementDirectionUp)
+        self.verticalLayoutMeasurementDirectionDown.addWidget(self.radioButtonMeasurementUp)
 
 
         self.verticalLayoutMeasurementDirection.addWidget(self.groupBoxSpokeMeasurementDirection)
@@ -1097,16 +1111,16 @@ class Ui_mainWindow(object):
         self.groupBoxWheelRotationDirection.setObjectName(u"groupBoxWheelRotationDirection")
         self.verticalLayoutRotationDirectionClockwise = QVBoxLayout(self.groupBoxWheelRotationDirection)
         self.verticalLayoutRotationDirectionClockwise.setObjectName(u"verticalLayoutRotationDirectionClockwise")
-        self.radioButtonWheelRotationDirectionClockwise = QRadioButton(self.groupBoxWheelRotationDirection)
-        self.radioButtonWheelRotationDirectionClockwise.setObjectName(u"radioButtonWheelRotationDirectionClockwise")
-        self.radioButtonWheelRotationDirectionClockwise.setChecked(True)
+        self.radioButtonRotationClockwise = QRadioButton(self.groupBoxWheelRotationDirection)
+        self.radioButtonRotationClockwise.setObjectName(u"radioButtonRotationClockwise")
+        self.radioButtonRotationClockwise.setChecked(True)
 
-        self.verticalLayoutRotationDirectionClockwise.addWidget(self.radioButtonWheelRotationDirectionClockwise)
+        self.verticalLayoutRotationDirectionClockwise.addWidget(self.radioButtonRotationClockwise)
 
-        self.radioButtonWheelRotationDirectionAnticlockwise = QRadioButton(self.groupBoxWheelRotationDirection)
-        self.radioButtonWheelRotationDirectionAnticlockwise.setObjectName(u"radioButtonWheelRotationDirectionAnticlockwise")
+        self.radioButtonRotationAnticlockwise = QRadioButton(self.groupBoxWheelRotationDirection)
+        self.radioButtonRotationAnticlockwise.setObjectName(u"radioButtonRotationAnticlockwise")
 
-        self.verticalLayoutRotationDirectionClockwise.addWidget(self.radioButtonWheelRotationDirectionAnticlockwise)
+        self.verticalLayoutRotationDirectionClockwise.addWidget(self.radioButtonRotationAnticlockwise)
 
 
         self.verticalLayoutMeasurementDirection.addWidget(self.groupBoxWheelRotationDirection)
@@ -1115,24 +1129,24 @@ class Ui_mainWindow(object):
         self.groupBoxWheelMeasurementType.setObjectName(u"groupBoxWheelMeasurementType")
         self.verticalLayoutMeasurementTypeLeftRight = QVBoxLayout(self.groupBoxWheelMeasurementType)
         self.verticalLayoutMeasurementTypeLeftRight.setObjectName(u"verticalLayoutMeasurementTypeLeftRight")
-        self.radioButtonWheelMeasurementTypeLeftRight = QRadioButton(self.groupBoxWheelMeasurementType)
-        self.radioButtonWheelMeasurementTypeLeftRight.setObjectName(u"radioButtonWheelMeasurementTypeLeftRight")
-        self.radioButtonWheelMeasurementTypeLeftRight.setChecked(False)
+        self.radioButtonLeftRight = QRadioButton(self.groupBoxWheelMeasurementType)
+        self.radioButtonLeftRight.setObjectName(u"radioButtonLeftRight")
+        self.radioButtonLeftRight.setChecked(False)
 
-        self.verticalLayoutMeasurementTypeLeftRight.addWidget(self.radioButtonWheelMeasurementTypeLeftRight)
+        self.verticalLayoutMeasurementTypeLeftRight.addWidget(self.radioButtonLeftRight)
 
-        self.radioButtonWheelMeasurementTypeSideBySide = QRadioButton(self.groupBoxWheelMeasurementType)
-        self.radioButtonWheelMeasurementTypeSideBySide.setObjectName(u"radioButtonWheelMeasurementTypeSideBySide")
-        self.radioButtonWheelMeasurementTypeSideBySide.setChecked(True)
+        self.radioButtonSideBySide = QRadioButton(self.groupBoxWheelMeasurementType)
+        self.radioButtonSideBySide.setObjectName(u"radioButtonSideBySide")
+        self.radioButtonSideBySide.setChecked(True)
 
-        self.verticalLayoutMeasurementTypeLeftRight.addWidget(self.radioButtonWheelMeasurementTypeSideBySide)
+        self.verticalLayoutMeasurementTypeLeftRight.addWidget(self.radioButtonSideBySide)
 
-        self.radioButtonWheelMeasurementTypRightLeft = QRadioButton(self.groupBoxWheelMeasurementType)
-        self.radioButtonWheelMeasurementTypRightLeft.setObjectName(u"radioButtonWheelMeasurementTypRightLeft")
-        self.radioButtonWheelMeasurementTypRightLeft.setEnabled(True)
-        self.radioButtonWheelMeasurementTypRightLeft.setChecked(False)
+        self.radioButtonRightLeft = QRadioButton(self.groupBoxWheelMeasurementType)
+        self.radioButtonRightLeft.setObjectName(u"radioButtonRightLeft")
+        self.radioButtonRightLeft.setEnabled(True)
+        self.radioButtonRightLeft.setChecked(False)
 
-        self.verticalLayoutMeasurementTypeLeftRight.addWidget(self.radioButtonWheelMeasurementTypRightLeft)
+        self.verticalLayoutMeasurementTypeLeftRight.addWidget(self.radioButtonRightLeft)
 
 
         self.verticalLayoutMeasurementDirection.addWidget(self.groupBoxWheelMeasurementType)
@@ -1191,12 +1205,12 @@ class Ui_mainWindow(object):
         self.groupBoxTensionConverterNewton.setMinimumSize(QSize(0, 0))
         self.verticalLayoutConverterNewton = QVBoxLayout(self.groupBoxTensionConverterNewton)
         self.verticalLayoutConverterNewton.setObjectName(u"verticalLayoutConverterNewton")
-        self.lineEditTensionConverterNewton = QLineEdit(self.groupBoxTensionConverterNewton)
-        self.lineEditTensionConverterNewton.setObjectName(u"lineEditTensionConverterNewton")
-        sizePolicy1.setHeightForWidth(self.lineEditTensionConverterNewton.sizePolicy().hasHeightForWidth())
-        self.lineEditTensionConverterNewton.setSizePolicy(sizePolicy1)
+        self.lineEditConverterNewton = QLineEdit(self.groupBoxTensionConverterNewton)
+        self.lineEditConverterNewton.setObjectName(u"lineEditConverterNewton")
+        sizePolicy1.setHeightForWidth(self.lineEditConverterNewton.sizePolicy().hasHeightForWidth())
+        self.lineEditConverterNewton.setSizePolicy(sizePolicy1)
 
-        self.verticalLayoutConverterNewton.addWidget(self.lineEditTensionConverterNewton)
+        self.verticalLayoutConverterNewton.addWidget(self.lineEditConverterNewton)
 
 
         self.verticalLayoutUnitCoverter.addWidget(self.groupBoxTensionConverterNewton)
@@ -1208,12 +1222,12 @@ class Ui_mainWindow(object):
         self.groupBoxTensionConverterKgF.setMinimumSize(QSize(0, 0))
         self.verticalLayoutConverterKgF = QVBoxLayout(self.groupBoxTensionConverterKgF)
         self.verticalLayoutConverterKgF.setObjectName(u"verticalLayoutConverterKgF")
-        self.lineEditTensionConverterKgF = QLineEdit(self.groupBoxTensionConverterKgF)
-        self.lineEditTensionConverterKgF.setObjectName(u"lineEditTensionConverterKgF")
-        sizePolicy1.setHeightForWidth(self.lineEditTensionConverterKgF.sizePolicy().hasHeightForWidth())
-        self.lineEditTensionConverterKgF.setSizePolicy(sizePolicy1)
+        self.lineEditConverterKgF = QLineEdit(self.groupBoxTensionConverterKgF)
+        self.lineEditConverterKgF.setObjectName(u"lineEditConverterKgF")
+        sizePolicy1.setHeightForWidth(self.lineEditConverterKgF.sizePolicy().hasHeightForWidth())
+        self.lineEditConverterKgF.setSizePolicy(sizePolicy1)
 
-        self.verticalLayoutConverterKgF.addWidget(self.lineEditTensionConverterKgF)
+        self.verticalLayoutConverterKgF.addWidget(self.lineEditConverterKgF)
 
 
         self.verticalLayoutUnitCoverter.addWidget(self.groupBoxTensionConverterKgF)
@@ -1225,12 +1239,12 @@ class Ui_mainWindow(object):
         self.groupBoxTensionConverterLbF.setMinimumSize(QSize(0, 0))
         self.verticalLayoutLbFConverter = QVBoxLayout(self.groupBoxTensionConverterLbF)
         self.verticalLayoutLbFConverter.setObjectName(u"verticalLayoutLbFConverter")
-        self.lineEditTensionConverterLbF = QLineEdit(self.groupBoxTensionConverterLbF)
-        self.lineEditTensionConverterLbF.setObjectName(u"lineEditTensionConverterLbF")
-        sizePolicy1.setHeightForWidth(self.lineEditTensionConverterLbF.sizePolicy().hasHeightForWidth())
-        self.lineEditTensionConverterLbF.setSizePolicy(sizePolicy1)
+        self.lineEditConverterLbF = QLineEdit(self.groupBoxTensionConverterLbF)
+        self.lineEditConverterLbF.setObjectName(u"lineEditConverterLbF")
+        sizePolicy1.setHeightForWidth(self.lineEditConverterLbF.sizePolicy().hasHeightForWidth())
+        self.lineEditConverterLbF.setSizePolicy(sizePolicy1)
 
-        self.verticalLayoutLbFConverter.addWidget(self.lineEditTensionConverterLbF)
+        self.verticalLayoutLbFConverter.addWidget(self.lineEditConverterLbF)
 
 
         self.verticalLayoutUnitCoverter.addWidget(self.groupBoxTensionConverterLbF)
@@ -1259,7 +1273,7 @@ class Ui_mainWindow(object):
         mainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(mainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1171, 22))
+        self.menubar.setGeometry(QRect(0, 0, 1171, 33))
         self.menuHelp = QMenu(self.menubar)
         self.menuHelp.setObjectName(u"menuHelp")
         mainWindow.setMenuBar(self.menubar)
@@ -1346,19 +1360,20 @@ class Ui_mainWindow(object):
         self.groupBoxLanguage.setTitle(QCoreApplication.translate("mainWindow", u"Language", None))
         self.groupBoxSpokeduino.setTitle(QCoreApplication.translate("mainWindow", u"Spokeduino port", None))
         self.groupBoxTensiometer.setTitle(QCoreApplication.translate("mainWindow", u"Tensiometer", None))
+        self.pushButtonMultipleTensiometers.setText("")
         self.groupBoxtNewTensiometer.setTitle(QCoreApplication.translate("mainWindow", u"New tensiometer", None))
         self.pushButtonNewTensiometer.setText(QCoreApplication.translate("mainWindow", u"Create", None))
         self.groupBoxDirectionsSetup.setTitle(QCoreApplication.translate("mainWindow", u"Directions", None))
         self.groupBoxSpokeMeasurementDirection.setTitle(QCoreApplication.translate("mainWindow", u"Spoke measurement direction", None))
-        self.radioButtonSpokeMeasurementDirectionDown.setText(QCoreApplication.translate("mainWindow", u"From high to low", None))
-        self.radioButtonSpokeMeasurementDirectionUp.setText(QCoreApplication.translate("mainWindow", u"From low to high", None))
+        self.radioButtonMeasurementDown.setText(QCoreApplication.translate("mainWindow", u"From high to low", None))
+        self.radioButtonMeasurementUp.setText(QCoreApplication.translate("mainWindow", u"From low to high", None))
         self.groupBoxWheelRotationDirection.setTitle(QCoreApplication.translate("mainWindow", u"Wheel rotation direction", None))
-        self.radioButtonWheelRotationDirectionClockwise.setText(QCoreApplication.translate("mainWindow", u"Clockwise", None))
-        self.radioButtonWheelRotationDirectionAnticlockwise.setText(QCoreApplication.translate("mainWindow", u"Anticlockwise", None))
+        self.radioButtonRotationClockwise.setText(QCoreApplication.translate("mainWindow", u"Clockwise", None))
+        self.radioButtonRotationAnticlockwise.setText(QCoreApplication.translate("mainWindow", u"Anticlockwise", None))
         self.groupBoxWheelMeasurementType.setTitle(QCoreApplication.translate("mainWindow", u"Wheel measurement direction", None))
-        self.radioButtonWheelMeasurementTypeLeftRight.setText(QCoreApplication.translate("mainWindow", u"Left-Right", None))
-        self.radioButtonWheelMeasurementTypeSideBySide.setText(QCoreApplication.translate("mainWindow", u"Side by side", None))
-        self.radioButtonWheelMeasurementTypRightLeft.setText(QCoreApplication.translate("mainWindow", u"Right-Left", None))
+        self.radioButtonLeftRight.setText(QCoreApplication.translate("mainWindow", u"Left-Right", None))
+        self.radioButtonSideBySide.setText(QCoreApplication.translate("mainWindow", u"Side by side", None))
+        self.radioButtonRightLeft.setText(QCoreApplication.translate("mainWindow", u"Right-Left", None))
         self.groupBoxUnitSetup.setTitle(QCoreApplication.translate("mainWindow", u"Unit", None))
         self.radioButtonNewton.setText(QCoreApplication.translate("mainWindow", u"Newton", None))
         self.radioButtonKgF.setText(QCoreApplication.translate("mainWindow", u"kgF", None))

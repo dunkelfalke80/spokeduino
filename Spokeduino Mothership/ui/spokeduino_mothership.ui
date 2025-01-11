@@ -1542,14 +1542,34 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayoutTensiometer" stretch="0,0">
                <item>
-                <widget class="QComboBox" name="comboBoxTensiometer">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                </widget>
+                <layout class="QHBoxLayout" name="horizontalLayout_3">
+                 <item>
+                  <widget class="QComboBox" name="comboBoxTensiometer">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="pushButtonMultipleTensiometers">
+                   <property name="sizePolicy">
+                    <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+                     <horstretch>0</horstretch>
+                     <verstretch>0</verstretch>
+                    </sizepolicy>
+                   </property>
+                   <property name="text">
+                    <string/>
+                   </property>
+                   <property name="icon">
+                    <iconset theme="QIcon::ThemeIcon::EditSelectAll"/>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
                </item>
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayoutNewTensiometer">
@@ -1641,7 +1661,7 @@
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayoutMeasurementDirectionDown">
                   <item>
-                   <widget class="QRadioButton" name="radioButtonSpokeMeasurementDirectionDown">
+                   <widget class="QRadioButton" name="radioButtonMeasurementDown">
                     <property name="text">
                      <string>From high to low</string>
                     </property>
@@ -1651,7 +1671,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QRadioButton" name="radioButtonSpokeMeasurementDirectionUp">
+                   <widget class="QRadioButton" name="radioButtonMeasurementUp">
                     <property name="text">
                      <string>From low to high</string>
                     </property>
@@ -1667,7 +1687,7 @@
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayoutRotationDirectionClockwise">
                   <item>
-                   <widget class="QRadioButton" name="radioButtonWheelRotationDirectionClockwise">
+                   <widget class="QRadioButton" name="radioButtonRotationClockwise">
                     <property name="text">
                      <string>Clockwise</string>
                     </property>
@@ -1677,7 +1697,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QRadioButton" name="radioButtonWheelRotationDirectionAnticlockwise">
+                   <widget class="QRadioButton" name="radioButtonRotationAnticlockwise">
                     <property name="text">
                      <string>Anticlockwise</string>
                     </property>
@@ -1693,7 +1713,7 @@
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayoutMeasurementTypeLeftRight">
                   <item>
-                   <widget class="QRadioButton" name="radioButtonWheelMeasurementTypeLeftRight">
+                   <widget class="QRadioButton" name="radioButtonLeftRight">
                     <property name="text">
                      <string>Left-Right</string>
                     </property>
@@ -1703,7 +1723,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QRadioButton" name="radioButtonWheelMeasurementTypeSideBySide">
+                   <widget class="QRadioButton" name="radioButtonSideBySide">
                     <property name="text">
                      <string>Side by side</string>
                     </property>
@@ -1713,7 +1733,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QRadioButton" name="radioButtonWheelMeasurementTypRightLeft">
+                   <widget class="QRadioButton" name="radioButtonRightLeft">
                     <property name="enabled">
                      <bool>true</bool>
                     </property>
@@ -1845,7 +1865,7 @@
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayoutConverterNewton">
                   <item>
-                   <widget class="QLineEdit" name="lineEditTensionConverterNewton">
+                   <widget class="QLineEdit" name="lineEditConverterNewton">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                       <horstretch>0</horstretch>
@@ -1876,7 +1896,7 @@
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayoutConverterKgF">
                   <item>
-                   <widget class="QLineEdit" name="lineEditTensionConverterKgF">
+                   <widget class="QLineEdit" name="lineEditConverterKgF">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                       <horstretch>0</horstretch>
@@ -1907,7 +1927,7 @@
                  </property>
                  <layout class="QVBoxLayout" name="verticalLayoutLbFConverter">
                   <item>
-                   <widget class="QLineEdit" name="lineEditTensionConverterLbF">
+                   <widget class="QLineEdit" name="lineEditConverterLbF">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                       <horstretch>0</horstretch>
@@ -1964,7 +1984,7 @@
      <x>0</x>
      <y>0</y>
      <width>1171</width>
-     <height>22</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">

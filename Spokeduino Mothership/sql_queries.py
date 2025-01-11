@@ -44,7 +44,7 @@ class SQLQueries:
     GET_SPOKES_BY_MANUFACTURER: str = \
         GET_SPOKES + " WHERE s.manufacturer_id = ?"
 
-    GET_SPOKES_BY_ID: str  = \
+    GET_SPOKES_BY_ID: str = \
         GET_SPOKES + " WHERE s.id = ?"
 
     GET_MEASUREMENTS: str = """
@@ -100,7 +100,7 @@ class SQLQueries:
                 WHERE
                     id = ?"""
 
-    UPSERT_SETTING: str =  """
+    UPSERT_SETTING: str = """
                 INSERT INTO
                     settings (key, value)
                 VALUES
