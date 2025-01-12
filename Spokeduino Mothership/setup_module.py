@@ -2,17 +2,24 @@ import logging
 import os
 import serial
 import serial.tools.list_ports
-from database_module import DatabaseModule
 from typing import Any
 from serial.tools.list_ports_common import ListPortInfo
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtCore import QTranslator
+from PySide6.QtWidgets import QMainWindow
+from database_module import DatabaseModule
+from sql_queries import SQLQueries
 
 
 class SetupModule:
 
-    def __init__(self, ui: Any, current_path: str, db: DatabaseModule) -> None:
+    def __init__(self,
+                 main_window: QMainWindow,
+                 ui: Any,
+                 current_path: str,
+                 db: DatabaseModule) -> None:
         self.ui = ui
+        self.main_window: QMainWindow = main_window
         self.current_path: str = current_path
         self.translator = QTranslator()
         self.current_language = "en"
@@ -42,7 +49,7 @@ class SetupModule:
             self.current_path, "i18n", f"{language_code}.qm")
         if self.translator.load(i18n_path):
             QCoreApplication.installTranslator(self.translator)
-            self.ui.retranslateUi(self)
+            self.ui.retranslateUi(self.main_window)
             self.save_setting("language", language_code)
             logging.info(f"Language changed to: {language_code}")
         else:

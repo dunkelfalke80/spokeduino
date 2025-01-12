@@ -5,7 +5,7 @@ from typing import Any
 class PiecewiseQuarticFit:
     @staticmethod
     def generate_model(
-            measurements: list[tuple[float, float]],
+            measurements: list[tuple[int, float]],
             pieces: int = 4,
             extend_range: tuple[int, int] = (200, 1800)) -> str:
         """

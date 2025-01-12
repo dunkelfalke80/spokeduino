@@ -5,7 +5,7 @@ from PySide6.QtWidgets import QStyledItemDelegate
 from PySide6.QtWidgets import QLineEdit
 
 
-class SpokeduinoTableModel(QAbstractTableModel):
+class SpokeTableModel(QAbstractTableModel):
     """
     Table model for displaying spokes data in a QTableView.
     """
