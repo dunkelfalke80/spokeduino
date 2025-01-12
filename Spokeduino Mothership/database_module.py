@@ -9,7 +9,7 @@ def get_line_info() -> str:
     return f"{inspect.stack()[1][2]}:{inspect.stack()[1][3]}"
 
 
-class DatabaseManager:
+class DatabaseModule:
     """
     Handles all database interactions for the Spokeduino application.
     """
