@@ -5,9 +5,11 @@ import serial.tools.list_ports
 import sys
 from serial.tools.list_ports_common import ListPortInfo
 from database_manager import DatabaseManager
+from quartic_fit import PiecewiseQuarticFit
 from sql_queries import SQLQueries
 from typing import cast, Any, Tuple
-from table_model import SpokeduinoTableModel
+from table_helpers import SpokeTableModel
+from table_helpers import FloatValidatorDelegate
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QCoreApplication
 from PySide6.QtCore import QModelIndex
@@ -18,6 +20,7 @@ from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QComboBox
 from PySide6.QtWidgets import QTableView
+from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QAbstractItemView
@@ -74,6 +77,7 @@ class SpokeduinoApp(QMainWindow):
         self.load_settings()
         self.current_spokes: list[list[str]] = []
         self.load_manufacturers()
+        self.setup_table_widget_measurements()
 
     def setup_ui(self):
         self.ui = Ui_mainWindow()
@@ -182,6 +186,9 @@ class SpokeduinoApp(QMainWindow):
         self.ui.pushButtonMultipleTensiometers.clicked.connect(
             self.toggle_multi_tensiometer_mode)
         self.ui.pushButtonMultipleTensiometers.setCheckable(True)
+        self.ui.comboBoxTensiometer.currentIndexChanged.connect(
+            self.setup_table_widget_measurements
+        )
 
         # Measurement-related signals
         self.ui.pushButtonDeleteMeasurement.clicked.connect(
@@ -191,6 +198,18 @@ class SpokeduinoApp(QMainWindow):
                 self.ui.tabWidget.indexOf(self.ui.measurementTab)))
         self.ui.tableViewMeasurements.clicked.connect(
             self.select_measurement_row)
+        self.ui.tableWidgetMeasurements.itemChanged.connect(
+            self.update_measurement_button_states)
+        self.ui.tableWidgetMeasurements.currentCellChanged.connect(
+            self.update_measurement_button_states)
+        self.ui.pushButtonCalculateFormula.clicked.connect(
+            self.calculate_formula)
+        self.ui.pushButtonMeasureSpoke.clicked.connect(
+            self.setup_table_widget_measurements)
+        self.ui.pushButtonPreviousMeasurement.clicked.connect(
+            self.move_to_previous_cell)
+        self.ui.pushButtonNextMeasurement.clicked.connect(
+            self.move_to_next_cell)
 
         # Use spokes
         self.ui.pushButtonUseLeft.clicked.connect(
@@ -218,12 +237,18 @@ class SpokeduinoApp(QMainWindow):
         self.ui.radioButtonNewton.toggled.connect(
             lambda checked:
                 self.save_setting("unit", "Newton") if checked else None)
+        self.ui.radioButtonNewton.toggled.connect(
+            self.setup_table_widget_measurements)
         self.ui.radioButtonKgF.toggled.connect(
             lambda checked:
                 self.save_setting("unit", "kgF") if checked else None)
+        self.ui.radioButtonKgF.toggled.connect(
+            self.setup_table_widget_measurements)
         self.ui.radioButtonLbF.toggled.connect(
             lambda checked:
                 self.save_setting("unit", "lbF") if checked else None)
+        self.ui.radioButtonLbF.toggled.connect(
+            self.setup_table_widget_measurements)
 
         # Directional settings
         self.ui.radioButtonMeasurementDown.toggled.connect(
@@ -231,11 +256,15 @@ class SpokeduinoApp(QMainWindow):
                 self.save_setting(
                     "spoke_direction",
                     "down") if checked else None)
+        self.ui.radioButtonMeasurementDown.toggled.connect(
+            self.setup_table_widget_measurements)
         self.ui.radioButtonMeasurementUp.toggled.connect(
             lambda checked:
                 self.save_setting(
                     "spoke_direction",
                     "up") if checked else None)
+        self.ui.radioButtonMeasurementDown.toggled.connect(
+            self.setup_table_widget_measurements)
         self.ui.radioButtonRotationClockwise.toggled.connect(
             lambda checked:
                 self.save_setting(
@@ -617,7 +646,7 @@ class SpokeduinoApp(QMainWindow):
 
         # Exclude ID
         self.current_spokes = [(spoke[0], list(spoke[1:])) for spoke in spokes]
-        model = SpokeduinoTableModel(self.current_spokes, headers)
+        model = SpokeTableModel(self.current_spokes, headers)
         view: QTableView = self.ui.tableViewSpokesDatabase
         view.setModel(model)
 
@@ -670,7 +699,7 @@ class SpokeduinoApp(QMainWindow):
             "300N", "400N", "500N", "600N", "700N", "800N", "900N",
             "1000N", "1100N", "1200N", "1300N", "1400N", "1500N"
         ]
-        model = SpokeduinoTableModel(
+        model = SpokeTableModel(
             [list(measurement[:-1])
                 for measurement in measurements], headers
         )
@@ -697,7 +726,7 @@ class SpokeduinoApp(QMainWindow):
         if not selected_index.isValid():
             return
 
-        model: SpokeduinoTableModel = cast(SpokeduinoTableModel, view.model())
+        model: SpokeTableModel = cast(SpokeTableModel, view.model())
         measurement_id: int = int(model.index(
             selected_index.row(),
             model.header_count()).data())
@@ -722,8 +751,8 @@ class SpokeduinoApp(QMainWindow):
         when a table row is clicked.
         """
         row = index.row()
-        model: SpokeduinoTableModel = cast(
-            SpokeduinoTableModel,
+        model: SpokeTableModel = cast(
+            SpokeTableModel,
             self.ui.tableViewSpokesDatabase.model())
         spoke_id = model.get_id(row)
 
@@ -742,8 +771,8 @@ class SpokeduinoApp(QMainWindow):
             self.ui.tableViewSpokesDatabase.clearSelection()
             return
 
-        model: SpokeduinoTableModel = cast(
-            SpokeduinoTableModel,
+        model: SpokeTableModel = cast(
+            SpokeTableModel,
             self.ui.tableViewSpokesDatabase.model())
 
         for row in range(model.rowCount()):
@@ -848,7 +877,6 @@ class SpokeduinoApp(QMainWindow):
         if not self.multi_tensiometer_enabled:
             # Enable multi-selection mode
             self.multi_tensiometer_enabled = True
-            self.ui.comboBoxTensiometer.clear()
             self.ui.pushButtonMultipleTensiometers.setChecked(True)
 
             # Use a QStandardItemModel to allow checkboxes
@@ -857,49 +885,70 @@ class SpokeduinoApp(QMainWindow):
                     SQLQueries.GET_TENSIOMETERS):
                 item = QStandardItem(tensiometer[1])
                 item.setFlags(Qt.ItemIsEnabled | Qt.ItemIsUserCheckable)
-                item.setData(Qt.Unchecked, Qt.CheckStateRole)
-                # Store tensiometer ID
+                item.setCheckState(Qt.Unchecked)
                 item.setData(tensiometer[0], Qt.UserRole)
                 model.appendRow(item)
 
             self.ui.comboBoxTensiometer.setModel(model)
+
+            # Connect itemChanged signal for multi-tensiometer mode
+            model.itemChanged.connect(self.setup_table_widget_measurements)
+
             # Disable manual typing
             self.ui.comboBoxTensiometer.setEditable(False)
+
         else:
             # Disable multi-selection mode
             self.multi_tensiometer_enabled = False
             self.ui.pushButtonMultipleTensiometers.setChecked(False)
-            self.selected_tensiometers = []
 
             # Restore single-selection mode
             self.ui.comboBoxTensiometer.clear()
-            self.load_tensiometers()  # Reload from database
+            self.load_tensiometers()
 
-            # Restore the original tensiometer
-            tensiometer_id: list[str] = self.__db.execute_select(
-                query=SQLQueries.GET_SINGLE_SETTING,
-                params=("tensiometer_id",),)
-            if not tensiometer_id:
-                return
+            # Restore the original tensiometer selection
+            selected_tensiometers = self.get_selected_tensiometers()
+            if selected_tensiometers:
+                tensiometer_id, _ = selected_tensiometers[0]
+                index = self.ui.comboBoxTensiometer.findData(tensiometer_id)
+                if index != -1:
+                    self.ui.comboBoxTensiometer.setCurrentIndex(index)
 
-            index: int = self.ui.comboBoxTensiometer.findData(
-                tensiometer_id[0][0])
-            if index != -1:
-                self.ui.comboBoxTensiometer.setCurrentIndex(index)
+            # Disconnect itemChanged signal to avoid unnecessary updates
+            model = self.ui.comboBoxTensiometer.model()
+            if model:
+                model.itemChanged.disconnect(
+                    self.setup_table_widget_measurements)
 
-    def get_selected_tensiometers(self) -> list[int]:
+    def get_selected_tensiometers(self) -> list[tuple[int, str]]:
         """
-        Retrieve the IDs of all tensiometers that are checked in the combobox.
-        :return: List of selected tensiometer IDs.
+        Retrieve the IDs and names of selected tensiometers based on the mode.
+        :return: List of tuples with (ID, Name) for selected tensiometers.
         """
         model = self.ui.comboBoxTensiometer.model()
-        selected_ids = []
-        for row in range(model.rowCount()):
-            item = model.item(row)
-            if item.checkState() == Qt.Checked:
-                # Retrieve stored ID
-                selected_ids.append(item.data(Qt.UserRole))
-        return selected_ids
+        selected_tensiometers = []
+
+        if self.multi_tensiometer_enabled:
+            # Multi-tensiometer mode: return all checked tensiometers
+            for row in range(model.rowCount()):
+                item = model.item(row)
+                if item.checkState() == Qt.Checked:
+                    tensiometer_id = item.data(Qt.UserRole)
+                    tensiometer_name = item.text()
+                    selected_tensiometers.append(
+                        (tensiometer_id,
+                         tensiometer_name))
+        else:
+            # Single-tensiometer mode: return the currently selected one
+            current_index = self.ui.comboBoxTensiometer.currentIndex()
+            if current_index != -1:
+                tensiometer_id = self.ui.comboBoxTensiometer.itemData(
+                    current_index)
+                tensiometer_name = self.ui.comboBoxTensiometer.currentText()
+                selected_tensiometers.append(
+                    (tensiometer_id,
+                     tensiometer_name))
+        return selected_tensiometers
 
     def create_new_tensiometer(self) -> None:
         """
@@ -1225,7 +1274,7 @@ class SpokeduinoApp(QMainWindow):
 
         # Update the table model with filtered data
         headers = ["Name", "Type", "Gauge", "Weight", "Dimensions", "Comment"]
-        model = SpokeduinoTableModel(filtered_data, headers)
+        model = SpokeTableModel(filtered_data, headers)
         self.ui.tableViewSpokesDatabase.setModel(model)
 
     def populate_filter_type(self):
@@ -1236,6 +1285,159 @@ class SpokeduinoApp(QMainWindow):
         self.ui.comboBoxFilterType.clear()
         self.ui.comboBoxFilterType.addItem("")  # Empty means no filter is set
         self.ui.comboBoxFilterType.addItems(sorted(types))
+
+    def setup_table_widget_measurements(self):
+        """
+        Set up the tableWidgetMeasurements with
+        editable fields for tension values
+        and selected tensiometers.
+        """
+        # Clear all cells, rows, and columns
+        self.ui.tableWidgetMeasurements.clearContents()
+        self.ui.tableWidgetMeasurements.setRowCount(0)
+        self.ui.tableWidgetMeasurements.setColumnCount(0)
+
+        # Handle the measurement direction
+        if self.ui.radioButtonMeasurementDown.isChecked():
+            tensions_newton = list(range(1600, 200, -100))
+        else:
+            tensions_newton = list(range(300, 1700, 100))
+
+        # Handle the measurement units
+        unit: str = "Newton"
+        if self.ui.radioButtonKgF.isChecked():
+            unit = "kgF"
+        elif self.ui.radioButtonLbF.isChecked():
+            unit = "lbF"
+        tensions_converted = [
+            self.convert_units(value, "newton")[{
+                "Newton": 0,
+                "kgF": 1,
+                "lbF": 2}[unit]]
+            for value in tensions_newton
+        ]
+
+        # Populate row headers with converted force values
+        self.ui.tableWidgetMeasurements.setRowCount(len(tensions_converted))
+        if unit == "Newton":
+            self.ui.tableWidgetMeasurements.setVerticalHeaderLabels(
+                [f"{value} {unit}" for value in tensions_converted]
+            )
+        else:
+            self.ui.tableWidgetMeasurements.setVerticalHeaderLabels(
+                [f"{value:.1f} {unit}" for value in tensions_converted]
+            )
+
+        # Get selected tensiometers and populate column headers
+        tensiometers = self.get_selected_tensiometers()
+        self.ui.tableWidgetMeasurements.setColumnCount(len(tensiometers))
+        self.ui.tableWidgetMeasurements.setHorizontalHeaderLabels(
+            [tensiometer[1] for tensiometer in tensiometers]
+        )
+
+        delegate = FloatValidatorDelegate(self.ui.tableWidgetMeasurements)
+        self.ui.tableWidgetMeasurements.setItemDelegate(delegate)
+
+        # Make all cells editable
+        for row in range(len(tensions_converted)):
+            for col in range(len(tensiometers)):
+                item = QTableWidgetItem()
+                item.setFlags(Qt.ItemFlag.ItemIsEditable |
+                              Qt.ItemFlag.ItemIsEnabled)
+                self.ui.tableWidgetMeasurements.setItem(row, col, item)
+
+    def update_measurement_button_states(self):
+        """
+        Enable or disable measurement buttons based
+        on the completeness of the current column.
+        """
+        table = self.ui.tableWidgetMeasurements
+        selected_column = table.currentColumn()
+
+        if selected_column != -1:
+            all_filled = all(
+                table.item(row, selected_column) and
+                table.item(row, selected_column).text().strip()
+                for row in range(table.rowCount())
+            )
+            self.ui.pushButtonCalculateFormula.setEnabled(all_filled)
+            self.ui.pushButtonSaveMeasurement.setEnabled(all_filled)
+        else:
+            self.ui.pushButtonCalculateFormula.setEnabled(False)
+            self.ui.pushButtonSaveMeasurement.setEnabled(False)
+
+    def calculate_formula(self):
+        """
+        Calculates the quartic fit equations for the spoke measurements and
+        shows the calculated coefficients and the ranges in lineEditFormula
+        """
+        # Example measurements
+        example_measurements = [
+            (1500, 3.1),
+            (1400, 3.05),
+            (1300, 3.01),
+            (1200, 2.95),
+            (1100, 2.89),
+            (1000, 2.82),
+            (900, 2.76),
+            (800, 2.67),
+            (700, 2.57),
+            (600, 2.49),
+            (500, 2.34),
+            (400, 2.2)
+        ]
+
+        # Create PiecewiseQuarticFit object
+        fit: str = PiecewiseQuarticFit.generate_model(example_measurements)
+
+        # Evaluate tension for a given deflection
+        deflection_value = 3.06  # Example deflection
+        tension: float = PiecewiseQuarticFit.evaluate(fit, deflection_value)
+        self.lineEditFormula.text = f"{tension:.2f}"
+
+    def move_to_previous_cell(self):
+        """
+        Navigate to the previous editable cell in tableWidgetMeasurements.
+        Wrap around to the previous row/column if needed.
+        """
+        table = self.ui.tableWidgetMeasurements
+        current_row = table.currentRow()
+        current_column = table.currentColumn()
+
+        # Calculate the previous cell
+        if current_column > 0:
+            target_row = current_row
+            target_column = current_column - 1
+        else:
+            # Wrap around to the previous row
+            target_row = (current_row - 1) \
+                if current_row > 0  \
+                else table.rowCount() - 1
+            target_column = table.columnCount() - 1
+
+        # Select the previous cell
+        table.setCurrentCell(target_row, target_column)
+
+    def move_to_next_cell(self):
+        """
+        Navigate to the next editable cell in tableWidgetMeasurements.
+        Wrap around to the next row/column if needed.
+        """
+        table = self.ui.tableWidgetMeasurements
+        current_row = table.currentRow()
+        current_column = table.currentColumn()
+
+        # Calculate the next cell
+        if current_column < table.columnCount() - 1:
+            target_row = current_row
+            target_column = current_column + 1
+        else:
+            # Wrap around to the next row
+            target_row = (current_row + 1) % table.rowCount()
+            target_column = 0
+
+        # Select the next cell
+        table.setCurrentCell(target_row, target_column)
 
 
 def main() -> None:

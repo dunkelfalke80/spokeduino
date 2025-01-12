@@ -3,43 +3,43 @@ from typing import List, Tuple
 
 
 class PiecewiseQuarticFit:
-    def __init__(self, measurements: List[Tuple[float, float]],
-                 pieces: int = 4,
-                 extend_range: Tuple[int, int] = (200, 1800)):
+    def __init__(self):
         """
         Initializes the PiecewiseQuarticFit object.
 
-        Parameters:
-            measurements: List of (tension, deflection) pairs.
-            pieces: Number of pieces to divide the dataset into for fitting.
-            extend_range: Tuple specifying the new
-            tension range (min_tension, max_tension).
         """
-        self.measurements = sorted(measurements, key=lambda x: x[0])
-        self.pieces = pieces
-        self.extend_range = extend_range
-        self.serialized_model = self._generate_model()
 
-    def _generate_model(self) -> str:
+    def generate_model(
+            self,
+            measurements: List[Tuple[float, float]],
+            pieces: int = 4,
+            extend_range: Tuple[int, int] = (200, 1800)) -> str:
         """
         Generates the piecewise quartic fit model
         and returns it as a serialized string.
 
-        Returns:
-            str: Serialized quartic coefficients for each piece.
+        :param measurements: List of (tension, deflection) pairs.
+        :param pieces: Number of pieces to divide the dataset into for fitting.
+        :param extend_range: Tuple specifying the new
+        :param tension range (min_tension, max_tension).
+        :return: Serialized quartic coefficients for each piece.
         """
+        measurements = sorted(measurements, key=lambda x: x[0])
+        pieces = pieces
+        extend_range = extend_range
+
         # Separate into x (tension) and y (deflection) arrays
-        tensions = np.array([m[0] for m in self.measurements])
-        deflections = np.array([m[1] for m in self.measurements])
+        tensions = np.array([m[0] for m in measurements])
+        deflections = np.array([m[1] for m in measurements])
 
         # Split data into equal sections
-        section_size = len(tensions) // self.pieces
+        section_size = len(tensions) // pieces
         equations = []
 
-        for i in range(self.pieces):
+        for i in range(pieces):
             start = i * section_size
             end = (start + section_size
-                   if i < self.pieces - 1
+                   if i < pieces - 1
                    else len(tensions))
 
             # Fit quartic polynomial for this section
@@ -61,7 +61,7 @@ class PiecewiseQuarticFit:
             equations.append(f"{range_ascii};{coeffs_ascii}")
 
         # Extend the range by fitting quartic to the first and last pieces
-        min_tension, max_tension = self.extend_range
+        min_tension, max_tension = extend_range
         first_coeffs = np.polyfit(tensions[:section_size],
                                   deflections[:section_size],
                                   4)
@@ -87,17 +87,14 @@ class PiecewiseQuarticFit:
 
         return "|".join(equations)
 
-    def evaluate(self, deflection: float) -> float:
+    def evaluate(self, serialized_model: str, deflection: float) -> float:
         """
         Takes a deflection value and calculates the corresponding tension.
 
-        Parameters:
-            deflection (float): Deflection value (mm).
-
-        Returns:
-            float: Calculated tension (N).
+        :param: deflection: Deflection value (mm).
+        :return: Calculated tension (N).
         """
-        pieces = self.serialized_model.split("|")
+        pieces = serialized_model.split("|")
 
         for piece in pieces:
             range_str, coeffs_str = piece.split(";")
@@ -123,30 +120,3 @@ class PiecewiseQuarticFit:
                 return min(real_roots)
 
         raise ValueError("Deflection out of range.")
-
-
-# Example usage:
-if __name__ == "__main__":
-    # Example measurements
-    example_measurements = [
-        (1500, 3.1),
-        (1400, 3.05),
-        (1300, 3.01),
-        (1200, 2.95),
-        (1100, 2.89),
-        (1000, 2.82),
-        (900, 2.76),
-        (800, 2.67),
-        (700, 2.57),
-        (600, 2.49),
-        (500, 2.34),
-        (400, 2.2)
-    ]
-
-    # Create PiecewiseQuarticFit object
-    fit = PiecewiseQuarticFit(example_measurements)
-
-    # Evaluate tension for a given deflection
-    deflection_value = 3.06  # Example deflection
-    tension = fit.evaluate(deflection_value)
-    print(f"Tension for {deflection_value} mm deflection: {tension:.2f} N")
