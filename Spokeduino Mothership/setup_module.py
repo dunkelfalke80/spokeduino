@@ -34,6 +34,22 @@ class SetupModule:
         if self.translator.load(i18n_path):
             QCoreApplication.installTranslator(self.translator)
 
+    def populate_language_combobox(self) -> None:
+        """
+        Populate the language combobox dynamically
+        from the available .qm files.
+        """
+        self.ui.comboBoxSelectLanguage.clear()
+        i18n_path: str = os.path.join(self.current_path, "i18n")
+        if not os.path.exists(i18n_path):
+            logging.error(f"i18n directory not found at: {i18n_path}")
+            return
+
+        for filename in os.listdir(i18n_path):
+            if filename.endswith(".qm"):
+                language_code: str = os.path.splitext(filename)[0]
+                self.ui.comboBoxSelectLanguage.addItem(language_code)
+
     def change_language(self, language_code: str | None = None) -> None:
         """
         Reload translations for new language settings.
@@ -54,6 +70,20 @@ class SetupModule:
             logging.info(f"Language changed to: {language_code}")
         else:
             logging.error(f"Failed to loopenad translation file: {i18n_path}")
+
+    def load_tensiometers(self) -> None:
+        """
+        Load all tensiometers from the database
+        and populate comboBoxTensiometer.
+        """
+        tensiometers: list[Any] = self.db.execute_select(
+            query=SQLQueries.GET_TENSIOMETERS)
+        if not tensiometers:
+            return
+
+        self.ui.comboBoxTensiometer.clear()
+        for tensiometer in tensiometers:
+            self.ui.comboBoxTensiometer.addItem(tensiometer[1], tensiometer[0])
 
     def load_available_com_ports(self) -> None:
         """
@@ -147,3 +177,33 @@ class SetupModule:
             self.ui.radioButtonLeftRight.setChecked(True)
         elif measurement_type == "right_left":
             self.ui.radioButtonRightLeft.setChecked(True)
+
+    def get_selected_tensiometers(self) -> list[tuple[int, str]]:
+        """
+        Retrieve the IDs and names of selected tensiometers based on the mode.
+        :return: List of tuples with (ID, Name) for selected tensiometers.
+        """
+        model = self.ui.comboBoxTensiometer.model()
+        selected_tensiometers = []
+
+        if self.multi_tensiometer_enabled:
+            # Ensure model is a QStandardItemModel
+            if isinstance(model, QStandardItemModel):
+                # Multi-tensiometer mode: return all checked tensiometers
+                for row in range(model.rowCount()):
+                    item = model.item(row)  # Safely access item()
+                    if item and item.checkState() == Qt.CheckState.Checked:
+                        tensiometer_id = item.data(Qt.ItemDataRole.UserRole)
+                        tensiometer_name = item.text()
+                        selected_tensiometers.append((tensiometer_id, tensiometer_name))
+            else:
+                print("Model is not a QStandardItemModel; cannot retrieve selected items.")
+        else:
+            # Single-tensiometer mode: return the currently selected one
+            current_index = self.ui.comboBoxTensiometer.currentIndex()
+            if current_index != -1:
+                tensiometer_id = self.ui.comboBoxTensiometer.itemData(current_index)
+                tensiometer_name = self.ui.comboBoxTensiometer.currentText()
+                selected_tensiometers.append((tensiometer_id, tensiometer_name))
+
+        return selected_tensiometers
