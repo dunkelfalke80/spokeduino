@@ -146,3 +146,4 @@ class MeasurementModule:
         else:
             self.ui.pushButtonCalculateFormula.setEnabled(False)
             self.ui.pushButtonSaveMeasurement.setEnabled(False)
+

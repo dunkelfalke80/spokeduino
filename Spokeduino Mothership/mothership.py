@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 from typing import cast, Any
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QAbstractItemModel, Qt
 from PySide6.QtCore import QModelIndex
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QStandardItemModel
@@ -262,10 +262,7 @@ class Spokeduino(QMainWindow):
             lambda port: self.setup_module.save_setting("spokeduino_port", port))
 
         # Tensiometer selection
-        self.ui.comboBoxTensiometer.currentIndexChanged.connect(
-            lambda index: self.setup_module.save_setting(
-                "tensiometer_id",
-                str(self.ui.comboBoxTensiometer.itemData(index))))
+        self.ui.comboBoxTensiometer.currentIndexChanged.connect(self.save_tensiometer)
 
         # Measurement units
         self.ui.radioButtonNewton.toggled.connect(
@@ -657,8 +654,17 @@ class Spokeduino(QMainWindow):
         Retrieve the IDs and names of selected tensiometers based on the mode.
         :return: List of tuples with (ID, Name) for selected tensiometers.
         """
-        model = self.ui.comboBoxTensiometer.model()
-        selected_tensiometers = []
+        model: QAbstractItemModel = self.ui.comboBoxTensiometer.model()
+        selected_tensiometers: list[Any] = []
+
+        # Fetch the primary tensiometer ID from settings
+        primary_tensiometer: list[Any] = self.db.execute_select(
+            query=SQLQueries.GET_SINGLE_SETTING,
+            params=("tensiometer_id",)
+        )
+
+        if primary_tensiometer is not None:
+            primary_tensiometer_id: int = int(primary_tensiometer[0][0])
 
         if self.multi_tensiometer_enabled:
             # Ensure model is a QStandardItemModel
@@ -674,11 +680,17 @@ class Spokeduino(QMainWindow):
                 print("Model is not a QStandardItemModel; cannot retrieve selected items.")
         else:
             # Single-tensiometer mode: return the currently selected one
-            current_index = self.ui.comboBoxTensiometer.currentIndex()
+            current_index: int = self.ui.comboBoxTensiometer.currentIndex()
             if current_index != -1:
                 tensiometer_id = self.ui.comboBoxTensiometer.itemData(current_index)
                 tensiometer_name = self.ui.comboBoxTensiometer.currentText()
                 selected_tensiometers.append((tensiometer_id, tensiometer_name))
+
+        # Reorder tensiometers to place the primary one first
+        if primary_tensiometer is not None:
+            selected_tensiometers.sort(
+                key=lambda x: x[0] != primary_tensiometer_id
+            )
 
         return selected_tensiometers
 
@@ -743,6 +755,17 @@ class Spokeduino(QMainWindow):
                 self.ui.tableWidgetMeasurements.setItem(row, col, item)
 
         self.measurement_module.activate_first_cell()
+
+    def save_tensiometer(self) -> None:
+        if self.multi_tensiometer_enabled: # Runtime only
+            return
+
+        current_index: int = self.ui.comboBoxTensiometer.currentIndex()
+        if current_index != -1:
+            tensiometer_id = self.ui.comboBoxTensiometer.itemData(current_index)
+            self.setup_module.save_setting(
+                key="tensiometer_id",
+                value=str(tensiometer_id))
 
 
 def main() -> None:
