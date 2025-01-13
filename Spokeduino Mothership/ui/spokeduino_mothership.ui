@@ -637,7 +637,7 @@
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayoutManufacturerLeft" stretch="5">
                  <item>
-                  <widget class="QTableWidget" name="tableWidgetMeasurements"/>
+                  <widget class="CustomTableWidget" name="tableWidgetMeasurements"/>
                  </item>
                 </layout>
                </item>
@@ -1984,7 +1984,7 @@
      <x>0</x>
      <y>0</y>
      <width>1171</width>
-     <height>33</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
@@ -2014,6 +2014,13 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>CustomTableWidget</class>
+   <extends>QTableWidget</extends>
+   <header>customtablewidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'spokeduino_mothershiplenHEo.ui'
+## Form generated from reading UI file 'spokeduino_mothershipYdAEFA.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.1
 ##
@@ -21,7 +21,9 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QGraphicsView, QGridLayo
     QLineEdit, QMainWindow, QMenu, QMenuBar,
     QPlainTextEdit, QPushButton, QRadioButton, QSizePolicy,
     QSpacerItem, QStatusBar, QTabWidget, QTableView,
-    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
+    QTableWidgetItem, QVBoxLayout, QWidget)
+
+from customtablewidget import CustomTableWidget
 
 class Ui_mainWindow(object):
     def setupUi(self, mainWindow):
@@ -437,7 +439,7 @@ class Ui_mainWindow(object):
         self.verticalLayoutManufacturer.setObjectName(u"verticalLayoutManufacturer")
         self.horizontalLayoutManufacturerLeft = QHBoxLayout()
         self.horizontalLayoutManufacturerLeft.setObjectName(u"horizontalLayoutManufacturerLeft")
-        self.tableWidgetMeasurements = QTableWidget(self.groupBoxMeasurement)
+        self.tableWidgetMeasurements = CustomTableWidget(self.groupBoxMeasurement)
         self.tableWidgetMeasurements.setObjectName(u"tableWidgetMeasurements")
 
         self.horizontalLayoutManufacturerLeft.addWidget(self.tableWidgetMeasurements)
@@ -1272,7 +1274,7 @@ class Ui_mainWindow(object):
         mainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(mainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1171, 33))
+        self.menubar.setGeometry(QRect(0, 0, 1171, 22))
         self.menuHelp = QMenu(self.menubar)
         self.menuHelp.setObjectName(u"menuHelp")
         mainWindow.setMenuBar(self.menubar)
@@ -1384,4 +1386,3 @@ class Ui_mainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.setupTab), QCoreApplication.translate("mainWindow", u"Setup", None))
         self.menuHelp.setTitle(QCoreApplication.translate("mainWindow", u"Help", None))
     # retranslateUi
-

@@ -22,6 +22,7 @@ from setup_module import SetupModule
 from spoke_module import SpokeModule
 from measurement_module import MeasurementModule
 from unit_converter import UnitConverter
+from customtablewidget import CustomTableWidget
 
 class Spokeduino(QMainWindow):
     """
@@ -77,6 +78,10 @@ class Spokeduino(QMainWindow):
         self.measurement_module = MeasurementModule(
             main_window=self,
             ui=self.ui)
+        self.ui.tableWidgetMeasurements = CustomTableWidget(
+            move_next_callback=self.measurement_module.move_to_next_cell,
+            parent=self.ui.groupBoxMeasurement
+        )
         self.unit_converter = UnitConverter(self.ui)
         self.setup_module.setup_language()
         self.setup_module.populate_language_combobox()
@@ -722,6 +727,9 @@ class Spokeduino(QMainWindow):
                 item.setFlags(Qt.ItemFlag.ItemIsEditable |
                               Qt.ItemFlag.ItemIsEnabled)
                 self.ui.tableWidgetMeasurements.setItem(row, col, item)
+
+        self.measurement_module.activate_first_cell()
+
 
 def main() -> None:
     """

@@ -45,49 +45,64 @@ class MeasurementModule:
         tension: float = PiecewiseQuarticFit.evaluate(fit, deflection_value)
         self.ui.lineEditFormula.setText(f"{tension:.2f}")
 
-    def move_to_previous_cell(self):
+    def activate_first_cell(self) -> None:
         """
-        Navigate to the previous editable cell in tableWidgetMeasurements.
-        Wrap around to the previous row/column if needed.
+        Activate the first cell in tableWidgetMeasurements.
         """
         table = self.ui.tableWidgetMeasurements
-        current_row = table.currentRow()
-        current_column = table.currentColumn()
+        if table.rowCount() > 0 and table.columnCount() > 0:
+            table.setCurrentCell(0, 0)
+            table.setFocus()
 
-        # Calculate the previous cell
-        if current_column > 0:
-            target_row = current_row
-            target_column = current_column - 1
-        else:
-            # Wrap around to the previous row
-            target_row = (current_row - 1) \
-                if current_row > 0  \
-                else table.rowCount() - 1
-            target_column = table.columnCount() - 1
-
-        # Select the previous cell
-        table.setCurrentCell(target_row, target_column)
-
-    def move_to_next_cell(self):
+    def move_to_next_cell(self) -> None:
         """
-        Navigate to the next editable cell in tableWidgetMeasurements.
+        Move to the next editable cell in tableWidgetMeasurements.
         Wrap around to the next row/column if needed.
         """
         table = self.ui.tableWidgetMeasurements
         current_row = table.currentRow()
         current_column = table.currentColumn()
 
+        if current_row == -1 or current_column == -1:
+            return
+
         # Calculate the next cell
         if current_column < table.columnCount() - 1:
             target_row = current_row
             target_column = current_column + 1
         else:
-            # Wrap around to the next row
+            # Wrap around to the first column of the next row
             target_row = (current_row + 1) % table.rowCount()
             target_column = 0
 
-        # Select the next cell
+        # Set the next cell as active
         table.setCurrentCell(target_row, target_column)
+        table.setFocus()
+
+    def move_to_previous_cell(self) -> None:
+        """
+        Move to the previous editable cell in tableWidgetMeasurements.
+        Wrap around to the previous row/column if needed.
+        """
+        table = self.ui.tableWidgetMeasurements
+        current_row = table.currentRow()
+        current_column = table.currentColumn()
+
+        if current_row == -1 or current_column == -1:
+            return
+
+        # Calculate the previous cell
+        if current_column > 0:
+            target_row = current_row
+            target_column = current_column - 1
+        else:
+            # Wrap around to the last column of the previous row
+            target_row = (current_row - 1) if current_row > 0 else table.rowCount() - 1
+            target_column = table.columnCount() - 1
+
+        # Set the previous cell as active
+        table.setCurrentCell(target_row, target_column)
+        table.setFocus()
 
     def update_measurement_button_states(self) -> None:
         """
