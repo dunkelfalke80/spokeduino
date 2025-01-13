@@ -1,3 +1,4 @@
+import logging
 from typing import Any, cast
 from PySide6.QtCore import QTranslator
 from PySide6.QtWidgets import QAbstractItemView
@@ -33,7 +34,6 @@ class SpokeModule:
             QAbstractItemView.SelectionBehavior.SelectRows
         self.__select_single: QAbstractItemView.SelectionMode = \
             QAbstractItemView.SelectionMode.SingleSelection
-
 
     def update_fields(self, spoke: list[str]) -> None:
         """
@@ -77,6 +77,26 @@ class SpokeModule:
 
         self.ui.comboBoxType.setCurrentIndex(-1)
         self.ui.comboBoxType2.setCurrentIndex(-1)
+
+    def update_spoke_details(self, sender: QComboBox) -> None:
+        """
+        Update the spoke details fields when a spoke is
+        selected in comboBoxSpoke.
+        """
+        spoke_id: int | None = sender.currentData()
+
+        if spoke_id is None:
+            self.clear_spoke_details()
+            return
+        spoke_id = int(spoke_id)
+
+        spokes: list[Any] = self.db.execute_select(
+            query=SQLQueries.GET_SPOKES_BY_ID,
+            params=(spoke_id,))
+        if not spokes:
+            return
+
+        self.update_fields(spokes[0][1:])
 
     def sync_comboboxes(self, combo_box, value) -> None:
         """
@@ -135,26 +155,6 @@ class SpokeModule:
             combo2.blockSignals(False)
 
         self.load_spokes()
-
-    def update_spoke_details(self, sender: QComboBox) -> None:
-        """
-        Update the spoke details fields when a spoke is
-        selected in comboBoxSpoke.
-        """
-        spoke_id: int | None = sender.currentData()
-
-        if spoke_id is None:
-            self.clear_spoke_details()
-            return
-        spoke_id = int(spoke_id)
-
-        spokes: list[Any] = self.db.execute_select(
-            query=SQLQueries.GET_SPOKES_BY_ID,
-            params=(spoke_id,))
-        if not spokes:
-            return
-
-        self.update_fields(spokes[0][1:])
 
     def load_manufacturers(self) -> None:
         """
@@ -323,3 +323,136 @@ class SpokeModule:
         self.ui.tableViewSpokesDatabase.clearSelection()
         self.ui.comboBoxSpoke.setCurrentIndex(-1)
         self.clear_spoke_details()
+
+    def get_database_spoke_data(
+            self, from_database: bool
+            ) -> tuple[int, int, float, str, str, str]:
+        """
+        DRY helper
+        """
+        try:
+            if from_database:
+                return int(self.ui.comboBoxType.currentData()), \
+                    int(self.ui.lineEditGauge.text() or 0), \
+                    float(self.ui.lineEditWeight.text() or 0.0), \
+                    self.ui.lineEditName.text() or "", \
+                    self.ui.lineEditDimension.text() or "", \
+                    self.ui.lineEditSpokeComment.text() or ""
+            else:
+                return int(self.ui.comboBoxType2.currentData()), \
+                    int(self.ui.lineEditGauge2.text() or 0), \
+                    float(self.ui.lineEditWeight2.text() or 0.0), \
+                    self.ui.lineEditName2.text() or "", \
+                    self.ui.lineEditDimension2.text() or "", \
+                    self.ui.lineEditSpokeComment2.text() or ""
+
+        except ValueError as e:
+            logging.error(f"Invalid data provided: {e}")
+            raise
+
+    def modify_spoke(self) -> None:
+        """
+        Update the selected spoke with new values from the detail fields.
+        """
+        spoke_id: int | None = self.ui.comboBoxSpoke.currentData()
+
+        if spoke_id is None:
+            return
+        spoke_id = int(spoke_id)
+
+        type_id, gauge, weight, \
+            spoke_name, dimension, comment = \
+            self.get_database_spoke_data(True)
+
+        _ = self.db.execute_query(
+            query=SQLQueries.MODIFY_SPOKE,
+            params=(spoke_name, type_id, gauge, weight,
+                    dimension, comment, spoke_id),
+        )
+        self.load_spokes()
+
+    def delete_spoke(self) -> None:
+        """
+        Delete the currently selected spoke from the spokes table.
+        """
+        spoke_id: int | None = self.ui.comboBoxSpoke.currentData()
+        if spoke_id is None:
+            return
+        spoke_id = int(spoke_id)
+
+        _ = self.db.execute_query(
+            query=SQLQueries.DELETE_SPOKE,
+            params=(spoke_id,)
+        )
+        self.load_spokes()
+        # Clear selection
+        self.ui.comboBoxSpoke.setCurrentIndex(-1)
+        self.ui.tableViewSpokesDatabase.clearSelection()
+
+    def filter_spoke_table(self) -> None:
+        """
+        Filter tableViewSpokesDatabase based on filter inputs.
+        """
+        name_filter: str = self.ui.lineEditFilterName.text().lower()
+        type_filter: str = self.ui.comboBoxFilterType.currentText().lower()
+        gauge_filter: str = self.ui.lineEditFilterGauge.text().lower()
+
+        # Apply filters to the data
+        filtered_data: list[tuple[int, list[str]]] = [
+            spoke for spoke in self.current_spokes
+            # Match Name
+            if (name_filter in spoke[1][0].lower()) and
+            # Match Type
+            (type_filter in spoke[1][1].lower() if type_filter else True) and
+            # Match Gauge
+            (gauge_filter in str(spoke[1][2]).lower()
+                if gauge_filter else True)
+        ]
+
+        # Update the table model with filtered data
+        headers: list[str] = [
+            "Name",
+            "Type",
+            "Gauge",
+            "Weight",
+            "Dimensions",
+            "Comment"]
+        model = SpokeTableModel(filtered_data, headers)
+        self.ui.tableViewSpokesDatabase.setModel(model)
+
+    def align_filters_with_table(self) -> None:
+        """
+        Align filter fields with tableViewSpokesDatabase columns.
+        """
+        if not self.ui.tableViewSpokesDatabase.isVisible():
+            return
+
+        header: QHeaderView = \
+            self.ui.tableViewSpokesDatabase.horizontalHeader()
+
+        # Get column positions and sizes
+        offset_x: int = self.ui.tableViewSpokesDatabase.geometry().x() + \
+            header.sectionPosition(0)
+        name_pos: int = header.sectionPosition(0) + offset_x
+        name_width: int = header.sectionSize(0)
+        type_pos: int = header.sectionPosition(1) + offset_x
+        type_width: int = header.sectionSize(1)
+        gauge_pos: int = header.sectionPosition(2) + offset_x
+        gauge_width: int = header.sectionSize(2)
+
+        # Update filter field positions and sizes
+        self.ui.lineEditFilterName.setGeometry(
+            name_pos,
+            self.ui.lineEditFilterName.y(),
+            name_width,
+            self.ui.lineEditFilterName.height())
+        self.ui.comboBoxFilterType.setGeometry(
+            type_pos,
+            self.ui.comboBoxFilterType.y(),
+            type_width,
+            self.ui.comboBoxFilterType.height())
+        self.ui.lineEditFilterGauge.setGeometry(
+            gauge_pos,
+            self.ui.lineEditFilterGauge.y(),
+            gauge_width,
+            self.ui.lineEditFilterGauge.height())

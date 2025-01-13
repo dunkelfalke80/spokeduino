@@ -177,33 +177,3 @@ class SetupModule:
             self.ui.radioButtonLeftRight.setChecked(True)
         elif measurement_type == "right_left":
             self.ui.radioButtonRightLeft.setChecked(True)
-
-    def get_selected_tensiometers(self) -> list[tuple[int, str]]:
-        """
-        Retrieve the IDs and names of selected tensiometers based on the mode.
-        :return: List of tuples with (ID, Name) for selected tensiometers.
-        """
-        model = self.ui.comboBoxTensiometer.model()
-        selected_tensiometers = []
-
-        if self.multi_tensiometer_enabled:
-            # Ensure model is a QStandardItemModel
-            if isinstance(model, QStandardItemModel):
-                # Multi-tensiometer mode: return all checked tensiometers
-                for row in range(model.rowCount()):
-                    item = model.item(row)  # Safely access item()
-                    if item and item.checkState() == Qt.CheckState.Checked:
-                        tensiometer_id = item.data(Qt.ItemDataRole.UserRole)
-                        tensiometer_name = item.text()
-                        selected_tensiometers.append((tensiometer_id, tensiometer_name))
-            else:
-                print("Model is not a QStandardItemModel; cannot retrieve selected items.")
-        else:
-            # Single-tensiometer mode: return the currently selected one
-            current_index = self.ui.comboBoxTensiometer.currentIndex()
-            if current_index != -1:
-                tensiometer_id = self.ui.comboBoxTensiometer.itemData(current_index)
-                tensiometer_name = self.ui.comboBoxTensiometer.currentText()
-                selected_tensiometers.append((tensiometer_id, tensiometer_name))
-
-        return selected_tensiometers

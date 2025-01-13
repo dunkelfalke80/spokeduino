@@ -1,104 +1,20 @@
 from typing import Any
 from PySide6.QtWidgets import QMainWindow
-from PySide6.QtWidgets import QTableWidgetItem
+from PySide6.QtWidgets import QTableWidget
 from quartic_fit import PiecewiseQuarticFit
 from setup_module import SetupModule
-from table_helpers import FloatValidatorDelegate
-from unit_converter import UnitConverter
 
 class MeasurementModule:
 
     def __init__(self,
                  main_window: QMainWindow,
-                 ui: Any,
-                 setup_module: SetupModule,
-                 unit_converter: UnitConverter) -> None:
+                 ui: Any
+                 ) -> None:
         self.ui = ui
         self.main_window: QMainWindow = main_window
         self.setup_module = SetupModule
-        self.unit_converter = unit_converter
 
-    def setup_table_widget_measurements(self) -> None:
-        """
-        Set up the tableWidgetMeasurements with
-        editable fields for tension values
-        and selected tensiometers.
-        """
-        # Clear all cells, rows, and columns
-        self.ui.tableWidgetMeasurements.clearContents()
-        self.ui.tableWidgetMeasurements.setRowCount(0)
-        self.ui.tableWidgetMeasurements.setColumnCount(0)
-
-        # Handle the measurement direction
-        if self.ui.radioButtonMeasurementDown.isChecked():
-            tensions_newton = list(range(1600, 200, -100))
-        else:
-            tensions_newton = list(range(300, 1700, 100))
-
-        # Handle the measurement units
-        unit: str = "Newton"
-        if self.ui.radioButtonKgF.isChecked():
-            unit = "kgF"
-        elif self.ui.radioButtonLbF.isChecked():
-            unit = "lbF"
-        tensions_converted = [
-            self.unit_converter.convert_units(value, "newton")[{
-                "Newton": 0,
-                "kgF": 1,
-                "lbF": 2}[unit]]
-            for value in tensions_newton
-        ]
-
-        # Populate row headers with converted force values
-        self.ui.tableWidgetMeasurements.setRowCount(len(tensions_converted))
-        if unit == "Newton":
-            self.ui.tableWidgetMeasurements.setVerticalHeaderLabels(
-                [f"{value} {unit}" for value in tensions_converted]
-            )
-        else:
-            self.ui.tableWidgetMeasurements.setVerticalHeaderLabels(
-                [f"{value:.1f} {unit}" for value in tensions_converted]
-            )
-
-        # Get selected tensiometers and populate column headers
-        tensiometers = self.setup_module.get_selected_tensiometers()
-        self.ui.tableWidgetMeasurements.setColumnCount(len(tensiometers))
-        self.ui.tableWidgetMeasurements.setHorizontalHeaderLabels(
-            [tensiometer[1] for tensiometer in tensiometers]
-        )
-
-        delegate = FloatValidatorDelegate(self.ui.tableWidgetMeasurements)
-        self.ui.tableWidgetMeasurements.setItemDelegate(delegate)
-
-        # Make all cells editable
-        for row in range(len(tensions_converted)):
-            for col in range(len(tensiometers)):
-                item = QTableWidgetItem()
-                item.setFlags(Qt.ItemFlag.ItemIsEditable |
-                              Qt.ItemFlag.ItemIsEnabled)
-                self.ui.tableWidgetMeasurements.setItem(row, col, item)
-
-    def update_measurement_button_states(self):
-        """
-        Enable or disable measurement buttons based
-        on the completeness of the current column.
-        """
-        table = self.ui.tableWidgetMeasurements
-        selected_column = table.currentColumn()
-
-        if selected_column != -1:
-            all_filled = all(
-                table.item(row, selected_column) and
-                table.item(row, selected_column).text().strip() # type: ignore
-                for row in range(table.rowCount())
-            )
-            self.ui.pushButtonCalculateFormula.setEnabled(all_filled)
-            self.ui.pushButtonSaveMeasurement.setEnabled(all_filled)
-        else:
-            self.ui.pushButtonCalculateFormula.setEnabled(False)
-            self.ui.pushButtonSaveMeasurement.setEnabled(False)
-
-    def calculate_formula(self):
+    def calculate_formula(self, measurements: list[tuple[int, float]]) -> None:
         """
         Calculates the quartic fit equations for the spoke measurements and
         shows the calculated coefficients and the ranges in lineEditFormula
@@ -119,8 +35,10 @@ class MeasurementModule:
             (400, 2.2)
         ]
 
+        measurements = example_measurements
+
         # Create PiecewiseQuarticFit object
-        fit: str = PiecewiseQuarticFit.generate_model(example_measurements)
+        fit: str = PiecewiseQuarticFit.generate_model(measurements)
 
         # Evaluate tension for a given deflection
         deflection_value = 3.06  # Example deflection
@@ -170,3 +88,23 @@ class MeasurementModule:
 
         # Select the next cell
         table.setCurrentCell(target_row, target_column)
+
+    def update_measurement_button_states(self) -> None:
+        """
+        Enable or disable measurement buttons based
+        on the completeness of the current column.
+        """
+        table: QTableWidget = self.ui.tableWidgetMeasurements
+        selected_column: int = table.currentColumn()
+
+        if selected_column != -1:
+            all_filled: bool = all(
+                table.item(row, selected_column) and
+                table.item(row, selected_column).text().strip() # type: ignore
+                for row in range(table.rowCount())
+            )
+            self.ui.pushButtonCalculateFormula.setEnabled(all_filled)
+            self.ui.pushButtonSaveMeasurement.setEnabled(all_filled)
+        else:
+            self.ui.pushButtonCalculateFormula.setEnabled(False)
+            self.ui.pushButtonSaveMeasurement.setEnabled(False)
