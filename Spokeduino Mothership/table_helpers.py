@@ -1,8 +1,14 @@
+from typing import cast
 from PySide6.QtCore import Qt
+from PySide6.QtCore import QAbstractItemModel
 from PySide6.QtCore import QAbstractTableModel
+from PySide6.QtCore import QModelIndex
+from PySide6.QtCore import QPersistentModelIndex
 from PySide6.QtGui import QDoubleValidator
 from PySide6.QtWidgets import QStyledItemDelegate
+from PySide6.QtWidgets import QStyleOptionViewItem
 from PySide6.QtWidgets import QLineEdit
+from PySide6.QtWidgets import QWidget
 
 
 class SpokeTableModel(QAbstractTableModel):
@@ -31,7 +37,7 @@ class SpokeTableModel(QAbstractTableModel):
 
     def data(self, index, role=Qt.ItemDataRole.DisplayRole) -> str | None:
         if role == Qt.ItemDataRole.DisplayRole:
-            row_data = self._data[index.row()][1]  # Access row data
+            row_data: list[str] = self._data[index.row()][1]  # Access row data
             return row_data[index.column()]
         return None
 
@@ -63,3 +69,30 @@ class FloatValidatorDelegate(QStyledItemDelegate):
         validator.setDecimals(2)
         editor.setValidator(validator)
         return editor
+
+
+class MeasurementItemDelegate(QStyledItemDelegate):
+    """
+    Custom delegate for tableWidgetMeasurements to allow both dot and comma
+    as decimal separators.
+    """
+
+    def createEditor(self,
+                     parent: QWidget,
+                     option: QStyleOptionViewItem,
+                     index: QModelIndex | QPersistentModelIndex) -> QLineEdit:
+        editor = QLineEdit(parent)
+        validator = QDoubleValidator()
+        validator.setNotation(QDoubleValidator.Notation.StandardNotation)
+        editor.setValidator(validator)
+        return editor
+
+    def setModelData(self,
+                     editor: QWidget,
+                     model: QAbstractItemModel,
+                     index: QModelIndex | QPersistentModelIndex) -> None:
+        """
+        Update the model with the editor's data, replacing commas with dots.
+        """
+        value: str = cast(QLineEdit, editor).text().replace(",", ".")
+        model.setData(index, value)

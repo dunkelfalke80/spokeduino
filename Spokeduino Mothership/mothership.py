@@ -1,4 +1,3 @@
-import logging
 import os
 import sys
 from typing import cast, Any
@@ -8,6 +7,7 @@ from PySide6.QtCore import QTimer
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QLayout
 from PySide6.QtWidgets import QGroupBox
 from PySide6.QtWidgets import QTableView
 from PySide6.QtWidgets import QMainWindow
@@ -90,9 +90,13 @@ class Spokeduino(QMainWindow):
         custom_table.setObjectName("tableWidgetMeasurements")
 
         # Replace the widget in the layout
-        layout = cast(QGroupBox, self.ui.tableWidgetMeasurements.parent()).layout()
+        layout: QLayout | None = cast(
+            QGroupBox,
+            self.ui.tableWidgetMeasurements.parent()).layout()
         if layout:
-            layout.replaceWidget(self.ui.tableWidgetMeasurements, custom_table)
+            layout.replaceWidget(
+                self.ui.tableWidgetMeasurements,
+                custom_table)
 
         self.ui.tableWidgetMeasurements.deleteLater()
         self.ui.tableWidgetMeasurements = custom_table
@@ -683,7 +687,7 @@ class Spokeduino(QMainWindow):
             current_index: int = self.ui.comboBoxTensiometer.currentIndex()
             if current_index != -1:
                 tensiometer_id = self.ui.comboBoxTensiometer.itemData(current_index)
-                tensiometer_name = self.ui.comboBoxTensiometer.currentText()
+                tensiometer_name: str = self.ui.comboBoxTensiometer.currentText()
                 selected_tensiometers.append((tensiometer_id, tensiometer_name))
 
         # Reorder tensiometers to place the primary one first

@@ -22,7 +22,7 @@ class MeasurementModule:
         :return: The calculated fit formula as a string.
         :raises ValueError: If data is invalid or the formula cannot be calculated.
         """
-        table = self.ui.tableWidgetMeasurements
+        table: CustomTableWidget = self.ui.tableWidgetMeasurements
 
         # Determine the measurement direction
         if self.ui.radioButtonMeasurementUp.isChecked():
@@ -33,13 +33,14 @@ class MeasurementModule:
             raise ValueError("Measurement direction not selected")
 
         # Extract deflection values and pair with tensions
-        measurements = []
+        measurements : list[tuple[int, float]] = []
         for i, tension in enumerate(tensions):
-            row = i if self.ui.radioButtonMeasurementUp.isChecked() else len(tensions) - 1 - i
+            row: int = (i if self.ui.radioButtonMeasurementUp.isChecked()
+                        else len(tensions) - 1 - i)
             item = table.item(row, column)
             if item and item.text().strip():
                 try:
-                    deflection = float(item.text().strip())
+                    deflection = float(item.text())
                     measurements.append((tension, deflection))
                 except ValueError:
                     raise ValueError("Invalid data in table")
