@@ -14,7 +14,7 @@ class CustomTableWidget(QTableWidget):
             super().keyPressEvent(event)
             self.move_next_callback()
         # Check for Ctrl+V or Shift+Insert
-        if (event.key() == Qt.Key.Key_V and event.modifiers() & Qt.KeyboardModifier.ControlModifier) or \
+        elif (event.key() == Qt.Key.Key_V and event.modifiers() & Qt.KeyboardModifier.ControlModifier) or \
            (event.key() == Qt.Key.Key_Insert and event.modifiers() & Qt.KeyboardModifier.ShiftModifier):
             self.paste_row()
         else:

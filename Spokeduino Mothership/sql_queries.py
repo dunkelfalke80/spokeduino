@@ -68,7 +68,7 @@ class SQLQueries:
                     tension_600N, tension_700N, tension_800N,
                     tension_900N, tension_1000N, tension_1100N,
                     tension_1200N, tension_1300N, tension_1400N,
-                    tension_1500N, tension_1500N, formula, comment)
+                    tension_1500N, tension_1600N, formula, comment)
                 VALUES
                     (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 

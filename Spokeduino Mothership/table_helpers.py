@@ -1,9 +1,10 @@
 from typing import cast
 from PySide6.QtCore import Qt
-from PySide6.QtCore import QAbstractItemModel
+from PySide6.QtCore import QLocale
 from PySide6.QtCore import QAbstractTableModel
 from PySide6.QtCore import QModelIndex
 from PySide6.QtCore import QPersistentModelIndex
+from PySide6.QtGui import QValidator
 from PySide6.QtGui import QDoubleValidator
 from PySide6.QtWidgets import QStyledItemDelegate
 from PySide6.QtWidgets import QStyleOptionViewItem
@@ -57,18 +58,25 @@ class SpokeTableModel(QAbstractTableModel):
         return None
 
 
-class FloatValidatorDelegate(QStyledItemDelegate):
+class CustomDoubleValidator(QDoubleValidator):
     """
-    Delegate to enforce floating-point input validation in CustomTableWidget cells.
+    Custom validator to allow both dot and comma as decimal separators.
     """
 
-    def createEditor(self, parent, option, index) -> QLineEdit:
-        editor = QLineEdit(parent)
-        validator = QDoubleValidator()
-        validator.setNotation(QDoubleValidator.Notation.StandardNotation)
-        validator.setDecimals(2)
-        editor.setValidator(validator)
-        return editor
+    def validate(self, arg__1, arg__2):
+        # Allow empty input (Intermediate state for typing)
+        if not arg__1:
+            return QValidator.State.Intermediate, arg__1, arg__2
+
+        decimal_point: str = QLocale().decimalPoint()
+        fixed_input: str = ""
+        for char in arg__1:
+            if char.isdigit() or char == decimal_point:
+                fixed_input += char
+            else:
+                fixed_input += decimal_point
+
+        return super(CustomDoubleValidator, self).validate(fixed_input, arg__2)
 
 
 class MeasurementItemDelegate(QStyledItemDelegate):
@@ -76,23 +84,12 @@ class MeasurementItemDelegate(QStyledItemDelegate):
     Custom delegate for tableWidgetMeasurements to allow both dot and comma
     as decimal separators.
     """
-
     def createEditor(self,
                      parent: QWidget,
                      option: QStyleOptionViewItem,
                      index: QModelIndex | QPersistentModelIndex) -> QLineEdit:
         editor = QLineEdit(parent)
-        validator = QDoubleValidator()
+        validator = CustomDoubleValidator()
         validator.setNotation(QDoubleValidator.Notation.StandardNotation)
         editor.setValidator(validator)
         return editor
-
-    def setModelData(self,
-                     editor: QWidget,
-                     model: QAbstractItemModel,
-                     index: QModelIndex | QPersistentModelIndex) -> None:
-        """
-        Update the model with the editor's data, replacing commas with dots.
-        """
-        value: str = cast(QLineEdit, editor).text().replace(",", ".")
-        model.setData(index, value)
