@@ -54,6 +54,8 @@ class Spokeduino(QMainWindow):
         self.db_changed: bool = False
 
         # Reducing verbosity
+        self.__rm_stretch: QHeaderView.ResizeMode = \
+            QHeaderView.ResizeMode.Stretch
         self.__rm_shrink: QHeaderView.ResizeMode =\
             QHeaderView.ResizeMode.ResizeToContents
         self.__select_rows: QAbstractItemView.SelectionBehavior = \
@@ -435,8 +437,10 @@ class Spokeduino(QMainWindow):
         view.setSelectionMode(self.__select_single)
 
         # Adjust column headers
-        view.horizontalHeader().setSectionResizeMode(self.__rm_shrink)
-        view.horizontalHeader().setStretchLastSection(True)
+        resize_mode = view.horizontalHeader().setSectionResizeMode
+        resize_mode(self.__rm_shrink)
+        resize_mode(0, self.__rm_stretch) # Comment
+
 
     def delete_measurement(self) -> None:
         """
@@ -737,7 +741,7 @@ class Spokeduino(QMainWindow):
             params=("tensiometer_id",)
         )
 
-        if primary_tensiometer is not None:
+        if primary_tensiometer is not None and primary_tensiometer:
             primary_tensiometer_id: int = int(primary_tensiometer[0][0])
 
         if self.multi_tensiometer_enabled:
@@ -761,7 +765,7 @@ class Spokeduino(QMainWindow):
                 selected_tensiometers.append((tensiometer_id, tensiometer_name))
 
         # Reorder tensiometers to place the primary one first
-        if primary_tensiometer is not None:
+        if primary_tensiometer is not None and primary_tensiometer:
             selected_tensiometers.sort(
                 key=lambda x: x[0] != primary_tensiometer_id
             )
@@ -911,6 +915,7 @@ class Spokeduino(QMainWindow):
                 item = table.item(row, col)
                 if item:
                     item.setText("")
+        self.load_measurements_for_selected_spoke()
 
     def setup_tension_table(self, is_left: bool) -> None:
         """

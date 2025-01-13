@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'spokeduino_mothershipYdAEFA.ui'
+## Form generated from reading UI file 'spokeduino_mothershipQBZdcf.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.1
 ##
@@ -20,8 +20,8 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QGraphicsView, QGridLayo
     QGroupBox, QHBoxLayout, QHeaderView, QLayout,
     QLineEdit, QMainWindow, QMenu, QMenuBar,
     QPlainTextEdit, QPushButton, QRadioButton, QSizePolicy,
-    QSpacerItem, QStatusBar, QTabWidget, QTableView,
-    QTableWidgetItem, QVBoxLayout, QWidget)
+    QSpacerItem, QStackedWidget, QStatusBar, QTabWidget,
+    QTableView, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from customtablewidget import CustomTableWidget
 
@@ -806,10 +806,23 @@ class Ui_mainWindow(object):
         self.verticalLayoutSelectedTensionValuesLeft = QVBoxLayout(self.groupBoxTensionValuesLeft)
         self.verticalLayoutSelectedTensionValuesLeft.setSpacing(6)
         self.verticalLayoutSelectedTensionValuesLeft.setObjectName(u"verticalLayoutSelectedTensionValuesLeft")
-        self.tableViewTensionsLeft = QTableView(self.groupBoxTensionValuesLeft)
+        self.stackedWidget = QStackedWidget(self.groupBoxTensionValuesLeft)
+        self.stackedWidget.setObjectName(u"stackedWidget")
+        self.page = QWidget()
+        self.page.setObjectName(u"page")
+        self.verticalLayout_2 = QVBoxLayout(self.page)
+        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.tableViewTensionsLeft = QTableView(self.page)
         self.tableViewTensionsLeft.setObjectName(u"tableViewTensionsLeft")
 
-        self.verticalLayoutSelectedTensionValuesLeft.addWidget(self.tableViewTensionsLeft)
+        self.verticalLayout_2.addWidget(self.tableViewTensionsLeft)
+
+        self.stackedWidget.addWidget(self.page)
+        self.page_2 = QWidget()
+        self.page_2.setObjectName(u"page_2")
+        self.stackedWidget.addWidget(self.page_2)
+
+        self.verticalLayoutSelectedTensionValuesLeft.addWidget(self.stackedWidget)
 
 
         self.verticalLayoutSideLeft.addWidget(self.groupBoxTensionValuesLeft)
@@ -885,10 +898,23 @@ class Ui_mainWindow(object):
         self.verticalLayoutSelectedTensionValuesRight = QVBoxLayout(self.groupBoxTensionValuesRight)
         self.verticalLayoutSelectedTensionValuesRight.setSpacing(6)
         self.verticalLayoutSelectedTensionValuesRight.setObjectName(u"verticalLayoutSelectedTensionValuesRight")
-        self.tableViewTensionsRight = QTableView(self.groupBoxTensionValuesRight)
+        self.stackedWidget_2 = QStackedWidget(self.groupBoxTensionValuesRight)
+        self.stackedWidget_2.setObjectName(u"stackedWidget_2")
+        self.page_3 = QWidget()
+        self.page_3.setObjectName(u"page_3")
+        self.verticalLayout_3 = QVBoxLayout(self.page_3)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.tableViewTensionsRight = QTableView(self.page_3)
         self.tableViewTensionsRight.setObjectName(u"tableViewTensionsRight")
 
-        self.verticalLayoutSelectedTensionValuesRight.addWidget(self.tableViewTensionsRight)
+        self.verticalLayout_3.addWidget(self.tableViewTensionsRight)
+
+        self.stackedWidget_2.addWidget(self.page_3)
+        self.page_4 = QWidget()
+        self.page_4.setObjectName(u"page_4")
+        self.stackedWidget_2.addWidget(self.page_4)
+
+        self.verticalLayoutSelectedTensionValuesRight.addWidget(self.stackedWidget_2)
 
 
         self.verticalLayoutSideRight.addWidget(self.groupBoxTensionValuesRight)
@@ -1274,7 +1300,7 @@ class Ui_mainWindow(object):
         mainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(mainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1171, 22))
+        self.menubar.setGeometry(QRect(0, 0, 1171, 33))
         self.menuHelp = QMenu(self.menubar)
         self.menuHelp.setObjectName(u"menuHelp")
         mainWindow.setMenuBar(self.menubar)
@@ -1289,7 +1315,7 @@ class Ui_mainWindow(object):
 
         self.retranslateUi(mainWindow)
 
-        self.tabWidget.setCurrentIndex(0)
+        self.tabWidget.setCurrentIndex(2)
 
 
         QMetaObject.connectSlotsByName(mainWindow)
@@ -1386,3 +1412,4 @@ class Ui_mainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.setupTab), QCoreApplication.translate("mainWindow", u"Setup", None))
         self.menuHelp.setTitle(QCoreApplication.translate("mainWindow", u"Help", None))
     # retranslateUi
+
