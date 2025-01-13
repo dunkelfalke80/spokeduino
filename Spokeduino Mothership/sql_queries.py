@@ -49,11 +49,11 @@ class SQLQueries:
 
     GET_MEASUREMENTS: str = """
                 SELECT
-                    tension_300N, tension_400N, tension_500N,
-                    tension_600N, tension_700N, tension_800N,
-                    tension_900N, tension_1000N, tension_1100N,
-                    tension_1200N, tension_1300N, tension_1400N,
-                    tension_1500N, tension_1600N, id
+                    id, comment, tension_300N, tension_400N,
+                    tension_500N, tension_600N, tension_700N,
+                    tension_800N, tension_900N, tension_1000N,
+                    tension_1100N, tension_1200N, tension_1300N,
+                    tension_1400N, tension_1500N, tension_1600N
                 FROM
                     measurements
                 WHERE

@@ -7,6 +7,7 @@ from PySide6.QtCore import QTimer
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QComboBox
 from PySide6.QtWidgets import QLayout
 from PySide6.QtWidgets import QGroupBox
 from PySide6.QtWidgets import QTableView
@@ -110,6 +111,7 @@ class Spokeduino(QMainWindow):
         self.current_spokes: list[tuple[int, list[str]]] = []
         self.spoke_module.load_manufacturers()
         self.setup_measurements_table()
+        self.toggle_new_manufacturer_button()
         # Ugly hack
         QTimer.singleShot(
             100,
@@ -166,10 +168,10 @@ class Spokeduino(QMainWindow):
 
         # Synchronize combobox and table for spokes
         self.ui.comboBoxSpoke.currentIndexChanged.connect(
-            lambda: self.spoke_module.sync_spoke_selection(
+            lambda: self.sync_spoke_selection(
                 self.ui.comboBoxSpoke))
         self.ui.comboBoxSpoke2.currentIndexChanged.connect(
-            lambda: self.spoke_module.sync_spoke_selection(
+            lambda: self.sync_spoke_selection(
                 self.ui.comboBoxSpoke2))
         self.ui.comboBoxSpoke.currentIndexChanged.connect(
             lambda: self.spoke_module.update_spoke_details(
@@ -358,6 +360,30 @@ class Spokeduino(QMainWindow):
             self.db.vacuum()
         event.accept()
 
+    def sync_spoke_selection(self, sender: QComboBox) -> None:
+        """
+        Synchronize the spoke selection between the Database Tab and
+        Measurement Tab while preventing circular calls.
+        """
+        if sender == self.ui.comboBoxSpoke:
+            # Sync comboBoxSpoke2 with comboBoxSpoke
+            self.ui.comboBoxSpoke2.blockSignals(True)
+            self.ui.comboBoxSpoke2.setCurrentIndex(
+                self.ui.comboBoxSpoke.currentIndex()
+            )
+            self.ui.comboBoxSpoke2.blockSignals(False)
+        elif sender == self.ui.comboBoxSpoke2:
+            # Sync comboBoxSpoke with comboBoxSpoke2
+            self.ui.comboBoxSpoke.blockSignals(True)
+            self.ui.comboBoxSpoke.setCurrentIndex(
+                self.ui.comboBoxSpoke2.currentIndex()
+            )
+            self.ui.comboBoxSpoke.blockSignals(False)
+
+        # Update the details for the currently selected spoke
+        self.spoke_module.update_spoke_details(sender)
+        self.load_measurements_for_selected_spoke()
+
     def load_measurements_for_selected_spoke(self) -> None:
         """
         Load all measurements for the selected spoke and tensiometer
@@ -374,21 +400,23 @@ class Spokeduino(QMainWindow):
 
         measurements: list[Any] = self.db.execute_select(
             query=SQLQueries.GET_MEASUREMENTS,
-            params=(spoke_id, tensiometer_id))
+            params=(spoke_id, tensiometer_id)
+        )
         if not measurements:
+            view.setModel(None)
             return
 
         headers: list[str] = [
-            "300N", "400N", "500N", "600N", "700N", "800N", "900N",
+            "Comment", "300N", "400N", "500N", "600N", "700N", "800N", "900N",
             "1000N", "1100N", "1200N", "1300N", "1400N", "1500N", "1600N"
         ]
 
-        # Convert measurements to list[tuple[int, list[str]]]
         data: list[tuple[Any, list[str]]] = [
-            (measurement[0],
-             list(map(str, measurement[1:-1])))
-             for measurement in measurements]
+            (measurement[0], [measurement[1]] + list(map(str, measurement[2:])))
+            for measurement in measurements
+        ]
 
+        # Create and set the model
         model = SpokeTableModel(data, headers)
         view.setModel(model)
 
@@ -396,33 +424,51 @@ class Spokeduino(QMainWindow):
         view.setSelectionBehavior(self.__select_rows)
         view.setSelectionMode(self.__select_single)
 
-        # Set column headers
-        view.horizontalHeader().\
-            setSectionResizeMode(
-            self.__rm_shrink
-        )
-        view.horizontalHeader().\
-            setStretchLastSection(True)
+        # Adjust column headers
+        view.horizontalHeader().setSectionResizeMode(self.__rm_shrink)
+        view.horizontalHeader().setStretchLastSection(True)
 
     def delete_measurement(self) -> None:
         """
         Delete the currently selected measurement from the measurements table.
+        Deletes only if there is one measurement or a measurement row is selected.
         """
         view: QTableView = self.ui.tableViewMeasurements
-        selected_index: QModelIndex = view.currentIndex()
-        if not selected_index.isValid():
+        model: SpokeTableModel = cast(SpokeTableModel, view.model())
+
+        if model is None or model.rowCount() == 0:
+            self.messagebox.err("No measurements available to delete.")
             return
 
-        model: SpokeTableModel = cast(SpokeTableModel, view.model())
-        measurement_id: int = int(model.index(
-            selected_index.row(),
-            model.columnCount() - 1
-        ).data())
+        # If there is only one measurement, delete it directly
+        if model.rowCount() == 1:
+            # Use the first row's ID
+            measurement_id: int | None = model.get_id(0)
+            if measurement_id is None:
+                self.messagebox.err("No measurement found.")
+                return
+            measurement_id = int(measurement_id)
+        else:
+            # If a measurement row is selected, delete the selected measurement
+            selected_index: QModelIndex = view.currentIndex()
+            if not selected_index.isValid():
+                self.messagebox.err("No measurement row selected for deletion.")
+                return
 
-        _ = self.db.execute_query(
+            # Use the selected row's ID
+            measurement_id = model.get_id(selected_index.row())
+            if measurement_id is None:
+                self.messagebox.err("No measurement found.")
+                return
+            measurement_id = int(measurement_id)
+
+        # Execute the deletion query
+        self.db.execute_query(
             query=SQLQueries.DELETE_MEASUREMENT,
             params=(measurement_id,),
         )
+
+        # Clear selection and reload the measurements
         view.clearSelection()
         self.load_measurements_for_selected_spoke()
 
@@ -450,15 +496,10 @@ class Spokeduino(QMainWindow):
         Enable or disable pushButtonNewManufacturer
         based on lineEditNewManufacturer.
         """
-        is_measurement_filled = bool(
-            self.ui.lineEditNewManufacturer.text())
-        is_database_filled = bool(
-            self.ui.lineEditNewManufacturer2.text())
-
         self.ui.pushButtonNewManufacturer.setEnabled(
-            is_database_filled)
+            len(self.ui.lineEditNewManufacturer.text()) > 0)
         self.ui.pushButtonNewManufacturer2.setEnabled(
-            is_measurement_filled
+            len(self.ui.lineEditNewManufacturer2.text()) > 0
         )
 
     def toggle_spoke_buttons(self) -> None:
@@ -614,33 +655,49 @@ class Spokeduino(QMainWindow):
     def use_spoke(self, left: bool) -> None:
         """
         Write the selected spoke details to plainTextEditSelectedSpoke
-        and save the formula for the spoke.
+        and save the formula for the spoke based on the selected or first measurement.
         """
         res, spoke_id = self.spoke_module.get_selected_spoke_id()
         if not res:
             return
 
-        # Fetch spoke details and formula from the database
+        # Fetch spoke details from the database
         spoke: list[Any] = self.db.execute_select(
             SQLQueries.GET_SPOKES_BY_ID,
             params=(spoke_id,)
         )
+        if not spoke:
+            self.messagebox.err("Spoke not found in the database.")
+            return
 
+        # Fetch the current tensiometer ID
         tensiometer_id: int | None = self.ui.comboBoxTensiometer.currentData()
         if tensiometer_id is None:
             self.messagebox.err("A single tensiometer must be selected first.")
             return
         tensiometer_id = int(tensiometer_id)
 
-        # measurements: list[Any] = self.__db.execute_select(
-        #    query=SQLQueries.GET_MEASUREMENTS,
-        #    params=(spoke_id, tensiometer_id))
-        # if not measurements:
-        #    return
+        # Fetch measurements for the selected spoke and tensiometer
+        measurements: list[Any] = self.db.execute_select(
+            query=SQLQueries.GET_MEASUREMENTS,
+            params=(spoke_id, tensiometer_id)
+        )
+        if not measurements:
+            self.messagebox.err("No measurements found for the selected spoke.")
+            return
 
-        # Extract and format details
+        # Determine which measurement to use
+        selected_index: QModelIndex = self.ui.tableViewMeasurements.currentIndex()
+        if selected_index.isValid():
+            # Use the selected measurement
+            selected_row = selected_index.row()
+            formula = measurements[selected_row][-2]  # Assuming formula is the second-to-last field
+        else:
+            # Use the first measurement
+            formula = measurements[0][-2]
+
+        # Extract and format spoke details
         _, name, _, gauge, _, dimensions, comment, *_ = spoke[0]
-
         spoke_details = (
             f"Name: {name}\n"
             f"Gauge: {gauge}\n"
@@ -648,12 +705,13 @@ class Spokeduino(QMainWindow):
             f"Comment: {comment}"
         )
 
+        # Set the details and save the formula
         if left:
             self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
-            # self.left_spoke_formula = formula
+            self.left_spoke_formula = formula
         else:
             self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
-            # self.right_spoke_formula = formula
+            self.right_spoke_formula = formula
 
     def get_selected_tensiometers(self) -> list[tuple[int, str]]:
         """

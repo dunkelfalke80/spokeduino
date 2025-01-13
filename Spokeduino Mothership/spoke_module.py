@@ -113,29 +113,6 @@ class SpokeModule:
         elif combo_box == self.ui.comboBoxSpoke2:
             self.ui.comboBoxSpoke.setCurrentText(value)
 
-    def sync_spoke_selection(self, sender: QComboBox) -> None:
-        """
-        Synchronize the spoke selection between the Database Tab and
-        Measurement Tab while preventing circular calls.
-        """
-        if sender == self.ui.comboBoxSpoke:
-            # Sync comboBoxSpoke2 with comboBoxSpoke
-            self.ui.comboBoxSpoke2.blockSignals(True)
-            self.ui.comboBoxSpoke2.setCurrentIndex(
-                self.ui.comboBoxSpoke.currentIndex()
-            )
-            self.ui.comboBoxSpoke2.blockSignals(False)
-        elif sender == self.ui.comboBoxSpoke2:
-            # Sync comboBoxSpoke with comboBoxSpoke2
-            self.ui.comboBoxSpoke.blockSignals(True)
-            self.ui.comboBoxSpoke.setCurrentIndex(
-                self.ui.comboBoxSpoke2.currentIndex()
-            )
-            self.ui.comboBoxSpoke.blockSignals(False)
-
-        # Update the details for the currently selected spoke
-        self.update_spoke_details(sender)
-
     def sync_manufacturer_selection(self, sender: QComboBox, index: int) -> None:
         """
         Synchronize the manufacturer selection between the
