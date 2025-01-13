@@ -187,3 +187,6 @@ $RECYCLE.BIN/
 .DS_Store
 
 _NCrunch*
+
+# Databases
+Spokeduino Mothership/spokeduino.sqlite
