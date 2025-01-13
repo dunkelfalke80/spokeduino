@@ -6,7 +6,7 @@ from PySide6.QtCore import QModelIndex
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtGui import QStandardItem
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QLineEdit
 from PySide6.QtWidgets import QComboBox
 from PySide6.QtWidgets import QLayout
 from PySide6.QtWidgets import QGroupBox
@@ -18,6 +18,7 @@ from PySide6.QtWidgets import QTableWidgetItem
 from mothership_ui import Ui_mainWindow
 from sql_queries import SQLQueries
 from table_helpers import SpokeTableModel
+from table_helpers import TensionTableModel
 from table_helpers import MeasurementItemDelegate
 from database_module import DatabaseModule
 from setup_module import SetupModule
@@ -342,6 +343,15 @@ class Spokeduino(QMainWindow):
         header: QHeaderView = \
             self.ui.tableViewSpokesDatabase.horizontalHeader()
         header.sectionClicked.connect(self.spoke_module.sort_by_column)
+
+        # Left tension table
+        self.ui.lineEditSpokeAmountLeft.textChanged.connect(lambda: self.setup_tension_table(is_left=True))
+        self.ui.lineEditTargetTensionLeft.textChanged.connect(lambda: self.setup_tension_table(is_left=True))
+
+        # Right tension table
+        self.ui.lineEditSpokeAmountRight.textChanged.connect(lambda: self.setup_tension_table(is_left=False))
+        self.ui.lineEditTargetTensionRight.textChanged.connect(lambda: self.setup_tension_table(is_left=False))
+
 
     def resizeEvent(self, event) -> None:
         """
@@ -902,6 +912,32 @@ class Spokeduino(QMainWindow):
                 if item:
                     item.setText("")
 
+    def setup_tension_table(self, is_left: bool) -> None:
+        """
+        Set up tableViewTensions
+        """
+        if is_left:
+            line_edit: QLineEdit = self.ui.lineEditSpokeAmountLeft
+            table_view: QTableView = self.ui.tableViewTensionsLeft
+            formula: str = self.left_spoke_formula
+            tension_edit: QLineEdit = self.ui.lineEditTargetTensionLeft
+        else:
+            line_edit: QLineEdit = self.ui.lineEditSpokeAmountRight
+            table_view: QTableView = self.ui.tableViewTensionsRight
+            formula: str = self.right_spoke_formula
+            tension_edit: QLineEdit = self.ui.lineEditTargetTensionRight
+
+        try:
+            spoke_amount = int(line_edit.text())
+        except ValueError:
+            spoke_amount = 0
+
+        # Define table structure
+        model = TensionTableModel(spoke_amount, formula, tension_edit.text(), self.unit_converter)
+        table_view.setModel(model)
+        table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        table_view.horizontalHeader().setSectionResizeMode(self.__rm_shrink)
+        table_view.horizontalHeader().setStretchLastSection(True)
 
 def main() -> None:
     """
