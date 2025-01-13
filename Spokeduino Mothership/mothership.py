@@ -89,8 +89,8 @@ class Spokeduino(QMainWindow):
         self.setup_table_widget_measurements()
         # Ugly hack
         QTimer.singleShot(
-            msec=100,
-            functor=self.spoke_module.align_filters_with_table)
+            100,
+            self.spoke_module.align_filters_with_table)
 
     def setup_signals_and_slots(self) -> None:
         """
@@ -149,25 +149,23 @@ class Spokeduino(QMainWindow):
             lambda: self.spoke_module.sync_spoke_selection(
                 self.ui.comboBoxSpoke2))
         self.ui.comboBoxSpoke.currentIndexChanged.connect(
-            lambda: self.spoke_module.sync_spoke_selection(
+            lambda: self.spoke_module.update_spoke_details(
                 self.ui.comboBoxSpoke))
         self.ui.comboBoxSpoke2.currentIndexChanged.connect(
-            lambda: self.spoke_module.sync_spoke_selection(
+            lambda: self.spoke_module.update_spoke_details(
                 self.ui.comboBoxSpoke2))
         self.ui.comboBoxSpoke.currentIndexChanged.connect(
-            lambda: self.spoke_module.sync_spoke_selection(
-                self.ui.comboBoxSpoke))
+            self.spoke_module.select_spoke_row)
         self.ui.comboBoxSpoke2.currentIndexChanged.connect(
-            lambda: self.spoke_module.sync_spoke_selection(
-                self.ui.comboBoxSpoke2))
+            self.spoke_module.select_spoke_row)
         self.ui.tableViewSpokesDatabase.clicked.connect(
             self.spoke_module.select_spoke_from_table)
 
         # Filters
         self.ui.tabWidget.currentChanged.connect(
         QTimer.singleShot(
-            msec=100,
-            functor=self.spoke_module.align_filters_with_table))
+            100,
+            self.spoke_module.align_filters_with_table))
         self.ui.lineEditFilterName.textChanged.connect(
             self.spoke_module.filter_spoke_table)
         self.ui.comboBoxFilterType.currentTextChanged.connect(

@@ -256,14 +256,29 @@ class SpokeModule:
         view.setSelectionMode(self.__select_single)
         self.populate_filter_type()
 
-    def populate_filter_type(self):
+    def populate_filter_type(self) -> None:
         """
-        Populate comboBoxFilterType with unique spoke types.
+        Populate comboBoxFilterType with unique spoke types applicable
+        to the current dataset in database order.
         """
-        types = {spoke[1][1] for spoke in self.current_spokes}
+        # Extract applicable types from current spokes
+        type_ids_in_use: set[Any] = {
+            spoke[1][1]
+            for spoke in self.current_spokes}
+
+        # Fetch all types from the database
+        types: list[Any] = self.db.execute_select(SQLQueries.GET_TYPES)
+        if not types:
+            return
+
+        # Populate comboBoxFilterType with applicable types
         self.ui.comboBoxFilterType.clear()
-        self.ui.comboBoxFilterType.addItem("")  # Empty means no filter is set
-        self.ui.comboBoxFilterType.addItems(sorted(types))
+        # Empty means no filter is set
+        self.ui.comboBoxFilterType.addItem("")
+
+        for type_id, type_name in types:
+            if type_name in type_ids_in_use:
+                self.ui.comboBoxFilterType.addItem(type_name, type_id)
 
     def sort_by_column(self, column: int) -> None:
         """
@@ -397,16 +412,13 @@ class SpokeModule:
         type_filter: str = self.ui.comboBoxFilterType.currentText().lower()
         gauge_filter: str = self.ui.lineEditFilterGauge.text().lower()
 
-        # Apply filters to the data
         filtered_data: list[tuple[int, list[str]]] = [
             spoke for spoke in self.current_spokes
-            # Match Name
-            if (name_filter in spoke[1][0].lower()) and
-            # Match Type
-            (type_filter in spoke[1][1].lower() if type_filter else True) and
-            # Match Gauge
+            if (name_filter in spoke[1][0].lower()) and  # Match Name
+            (type_filter == spoke[1][1].lower()
+             if type_filter else True) and  # Match Type
             (gauge_filter in str(spoke[1][2]).lower()
-                if gauge_filter else True)
+             if gauge_filter else True)  # Match Gauge
         ]
 
         # Update the table model with filtered data
