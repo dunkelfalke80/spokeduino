@@ -8,6 +8,7 @@ from PySide6.QtCore import QTimer
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QGroupBox
 from PySide6.QtWidgets import QTableView
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QHeaderView
@@ -78,10 +79,23 @@ class Spokeduino(QMainWindow):
         self.measurement_module = MeasurementModule(
             main_window=self,
             ui=self.ui)
-        self.ui.tableWidgetMeasurements = CustomTableWidget(
+
+        # Replace the tableWidgetMeasurements with the custom widget
+        custom_table = CustomTableWidget(
             move_next_callback=self.measurement_module.move_to_next_cell,
-            parent=self.ui.groupBoxMeasurement
+            parent=self
         )
+
+        # Set the same object name so the rest of the code works seamlessly
+        custom_table.setObjectName("tableWidgetMeasurements")
+
+        # Replace the widget in the layout
+        layout = cast(QGroupBox, self.ui.tableWidgetMeasurements.parent()).layout()
+        if layout:
+            layout.replaceWidget(self.ui.tableWidgetMeasurements, custom_table)
+
+        self.ui.tableWidgetMeasurements.deleteLater()
+        self.ui.tableWidgetMeasurements = custom_table
         self.unit_converter = UnitConverter(self.ui)
         self.setup_module.setup_language()
         self.setup_module.populate_language_combobox()
@@ -223,7 +237,7 @@ class Spokeduino(QMainWindow):
         self.ui.tableWidgetMeasurements.currentCellChanged.connect(
             self.measurement_module.update_measurement_button_states)
         self.ui.pushButtonCalculateFormula.clicked.connect(
-            self.measurement_module.calculate_formula)
+            self.measurement_module.toggle_calculate_button)
         self.ui.pushButtonMeasureSpoke.clicked.connect(
             self.setup_table_widget_measurements)
         self.ui.pushButtonPreviousMeasurement.clicked.connect(

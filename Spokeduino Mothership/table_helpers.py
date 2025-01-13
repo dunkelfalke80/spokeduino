@@ -53,7 +53,7 @@ class SpokeTableModel(QAbstractTableModel):
 
 class FloatValidatorDelegate(QStyledItemDelegate):
     """
-    Delegate to enforce floating-point input validation in QTableWidget cells.
+    Delegate to enforce floating-point input validation in CustomTableWidget cells.
     """
 
     def createEditor(self, parent, option, index) -> QLineEdit:

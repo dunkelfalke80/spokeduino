@@ -1,8 +1,9 @@
 from typing import Any
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QMainWindow
-from PySide6.QtWidgets import QTableWidget
 from quartic_fit import PiecewiseQuarticFit
 from setup_module import SetupModule
+from customtablewidget import CustomTableWidget
 
 class MeasurementModule:
 
@@ -14,36 +15,60 @@ class MeasurementModule:
         self.main_window: QMainWindow = main_window
         self.setup_module = SetupModule
 
-    def calculate_formula(self, measurements: list[tuple[int, float]]) -> None:
+    def calculate_formula(self, column: int) -> str:
         """
-        Calculates the quartic fit equations for the spoke measurements and
-        shows the calculated coefficients and the ranges in lineEditFormula
+        Calculate the quartic fit formula for the specified column.
+        :param column: The column index to extract measurements from.
+        :return: The calculated fit formula as a string.
+        :raises ValueError: If data is invalid or the formula cannot be calculated.
         """
-        # Example measurements
-        example_measurements: list[tuple[int, float]] = [
-            (1500, 3.1),
-            (1400, 3.05),
-            (1300, 3.01),
-            (1200, 2.95),
-            (1100, 2.89),
-            (1000, 2.82),
-            (900, 2.76),
-            (800, 2.67),
-            (700, 2.57),
-            (600, 2.49),
-            (500, 2.34),
-            (400, 2.2)
-        ]
+        table = self.ui.tableWidgetMeasurements
 
-        measurements = example_measurements
+        # Determine the measurement direction
+        if self.ui.radioButtonMeasurementUp.isChecked():
+            tensions = list(range(300, 1700, 100))  # 300 N to 1600 N
+        elif self.ui.radioButtonMeasurementDown.isChecked():
+            tensions = list(range(1600, 200, -100))  # 1600 N to 300 N
+        else:
+            raise ValueError("Measurement direction not selected")
 
-        # Create PiecewiseQuarticFit object
-        fit: str = PiecewiseQuarticFit.generate_model(measurements)
+        # Extract deflection values and pair with tensions
+        measurements = []
+        for i, tension in enumerate(tensions):
+            row = i if self.ui.radioButtonMeasurementUp.isChecked() else len(tensions) - 1 - i
+            item = table.item(row, column)
+            if item and item.text().strip():
+                try:
+                    deflection = float(item.text().strip())
+                    measurements.append((tension, deflection))
+                except ValueError:
+                    raise ValueError("Invalid data in table")
 
-        # Evaluate tension for a given deflection
-        deflection_value = 3.06  # Example deflection
-        tension: float = PiecewiseQuarticFit.evaluate(fit, deflection_value)
-        self.ui.lineEditFormula.setText(f"{tension:.2f}")
+        if not measurements:
+            raise ValueError("No data in selected column")
+
+        # Run the quartic fit model
+        return PiecewiseQuarticFit.generate_model(measurements)
+
+    def toggle_calculate_button(self) -> None:
+        """
+        Handle pushButtonCalculateFormula click event.
+        """
+        table = self.ui.tableWidgetMeasurements
+        selected_column = table.currentColumn()
+
+        if selected_column == -1:
+            self.ui.lineEditFormula.setText("No column selected")
+            return
+
+        try:
+            fit = self.calculate_formula(selected_column)
+            self.ui.lineEditFormula.setText(fit)
+        except ValueError as e:
+            self.ui.lineEditFormula.setText(str(e))
+        except Exception as e:
+            self.ui.lineEditFormula.setText(f"Error calculating formula: {e}")
+
 
     def activate_first_cell(self) -> None:
         """
@@ -57,7 +82,7 @@ class MeasurementModule:
     def move_to_next_cell(self) -> None:
         """
         Move to the next editable cell in tableWidgetMeasurements.
-        Wrap around to the next row/column if needed.
+        Wrap around rows and columns as needed.
         """
         table = self.ui.tableWidgetMeasurements
         current_row = table.currentRow()
@@ -71,13 +96,11 @@ class MeasurementModule:
             target_row = current_row
             target_column = current_column + 1
         else:
-            # Wrap around to the first column of the next row
             target_row = (current_row + 1) % table.rowCount()
             target_column = 0
 
-        # Set the next cell as active
-        table.setCurrentCell(target_row, target_column)
-        table.setFocus()
+        # Ugly hack
+        QTimer.singleShot(50, lambda: table.setCurrentCell(target_row, target_column))
 
     def move_to_previous_cell(self) -> None:
         """
@@ -109,7 +132,7 @@ class MeasurementModule:
         Enable or disable measurement buttons based
         on the completeness of the current column.
         """
-        table: QTableWidget = self.ui.tableWidgetMeasurements
+        table: CustomTableWidget = self.ui.tableWidgetMeasurements
         selected_column: int = table.currentColumn()
 
         if selected_column != -1:
