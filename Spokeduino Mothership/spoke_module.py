@@ -35,6 +35,12 @@ class SpokeModule:
         self.__select_single: QAbstractItemView.SelectionMode = \
             QAbstractItemView.SelectionMode.SingleSelection
 
+    def get_selected_spoke_id(self) -> tuple[bool, int]:
+        spoke_id: int | None = self.ui.comboBoxSpoke.currentData()
+        if spoke_id is None:
+            return False, 0
+        return True, int(spoke_id)
+
     def update_fields(self, spoke: list[str]) -> None:
         """
         Update the fields and comboboxes on both tabs
@@ -308,8 +314,8 @@ class SpokeModule:
         Select the corresponding row in tableViewSpokesDatabase
         based on the combobox.
         """
-        spoke_id: int | None = self.ui.comboBoxSpoke.currentData()
-        if spoke_id is None:
+        res, spoke_id = self.get_selected_spoke_id()
+        if not res:
             self.ui.tableViewSpokesDatabase.clearSelection()
             return
 
@@ -369,11 +375,9 @@ class SpokeModule:
         """
         Update the selected spoke with new values from the detail fields.
         """
-        spoke_id: int | None = self.ui.comboBoxSpoke.currentData()
-
-        if spoke_id is None:
+        res, spoke_id = self.get_selected_spoke_id()
+        if not res:
             return
-        spoke_id = int(spoke_id)
 
         type_id, gauge, weight, \
             spoke_name, dimension, comment = \
@@ -390,10 +394,9 @@ class SpokeModule:
         """
         Delete the currently selected spoke from the spokes table.
         """
-        spoke_id: int | None = self.ui.comboBoxSpoke.currentData()
-        if spoke_id is None:
+        res, spoke_id = self.get_selected_spoke_id()
+        if not res:
             return
-        spoke_id = int(spoke_id)
 
         _ = self.db.execute_query(
             query=SQLQueries.DELETE_SPOKE,

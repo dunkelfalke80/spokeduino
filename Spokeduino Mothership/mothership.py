@@ -24,6 +24,7 @@ from spoke_module import SpokeModule
 from measurement_module import MeasurementModule
 from unit_converter import UnitConverter
 from customtablewidget import CustomTableWidget
+from messagebox_module import MessageboxModule
 
 class Spokeduino(QMainWindow):
     """
@@ -42,8 +43,8 @@ class Spokeduino(QMainWindow):
         self.db_path: str = f"{self.current_path}/spokeduino.sqlite"
 
         # Initialize database
-        schema_file = os.path.join(self.current_path, "sql", "init_schema.sql")
-        data_file = os.path.join(self.current_path, "sql", "default_data.sql")
+        schema_file: str = os.path.join(self.current_path, "sql", "init_schema.sql")
+        data_file: str = os.path.join(self.current_path, "sql", "default_data.sql")
         self.db = DatabaseModule(self.db_path)
         self.db.initialize_database(schema_file, data_file)
 
@@ -51,8 +52,6 @@ class Spokeduino(QMainWindow):
         self.db_changed: bool = False
 
         # Reducing verbosity
-        self.__rm_stretch: QHeaderView.ResizeMode = \
-            QHeaderView.ResizeMode.Stretch
         self.__rm_shrink: QHeaderView.ResizeMode =\
             QHeaderView.ResizeMode.ResizeToContents
         self.__select_rows: QAbstractItemView.SelectionBehavior = \
@@ -79,6 +78,7 @@ class Spokeduino(QMainWindow):
         self.measurement_module = MeasurementModule(
             main_window=self,
             ui=self.ui)
+        self.messagebox = MessageboxModule(self.ui)
 
         # Replace the tableWidgetMeasurements with the custom widget
         custom_table = CustomTableWidget(
@@ -248,6 +248,8 @@ class Spokeduino(QMainWindow):
             self.measurement_module.move_to_previous_cell)
         self.ui.pushButtonNextMeasurement.clicked.connect(
             self.measurement_module.move_to_next_cell)
+        self.ui.pushButtonSaveMeasurement.clicked.connect(
+            self.save_measurements)
 
         # Use spokes
         self.ui.pushButtonUseLeft.clicked.connect(
@@ -361,14 +363,13 @@ class Spokeduino(QMainWindow):
         Load all measurements for the selected spoke and tensiometer
         and populate tableViewMeasurements.
         """
-        spoke_id: int | None = self.ui.comboBoxSpoke.currentData()
+        res, spoke_id = self.spoke_module.get_selected_spoke_id()
         tensiometer_id: int | None = self.ui.comboBoxTensiometer.currentData()
         view: QTableView = self.ui.tableViewMeasurements
 
-        if spoke_id is None or tensiometer_id is None:
+        if not res or tensiometer_id is None:
             view.setModel(None)
             return
-        spoke_id = int(spoke_id)
         tensiometer_id = int(tensiometer_id)
 
         measurements: list[Any] = self.db.execute_select(
@@ -379,7 +380,7 @@ class Spokeduino(QMainWindow):
 
         headers: list[str] = [
             "300N", "400N", "500N", "600N", "700N", "800N", "900N",
-            "1000N", "1100N", "1200N", "1300N", "1400N", "1500N"
+            "1000N", "1100N", "1200N", "1300N", "1400N", "1500N", "1600N"
         ]
 
         # Convert measurements to list[tuple[int, list[str]]]
@@ -615,8 +616,8 @@ class Spokeduino(QMainWindow):
         Write the selected spoke details to plainTextEditSelectedSpoke
         and save the formula for the spoke.
         """
-        spoke_id = self.ui.comboBoxSpoke.currentData()
-        if not spoke_id:
+        res, spoke_id = self.spoke_module.get_selected_spoke_id()
+        if not res:
             return
 
         # Fetch spoke details and formula from the database
@@ -770,6 +771,67 @@ class Spokeduino(QMainWindow):
             self.setup_module.save_setting(
                 key="tensiometer_id",
                 value=str(tensiometer_id))
+
+    def save_measurements(self) -> None:
+        """
+        Save measurement data for all columns in tableWidgetMeasurements.
+        """
+        table: CustomTableWidget = self.ui.tableWidgetMeasurements
+        db: DatabaseModule = self.db  # Reference to the database module
+
+        # Ensure a valid spoke ID is selected
+        res, spoke_id = self.spoke_module.get_selected_spoke_id()
+        if not res:
+            self.messagebox.err("No spoke selected")
+            return
+
+        # Get the comment
+        comment: str = self.ui.lineEditMeasurementComment.text().strip()
+
+        # Iterate over each column in the table
+        for column in range(table.columnCount()):
+            try:
+                # Get measurements and formula for the column
+                measurements, formula = \
+                    self.measurement_module.calculate_formula(column)
+            except ValueError as e:
+                self.messagebox.err(f"Column {column + 1}: {str(e)}")
+                continue
+
+            # Fetch the tensiometer ID for the column
+            current_column: QTableWidgetItem | None = table.horizontalHeaderItem(column)
+            if current_column is None:
+                continue
+
+            header_item = table.horizontalHeaderItem(column)
+            if header_item is None:
+                raise ValueError(f"Column {column + 1}: No header item found")
+
+            tensiometer_id = header_item.data(Qt.ItemDataRole.UserRole)
+            if tensiometer_id is None:
+                self.messagebox.err(f"Column {column + 1}: No tensiometer ID assigned")
+
+            # Extract tension values in the correct order
+            tension_values: list[float] = [value for _, value in measurements]
+
+            # Prepare query parameters
+            params = (
+                spoke_id,
+                tensiometer_id,
+                *tension_values,
+                formula,
+                comment,
+            )
+
+            # Execute the query
+            try:
+                # db.execute_query(query=SQLQueries.ADD_MEASUREMENT, params=params)
+                print(params)
+            except Exception as e:
+                self.messagebox.err("Failed to save measurement for column {column + 1}: {str(e)}")
+
+        # Notify the user
+        self.messagebox.ok("Measurements saved successfully")
 
 
 def main() -> None:

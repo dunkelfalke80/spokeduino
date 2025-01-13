@@ -1,4 +1,3 @@
-import logging
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QClipboard
 from PySide6.QtWidgets import QApplication
@@ -17,7 +16,6 @@ class CustomTableWidget(QTableWidget):
         # Check for Ctrl+V or Shift+Insert
         if (event.key() == Qt.Key.Key_V and event.modifiers() & Qt.KeyboardModifier.ControlModifier) or \
            (event.key() == Qt.Key.Key_Insert and event.modifiers() & Qt.KeyboardModifier.ShiftModifier):
-            logging.error("keypress")
             self.paste_row()
         else:
             super().keyPressEvent(event)
@@ -27,7 +25,8 @@ class CustomTableWidget(QTableWidget):
         Paste data from the clipboard into the currently selected row.
         """
         selected_row: int = self.currentRow()
-        if selected_row == -1:
+        selected_column: int = self.currentColumn()
+        if selected_row == -1 or selected_column == -1:
             return
 
         clipboard: QClipboard = QApplication.clipboard()
@@ -39,7 +38,7 @@ class CustomTableWidget(QTableWidget):
             return
 
         # Populate the selected row with clipboard data
-        for col, value in enumerate(cells):
+        for row, value in enumerate(cells):
             item = QTableWidgetItem(value)
             item.setFlags(Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
-            self.setItem(selected_row, col, item)
+            self.setItem(row, selected_column, item)

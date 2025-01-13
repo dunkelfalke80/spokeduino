@@ -53,13 +53,24 @@ class SQLQueries:
                     tension_600N, tension_700N, tension_800N,
                     tension_900N, tension_1000N, tension_1100N,
                     tension_1200N, tension_1300N, tension_1400N,
-                    tension_1500N, id
+                    tension_1500N, tension_1600N, id
                 FROM
                     measurements
                 WHERE
                     spoke_id = ?
                 AND
                     tensiometer_id = ?"""
+
+    ADD_MEASUREMENT: str = """
+                INSERT INTO
+                    measurements (spoke_id, tensiometer_id,
+                    tension_300N, tension_400N, tension_500N,
+                    tension_600N, tension_700N, tension_800N,
+                    tension_900N, tension_1000N, tension_1100N,
+                    tension_1200N, tension_1300N, tension_1400N,
+                    tension_1500N, tension_1500N, formula, comment)
+                VALUES
+                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
 
     ADD_TENSIOMETER: str = """
                 INSERT INTO
