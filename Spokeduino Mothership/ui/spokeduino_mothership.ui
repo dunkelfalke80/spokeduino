@@ -1210,7 +1210,7 @@
                  <number>6</number>
                 </property>
                 <item>
-                 <widget class="QTableView" name="tableViewTensionsLeft"/>
+                 <widget class="CustomTableWidget" name="tableViewTensionsLeft"/>
                 </item>
                </layout>
               </widget>
@@ -1334,7 +1334,7 @@
                  <number>6</number>
                 </property>
                 <item>
-                 <widget class="QTableView" name="tableViewTensionsRight"/>
+                 <widget class="CustomTableWidget" name="tableViewTensionsRight"/>
                 </item>
                </layout>
               </widget>
@@ -1984,7 +1984,7 @@
      <x>0</x>
      <y>0</y>
      <width>1171</width>
-     <height>22</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">

@@ -1,17 +1,15 @@
-from typing import cast
+from enum import Enum
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QLocale
 from PySide6.QtCore import QAbstractTableModel
 from PySide6.QtCore import QModelIndex
 from PySide6.QtCore import QPersistentModelIndex
-from PySide6.QtGui import QColor
 from PySide6.QtGui import QValidator
 from PySide6.QtGui import QDoubleValidator
 from PySide6.QtWidgets import QStyledItemDelegate
 from PySide6.QtWidgets import QStyleOptionViewItem
 from PySide6.QtWidgets import QLineEdit
 from PySide6.QtWidgets import QWidget
-from quartic_fit import PiecewiseQuarticFit
 
 
 class SpokeTableModel(QAbstractTableModel):
@@ -60,79 +58,6 @@ class SpokeTableModel(QAbstractTableModel):
         return None
 
 
-class TensionTableModel(QAbstractTableModel):
-    def __init__(self, spoke_amount: int, formula: str, target_tension: str, unit_converter) -> None:
-        super().__init__()
-        self.spoke_amount: int = spoke_amount
-        self.formula: str = formula
-        self.target_tension: float | None = (float(target_tension)
-                                             if target_tension
-                                             else None)
-        self.unit_converter = unit_converter
-        self.data_mm: list[str] = [""] * spoke_amount
-        self.data_tension: list[str] = [""] * spoke_amount
-
-    def rowCount(self, parent=None) -> int:
-        return self.spoke_amount
-
-    def columnCount(self, parent=None) -> int:
-        return 2  # "mm" and tension
-
-    def data(self, index, role = Qt.ItemDataRole.DisplayRole):
-        if not index.isValid():
-            return None
-
-        row, col = index.row(), index.column()
-
-        # Display data
-        if role == Qt.ItemDataRole.DisplayRole:
-            if col == 0:  # "mm" column
-                return self.data_mm[row]
-            elif col == 1:  # Tension column
-                return self.data_tension[row]
-
-        # Background color
-        if role == Qt.ItemDataRole.BackgroundRole and col == 1 and self.data_tension[row]:
-            tension = float(self.data_tension[row])
-            if self.target_tension:
-                if tension < self.target_tension - 25:
-                    return QColor("yellow")
-                elif abs(tension - self.target_tension) <= 25:
-                    return QColor("green")
-                elif tension > self.target_tension + 25:
-                    return QColor("red")
-
-        return None
-
-    def setData(self, index, value, role = Qt.ItemDataRole.EditRole) -> bool:
-        if not index.isValid() or index.column() != 0:
-            return False
-        index = cast(QModelIndex, index)
-
-        self.data_mm[index.row()] = value
-        try:
-            deflection = float(value.replace(",", "."))
-            tension_newton = PiecewiseQuarticFit.evaluate(
-                self.formula,
-                deflection)
-            _, converted_tension, _ = self.unit_converter.convert_units(
-                tension_newton,
-                "newton")
-            self.data_tension[index.row()] = f"{converted_tension:.2f}"
-        except ValueError:
-            self.data_tension[index.row()] = ""
-
-        self.dataChanged.emit(index, index.siblingAtColumn(1))
-        return True
-
-    def flags(self, index) -> Qt.ItemFlag:
-        if index.column() == 0:  # "mm" column
-            return Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
-        elif index.column() == 1:  # Tension column
-            return Qt.ItemFlag.ItemIsEnabled
-        return Qt.ItemFlag.NoItemFlags
-
-
 class CustomDoubleValidator(QDoubleValidator):
     """
     Custom validator to allow both dot and comma as decimal separators.
@@ -168,3 +93,9 @@ class MeasurementItemDelegate(QStyledItemDelegate):
         validator.setNotation(QDoubleValidator.Notation.StandardNotation)
         editor.setValidator(validator)
         return editor
+
+
+class SpokeduinoState(Enum):
+    WAITING  = 1
+    MEASURING = 2
+    TENSIONING = 4
