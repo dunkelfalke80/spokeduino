@@ -1,19 +1,19 @@
 // MIT License
-// 
+//
 // Copyright (c) 2025 Roman Galperin
-// Original code Copyright (c) David Pilling (https://www.davidpilling.com/wiki/index.php/DialGauge) 
+// Original code Copyright (c) David Pilling (https://www.davidpilling.com/wiki/index.php/DialGauge)
 // and used with explicid permission.
-// 
+//
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-// 
+//
 // The above copyright notice and this permission notice shall be included in all
 // copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -52,6 +52,11 @@ float gauge3_deflection_old = 0.1f;
 int pedal_value_old = 0;
 int btn_func_value_old = 0;
 int btn_func2_value_old = 0;
+
+bool pedal_value_toggle = false;
+bool btn_func_value_toggle = false;
+bool btn_func2_value_toggle = false;
+
 
 /**
  * @brief Reads the gauge by toggling ADMUX between two channels
@@ -179,12 +184,12 @@ void process_gauge(const uint8_t admux_channel_a, const uint8_t admux_channel_b,
  * @brief Runs the full job for a single digital input.
  *
  * Reads the input value, compares it to the old value,
- * sends updated data to the serial port and.
+ * sends updated data to the serial port on a full toggle.
  *
  * @param pin_number  The number of the pin
  * @param old_value   The previous valid detection value reference
  */
-void process_pin(const uint8_t pin_number, int& old_value)
+void process_pin(const uint8_t pin_number, int& old_value, bool& toggle_value)
 {
     int value = digitalRead(pin_number);
 
@@ -193,14 +198,22 @@ void process_pin(const uint8_t pin_number, int& old_value)
         return;
 
     old_value = value;
-    send_input_value(pin_number, value);
+    if (toggle_value) // Only send a value on a full toggle (high-low-high)
+    {
+        toggle_value = false;
+        send_input_value(pin_number, value);
+    }
+    else
+    {
+        toggle_value = true;
+    }
 }
 
 /**
  * @brief Initializes the hardware and peripherals.
  *
  * Sets up serial communication and digital inputs, disables default ADC,
- * enables the comparator, and initializes the LCD display.
+ * and enables the comparator.
  */
 void setup()
 {
@@ -225,9 +238,9 @@ void setup()
 
 void loop()
 {
-    process_pin(PIN_PEDAL, pedal_value_old);
-    process_pin(PIN_BTN_FUNC, btn_func_value_old);
-    process_pin(PIN_BTN_FUNC2, btn_func2_value_old);
+    process_pin(PIN_PEDAL, pedal_value_old, pedal_value_toggle);
+    process_pin(PIN_BTN_FUNC, btn_func_value_old, btn_func_value_toggle);
+    process_pin(PIN_BTN_FUNC2, btn_func2_value_old, btn_func2_value_toggle);
     process_gauge(PIN_GAUGE1_CLOCK, PIN_GAUGE1_DATA, 0, gauge1_deflection_old);
     process_gauge(PIN_GAUGE2_CLOCK, PIN_GAUGE2_DATA, 1, gauge2_deflection_old);
     process_gauge(PIN_GAUGE3_CLOCK, PIN_GAUGE3_DATA, 2, gauge3_deflection_old);
