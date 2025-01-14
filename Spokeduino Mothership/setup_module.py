@@ -138,6 +138,10 @@ class SetupModule:
         if index != -1:
             self.ui.comboBoxSpokeduinoPort.setCurrentIndex(index)
 
+        # Load Spokeduino enabled
+        spokeduino_enabled: str = settings_dict.get("spokeduino_enabled", "0")
+        self.ui.checkBoxSpokeduinoEnabled.setChecked(spokeduino_enabled == "1")
+
         # Load Tensiometer selection
         tensiometer_id: str | None = settings_dict.get("tensiometer_id")
         if tensiometer_id:

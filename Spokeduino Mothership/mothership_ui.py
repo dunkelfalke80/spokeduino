@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'spokeduino_mothershipzFMLeq.ui'
+## Form generated from reading UI file 'spokeduino_mothershipMdoUyv.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.1
 ##
@@ -16,12 +16,12 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QIcon, QImage, QKeySequence, QLinearGradient,
     QPainter, QPalette, QPixmap, QRadialGradient,
     QTransform)
-from PySide6.QtWidgets import (QApplication, QComboBox, QGraphicsView, QGridLayout,
-    QGroupBox, QHBoxLayout, QHeaderView, QLayout,
-    QLineEdit, QMainWindow, QMenu, QMenuBar,
-    QPlainTextEdit, QPushButton, QRadioButton, QSizePolicy,
-    QSpacerItem, QStatusBar, QTabWidget, QTableView,
-    QTableWidgetItem, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QGraphicsView,
+    QGridLayout, QGroupBox, QHBoxLayout, QHeaderView,
+    QLayout, QLineEdit, QMainWindow, QMenu,
+    QMenuBar, QPlainTextEdit, QPushButton, QRadioButton,
+    QSizePolicy, QSpacerItem, QStatusBar, QTabWidget,
+    QTableView, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from customtablewidget import CustomTableWidget
 
@@ -994,14 +994,22 @@ class Ui_mainWindow(object):
         sizePolicy3.setHeightForWidth(self.groupBoxSpokeduino.sizePolicy().hasHeightForWidth())
         self.groupBoxSpokeduino.setSizePolicy(sizePolicy3)
         self.groupBoxSpokeduino.setMinimumSize(QSize(250, 0))
-        self.verticalLayoutSelectPort = QVBoxLayout(self.groupBoxSpokeduino)
-        self.verticalLayoutSelectPort.setObjectName(u"verticalLayoutSelectPort")
+        self.horizontalLayout_2 = QHBoxLayout(self.groupBoxSpokeduino)
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.comboBoxSpokeduinoPort = QComboBox(self.groupBoxSpokeduino)
         self.comboBoxSpokeduinoPort.setObjectName(u"comboBoxSpokeduinoPort")
         sizePolicy3.setHeightForWidth(self.comboBoxSpokeduinoPort.sizePolicy().hasHeightForWidth())
         self.comboBoxSpokeduinoPort.setSizePolicy(sizePolicy3)
 
-        self.verticalLayoutSelectPort.addWidget(self.comboBoxSpokeduinoPort)
+        self.horizontalLayout_2.addWidget(self.comboBoxSpokeduinoPort)
+
+        self.checkBoxSpokeduinoEnabled = QCheckBox(self.groupBoxSpokeduino)
+        self.checkBoxSpokeduinoEnabled.setObjectName(u"checkBoxSpokeduinoEnabled")
+        self.checkBoxSpokeduinoEnabled.setEnabled(True)
+        sizePolicy2.setHeightForWidth(self.checkBoxSpokeduinoEnabled.sizePolicy().hasHeightForWidth())
+        self.checkBoxSpokeduinoEnabled.setSizePolicy(sizePolicy2)
+
+        self.horizontalLayout_2.addWidget(self.checkBoxSpokeduinoEnabled)
 
 
         self.verticalLayoutSetupLeft.addWidget(self.groupBoxSpokeduino)
@@ -1274,7 +1282,7 @@ class Ui_mainWindow(object):
         mainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(mainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1171, 33))
+        self.menubar.setGeometry(QRect(0, 0, 1171, 22))
         self.menuHelp = QMenu(self.menubar)
         self.menuHelp.setObjectName(u"menuHelp")
         mainWindow.setMenuBar(self.menubar)
@@ -1360,6 +1368,7 @@ class Ui_mainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tensionTab), QCoreApplication.translate("mainWindow", u"Tension a wheel", None))
         self.groupBoxLanguage.setTitle(QCoreApplication.translate("mainWindow", u"Language", None))
         self.groupBoxSpokeduino.setTitle(QCoreApplication.translate("mainWindow", u"Spokeduino port", None))
+        self.checkBoxSpokeduinoEnabled.setText(QCoreApplication.translate("mainWindow", u"Use Spokeduino", None))
         self.groupBoxTensiometer.setTitle(QCoreApplication.translate("mainWindow", u"Tensiometer", None))
         self.pushButtonMultipleTensiometers.setText("")
         self.groupBoxtNewTensiometer.setTitle(QCoreApplication.translate("mainWindow", u"New tensiometer", None))

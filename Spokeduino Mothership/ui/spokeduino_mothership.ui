@@ -1496,7 +1496,7 @@
               <property name="title">
                <string>Spokeduino port</string>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayoutSelectPort">
+              <layout class="QHBoxLayout" name="horizontalLayout_2">
                <item>
                 <widget class="QComboBox" name="comboBoxSpokeduinoPort">
                  <property name="sizePolicy">
@@ -1504,6 +1504,22 @@
                    <horstretch>0</horstretch>
                    <verstretch>0</verstretch>
                   </sizepolicy>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QCheckBox" name="checkBoxSpokeduinoEnabled">
+                 <property name="enabled">
+                  <bool>true</bool>
+                 </property>
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Use Spokeduino</string>
                  </property>
                 </widget>
                </item>
@@ -1984,7 +2000,7 @@
      <x>0</x>
      <y>0</y>
      <width>1171</width>
-     <height>33</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">

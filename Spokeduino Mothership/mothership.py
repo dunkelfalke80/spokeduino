@@ -1,8 +1,6 @@
 import os
 import sys
-import serial
 import threading
-import time
 from typing import cast, Any
 from PySide6.QtCore import QAbstractItemModel, Qt
 from PySide6.QtCore import QModelIndex
@@ -22,7 +20,8 @@ from mothership_ui import Ui_mainWindow
 from sql_queries import SQLQueries
 from table_helpers import SpokeTableModel
 from table_helpers import MeasurementItemDelegate
-from table_helpers import SpokeduinoState
+from spokeduino_module import SpokeduinoState
+from spokeduino_module import SpokeduinoModule
 from database_module import DatabaseModule
 from setup_module import SetupModule
 from spoke_module import SpokeModule
@@ -53,6 +52,7 @@ class Spokeduino(QMainWindow):
         self.db = DatabaseModule(self.db_path)
         self.db.initialize_database(schema_file, data_file)
         self.serial_port = None
+        self.waiting_event = threading.Event()
 
         # For vacuuming on exit
         self.db_changed: bool = False
@@ -87,6 +87,11 @@ class Spokeduino(QMainWindow):
             main_window=self,
             ui=self.ui)
         self.messagebox = MessageboxModule(self)
+        self.spokeduino_module = SpokeduinoModule(
+            ui=self.ui,
+            db=self.db,
+            setup_module=self.setup_module,
+            messagebox=self.messagebox)
 
         # Replace the tableWidgetMeasurements with the custom widget
         custom_table = CustomTableWidget(
@@ -157,7 +162,7 @@ class Spokeduino(QMainWindow):
         self.spoke_module.load_manufacturers()
         self.setup_measurements_table()
         self.toggle_new_manufacturer_button()
-        self.restart_arduino_port()
+        self.spokeduino_module.reinitialize_serial_port()
         # Ugly hack
         QTimer.singleShot(
             100,
@@ -293,13 +298,15 @@ class Spokeduino(QMainWindow):
         self.ui.pushButtonMeasureSpoke.clicked.connect(
             self.setup_measurements_table)
         self.ui.pushButtonMeasureSpoke.clicked.connect(
-            lambda: self.state_machine(SpokeduinoState.MEASURING))
+            lambda: self.spokeduino_module.set_state(
+                SpokeduinoState.MEASURING))
         self.ui.pushButtonPreviousMeasurement.clicked.connect(
             self.measurement_module.move_to_previous_cell)
         self.ui.pushButtonNextMeasurement.clicked.connect(
             self.measurement_module.move_to_next_cell)
         self.ui.pushButtonSaveMeasurement.clicked.connect(
-        lambda: self.state_machine(SpokeduinoState.WAITING))
+        lambda: self.spokeduino_module.set_state(
+            SpokeduinoState.WAITING))
         self.ui.pushButtonSaveMeasurement.clicked.connect(
             self.save_measurements)
 
@@ -322,8 +329,9 @@ class Spokeduino(QMainWindow):
             lambda port: self.setup_module.save_setting(
                 "spokeduino_port", port))
         self.ui.comboBoxSpokeduinoPort.currentTextChanged.connect(
-            self.restart_arduino_port)
-
+            self.spokeduino_module.restart_arduino_port)
+        self.ui.checkBoxSpokeduinoEnabled.checkStateChanged.connect(
+            self.spokeduino_module.restart_arduino_port)
         # Tensiometer selection
         self.ui.comboBoxTensiometer.currentIndexChanged.connect(self.save_tensiometer)
 
@@ -431,6 +439,7 @@ class Spokeduino(QMainWindow):
         Handle the close event for the main window.
         Run VACUUM if the database has been modified.
         """
+        self.spokeduino_module.close_serial_port()
         if self.db_changed:
             self.db.vacuum()
         event.accept()
@@ -639,7 +648,7 @@ class Spokeduino(QMainWindow):
             self.setup_module.load_tensiometers()
 
             # Restore the original tensiometer selection
-            selected_tensiometers = self.get_selected_tensiometers()
+            selected_tensiometers: list[tuple[int, str]] = self.get_selected_tensiometers()
             if selected_tensiometers:
                 tensiometer_id, _ = selected_tensiometers[0]
                 index = self.ui.comboBoxTensiometer.findData(tensiometer_id)
@@ -811,8 +820,9 @@ class Spokeduino(QMainWindow):
             params=("tensiometer_id",)
         )
 
-        if primary_tensiometer is not None and primary_tensiometer:
-            primary_tensiometer_id: int = int(primary_tensiometer[0][0])
+        if primary_tensiometer is None or not primary_tensiometer:
+            return []
+        primary_tensiometer_id: int = int(primary_tensiometer[0][0])
 
         if self.multi_tensiometer_enabled:
             # Ensure model is a QStandardItemModel
@@ -835,10 +845,7 @@ class Spokeduino(QMainWindow):
                 selected_tensiometers.append((tensiometer_id, tensiometer_name))
 
         # Reorder tensiometers to place the primary one first
-        if primary_tensiometer is not None and primary_tensiometer:
-            selected_tensiometers.sort(
-                key=lambda x: x[0] != primary_tensiometer_id
-            )
+        selected_tensiometers.sort(key=lambda x: x[0] != primary_tensiometer_id)
 
         return selected_tensiometers
 
@@ -978,7 +985,7 @@ class Spokeduino(QMainWindow):
         self.messagebox.ok("Measurements saved successfully")
         for row in range(table.rowCount()):
             for col in range(table.columnCount()):
-                item = table.item(row, col)
+                item: QTableWidgetItem | None = table.item(row, col)
                 if item:
                     item.setText("")
         self.load_measurements_for_selected_spoke()
@@ -1032,46 +1039,6 @@ class Spokeduino(QMainWindow):
 
         # Adjust font size to fit the screen
         #self.resize_table_font(table_widget, spoke_amount)
-
-    def state_machine(self, SpokeduinoState) -> None:
-        self.spokeduino_state = SpokeduinoState
-        print(f"State machine switched to {self.spokeduino_state}")
-
-    def spokeduino_thread(self) -> None:
-        if not self.serial_port:
-            return
-        while (self.serial_port.is_open):
-            if not self.serial_port.in_waiting:
-                time.sleep(0.01)
-            if self.spokeduino_state == SpokeduinoState.WAITING:
-                time.sleep(1)
-                continue
-            data: str = self.serial_port.readline().decode("ascii")
-            if data.startswith("0:"): # first gauge
-                if self.spokeduino_state == SpokeduinoState.MEASURING:
-                    table = self.ui.tableWidgetMeasurements
-                    value: str = str(float(data[2:]))
-                    item = QTableWidgetItem(value)
-                    item.setFlags(Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
-                    table.setItem(table.currentRow(), table.currentColumn(), item)
-
-    def restart_arduino_port(self) -> None:
-        if not self.ui.comboBoxSpokeduinoPort.currentText():
-            return
-        if self.serial_port is None:
-            self.serial_port = serial.Serial()
-
-        if not self.serial_port.is_open:
-            self.th_spokeduino_handler: threading.Thread
-        else:
-            self.serial_port.close()
-            self.th_spokeduino_handler.join()
-        self.serial_port.baudrate = 9600
-        self.serial_port.port = self.ui.comboBoxSpokeduinoPort.currentText()
-        self.serial_port.open()
-        self.serial_port.flush()
-        self.th_spokeduino_handler = threading.Thread(target=self.spokeduino_thread)
-        self.th_spokeduino_handler.start()
 
 
 def main() -> None:

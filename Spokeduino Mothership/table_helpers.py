@@ -1,4 +1,3 @@
-from enum import Enum
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QLocale
 from PySide6.QtCore import QAbstractTableModel
@@ -93,9 +92,3 @@ class MeasurementItemDelegate(QStyledItemDelegate):
         validator.setNotation(QDoubleValidator.Notation.StandardNotation)
         editor.setValidator(validator)
         return editor
-
-
-class SpokeduinoState(Enum):
-    WAITING  = 1
-    MEASURING = 2
-    TENSIONING = 4
