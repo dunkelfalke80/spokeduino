@@ -2,12 +2,14 @@ import os
 import sys
 import threading
 from typing import cast, Any
-from PySide6.QtCore import QAbstractItemModel, Qt
+from PySide6.QtCore import Qt
+from PySide6.QtCore import QAbstractItemModel
 from PySide6.QtCore import QModelIndex
 from PySide6.QtCore import QTimer
+from PySide6.QtGui import QFont
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtGui import QStandardItem
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QLineEdit
 from PySide6.QtWidgets import QComboBox
 from PySide6.QtWidgets import QLayout
 from PySide6.QtWidgets import QGroupBox
@@ -16,7 +18,8 @@ from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QAbstractItemView
 from PySide6.QtWidgets import QTableWidgetItem
-from mothership_ui import Ui_mainWindow
+from PySide6.QtWidgets import QSizePolicy
+from ui import Ui_mainWindow
 from sql_queries import SQLQueries
 from table_helpers import SpokeTableModel
 from table_helpers import MeasurementItemDelegate
@@ -121,6 +124,9 @@ class Spokeduino(QMainWindow):
             parent=self
         )
 
+        # Set the same object name so the rest of the code works seamlessly
+        custom_tension_table_left.setObjectName("tableViewTensionsLeft")
+
         # Replace the widget in the layout
         layout: QLayout | None = cast(
             QGroupBox,
@@ -139,6 +145,9 @@ class Spokeduino(QMainWindow):
             parent=self
         )
 
+        # Set the same object name so the rest of the code works seamlessly
+        custom_tension_table_right.setObjectName("tableViewTensionsRight")
+
         # Replace the widget in the layout
         layout: QLayout | None = cast(
             QGroupBox,
@@ -146,10 +155,10 @@ class Spokeduino(QMainWindow):
         if layout:
             layout.replaceWidget(
                 self.ui.tableViewTensionsRight,
-                custom_tension_table_left)
+                custom_tension_table_right)
 
         self.ui.tableViewTensionsRight.deleteLater()
-        self.ui.tableViewTensionsRight = custom_tension_table_left
+        self.ui.tableViewTensionsRight = custom_tension_table_right
 
         self.unit_converter = UnitConverter(self.ui)
         self.setup_module.setup_language()
@@ -162,7 +171,6 @@ class Spokeduino(QMainWindow):
         self.spoke_module.load_manufacturers()
         self.setup_measurements_table()
         self.toggle_new_manufacturer_button()
-        self.spokeduino_module.reinitialize_serial_port()
         # Ugly hack
         QTimer.singleShot(
             100,
@@ -329,9 +337,9 @@ class Spokeduino(QMainWindow):
             lambda port: self.setup_module.save_setting(
                 "spokeduino_port", port))
         self.ui.comboBoxSpokeduinoPort.currentTextChanged.connect(
-            self.spokeduino_module.restart_arduino_port)
+            self.spokeduino_module.restart_spokeduino_port)
         self.ui.checkBoxSpokeduinoEnabled.checkStateChanged.connect(
-            self.spokeduino_module.restart_arduino_port)
+            self.spokeduino_module.restart_spokeduino_port)
         # Tensiometer selection
         self.ui.comboBoxTensiometer.currentIndexChanged.connect(self.save_tensiometer)
 
@@ -996,10 +1004,14 @@ class Spokeduino(QMainWindow):
         Populate the table manually for QTableWidget.
         """
         # Select the appropriate UI elements
-        line_edit_spoke_amount = self.ui.lineEditSpokeAmountLeft if is_left else self.ui.lineEditSpokeAmountRight
-        line_edit_target_tension = self.ui.lineEditTargetTensionLeft if is_left else self.ui.lineEditTargetTensionRight
-        view = self.ui.tableViewTensionsLeft if is_left else self.ui.tableViewTensionsRight
-        formula = self.left_spoke_formula if is_left else self.right_spoke_formula
+        if is_left:
+            line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountLeft
+            line_edit_target_tension: QLineEdit = self.ui.lineEditTargetTensionLeft
+            view: CustomTableWidget = self.ui.tableViewTensionsLeft
+        else:
+            line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountRight
+            line_edit_target_tension: QLineEdit = self.ui.lineEditTargetTensionRight
+            view: CustomTableWidget = self.ui.tableViewTensionsRight
 
         # Get spoke amount and target tension
         try:
@@ -1035,10 +1047,46 @@ class Spokeduino(QMainWindow):
         # Resize columns to fit within the table
         view.horizontalHeader().setSectionResizeMode(self.__rm_stretch.Stretch)
         view.horizontalHeader().setHighlightSections(False)
-        view.verticalHeader().setVisible(False)  # Hide row numbers for simplicity
 
         # Adjust font size to fit the screen
-        #self.resize_table_font(table_widget, spoke_amount)
+        self.resize_table_font(view, spoke_amount)
+
+    def resize_table_font(self, view, row_count) -> None:
+        """
+        Resize the table font, row heights, and column widths so it fits within the parent layout
+        without scrollbars. Dynamically retrieves the layout size from the table's parent widget.
+
+        :param view: The QTableWidget or QTableView to resize.
+        :param row_count: The number of rows in the table.
+        """
+        if row_count == 0:
+            return  # No rows to resize
+
+        # Get the size of the parent widget
+        parent_widget = view.parentWidget()
+        if not parent_widget:
+            return  # Cannot determine parent size
+
+        layout_size = parent_widget.size()
+        layout_height = layout_size.height()
+        layout_width = layout_size.width()
+
+        # Estimate row height and font size
+        row_height = layout_height // row_count
+        font_size = row_height // 3  # Adjust font size relative to row height
+
+        # Ensure minimum font size
+        font_size = max(font_size, 8)
+
+        # Set font for the table
+        font = view.font()
+        font.setPointSize(font_size)
+        view.setFont(font)
+
+        # Adjust row height and column widths
+        view.verticalHeader().setDefaultSectionSize(row_height)
+        view.horizontalHeader().setDefaultSectionSize(layout_width // view.columnCount())
+        view.resizeRowsToContents()
 
 
 def main() -> None:

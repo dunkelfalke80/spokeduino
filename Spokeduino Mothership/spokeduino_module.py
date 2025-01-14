@@ -10,6 +10,7 @@ from setup_module import SetupModule
 from messagebox_module import MessageboxModule
 from sql_queries import SQLQueries
 
+
 class SpokeduinoState(Enum):
     WAITING  = 1
     MEASURING = 2
@@ -36,25 +37,29 @@ class SpokeduinoModule:
         self.db: DatabaseModule = db
         self.setup_module: SetupModule = setup_module
         self.messagebox: MessageboxModule = messagebox
-
-        self.serial_port: serial.Serial
         self.spokeduino_state: SpokeduinoState = SpokeduinoState.WAITING
         self.waiting_event = threading.Event()
         self.th_spokeduino = None
+        self.serial_port = serial.Serial()
+        self.first_start: bool = True
 
-    def restart_arduino_port(self) -> None:
+    def restart_spokeduino_port(self) -> None:
         """
-        Restart the Arduino serial port based on the Spokeduino settings.
+        Restart the Spokeduino serial port based on the settings.
         """
         try:
-            spokeduino_enabled: bool = self.get_spokeduino_enabled()
-            if not spokeduino_enabled:
-                self.ui.checkBoxSpokeduinoEnabled.setChecked(False)
+            if self.get_spokeduino_enabled():
+                self.close_serial_port()
+                self.update_spokeduino_state(self.first_start, self.first_start)
+                if self.first_start:
+                    self.first_start = False
+                self.reinitialize_serial_port()
                 return
 
+            self.update_spokeduino_state(True, False)
             self.reinitialize_serial_port()
         except Exception as ex:
-            print(f"Error restarting Arduino port: {ex}")
+            print(f"Error restarting Spokeduino port: {ex}")
 
     def set_state(self, state: SpokeduinoState) -> None:
         """
@@ -83,25 +88,26 @@ class SpokeduinoModule:
             return False
         return setting[0][0] == "1"
 
-    def update_spokeduino_state(self, current_state: bool) -> bool:
+    def update_spokeduino_state(self,
+                                current_state: bool,
+                                force: bool) -> bool:
         """
         Update the Spokeduino state if it has changed.
         Returns the new state.
         """
         new_state = self.ui.checkBoxSpokeduinoEnabled.isChecked()
-        if current_state != new_state:
-            self.setup_module.save_setting(
-                "spokeduino_enabled", "1" if new_state else "0"
-            )
+        if force or current_state != new_state:
+                self.setup_module.save_setting(
+                    key="spokeduino_enabled",
+                    value="1" if new_state
+                    else "0"
+                )
         return new_state
 
     def reinitialize_serial_port(self) -> None:
         """
         Reinitialize the serial port and start the handler thread.
         """
-        if self.serial_port is None:
-            self.serial_port = serial.Serial()
-
         if self.serial_port.is_open:
             self.close_serial_port()
 
@@ -143,13 +149,14 @@ class SpokeduinoModule:
         if not self.serial_port:
             return
 
+        return
+
         gauge_handlers = {
             0: self.process_tension_gauge,
             1: self.process_lateral_gauge,
             2: self.process_radial_gauge,
             6: self.process_pedal,
         }
-
 
         while self.serial_port.is_open:
             self.waiting_event.wait()

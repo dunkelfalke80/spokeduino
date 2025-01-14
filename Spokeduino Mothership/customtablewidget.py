@@ -21,24 +21,27 @@ class CustomTableWidget(QTableWidget):
             super().keyPressEvent(event)
 
     def paste_row(self) -> None:
-        """
-        Paste data from the clipboard into the currently selected row.
-        """
-        selected_row: int = self.currentRow()
-        selected_column: int = self.currentColumn()
-        if selected_row == -1 or selected_column == -1:
-            return
+            """
+            Paste data from the clipboard into the currently selected column,
+            starting at the selected row. Supports single-column clipboard data only.
+            """
+            selected_row = self.currentRow()
+            selected_column = self.currentColumn()
 
-        clipboard: QClipboard = QApplication.clipboard()
-        clipboard_data: str = clipboard.text()
-        cells: list[str] = clipboard_data.strip().split("\n")
+            if selected_row == -1 or selected_column == -1:
+                return  # No valid selection
 
-        # Ensure the number of cells matches the table's row count
-        if len(cells) != self.rowCount():
-            return
+            clipboard: QClipboard = QApplication.clipboard()
+            clipboard_data: str = clipboard.text()
 
-        # Populate the selected row with clipboard data
-        for row, value in enumerate(cells):
-            item = QTableWidgetItem(value)
-            item.setFlags(Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
-            self.setItem(row, selected_column, item)
+            # Split clipboard data into individual rows
+            rows: list[str] = clipboard_data.strip().split("\n")
+
+            for r_offset, cell_data in enumerate(rows):
+                target_row = selected_row + r_offset
+
+                # Check bounds to avoid pasting outside the table
+                if target_row < self.rowCount():
+                    item = QTableWidgetItem(cell_data.strip())
+                    item.setFlags(Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
+                    self.setItem(target_row, selected_column, item)

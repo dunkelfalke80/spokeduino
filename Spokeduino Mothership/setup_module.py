@@ -150,13 +150,13 @@ class SetupModule:
                 self.ui.comboBoxTensiometer.setCurrentIndex(index)
 
         # Load measurement units
-        unit: str = settings_dict.get("unit", "Newton")
-        if unit == "Newton":
-            self.ui.radioButtonNewton.setChecked(True)
-        elif unit == "kgF":
-            self.ui.radioButtonKgF.setChecked(True)
-        elif unit == "lbF":
-            self.ui.radioButtonLbF.setChecked(True)
+        match settings_dict.get("unit", "Newton"):
+            case "Newton":
+                self.ui.radioButtonNewton.setChecked(True)
+            case "kgF":
+                self.ui.radioButtonKgF.setChecked(True)
+            case "lbF":
+                self.ui.radioButtonLbF.setChecked(True)
 
         # Load directional settings
         measurement_direction: str = settings_dict.get(
@@ -175,9 +175,10 @@ class SetupModule:
 
         measurement_type: str = settings_dict.get(
             "measurement_type", "side_by_side")
-        if measurement_type == "side_by_side":
-            self.ui.radioButtonSideBySide.setChecked(True)
-        elif measurement_type == "left_right":
-            self.ui.radioButtonLeftRight.setChecked(True)
-        elif measurement_type == "right_left":
-            self.ui.radioButtonRightLeft.setChecked(True)
+        match measurement_type:
+            case "side_by_side":
+                self.ui.radioButtonSideBySide.setChecked(True)
+            case "left_right":
+                self.ui.radioButtonLeftRight.setChecked(True)
+            case "right_left":
+                self.ui.radioButtonRightLeft.setChecked(True)
