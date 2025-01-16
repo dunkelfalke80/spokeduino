@@ -1,28 +1,24 @@
 import os
 import sys
 import threading
-from typing import cast, Any
+from typing import cast, Any, override
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QAbstractItemModel
 from PySide6.QtCore import QModelIndex
 from PySide6.QtCore import QTimer
-from PySide6.QtGui import QFont
-from PySide6.QtGui import QStandardItemModel
+from PySide6.QtGui import QFocusEvent, QStandardItemModel
 from PySide6.QtGui import QStandardItem
-from PySide6.QtWidgets import QApplication, QLineEdit
-from PySide6.QtWidgets import QComboBox
+from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QLineEdit
 from PySide6.QtWidgets import QLayout
 from PySide6.QtWidgets import QGroupBox
 from PySide6.QtWidgets import QTableView
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QHeaderView
-from PySide6.QtWidgets import QAbstractItemView
 from PySide6.QtWidgets import QTableWidgetItem
-from PySide6.QtWidgets import QSizePolicy
 from ui import Ui_mainWindow
 from sql_queries import SQLQueries
-from table_helpers import SpokeTableModel
-from table_helpers import MeasurementItemDelegate
+from helpers import SpokeTableModel
 from spokeduino_module import SpokeduinoState
 from spokeduino_module import SpokeduinoModule
 from database_module import DatabaseModule
@@ -31,7 +27,7 @@ from spoke_module import SpokeModule
 from measurement_module import MeasurementModule
 from unit_converter import UnitConverter
 from customtablewidget import CustomTableWidget
-from messagebox_module import MessageboxModule
+from helpers import Messagebox
 
 class Spokeduino(QMainWindow):
     """
@@ -60,16 +56,6 @@ class Spokeduino(QMainWindow):
         # For vacuuming on exit
         self.db_changed: bool = False
 
-        # Reducing verbosity
-        self.__rm_stretch: QHeaderView.ResizeMode = \
-            QHeaderView.ResizeMode.Stretch
-        self.__rm_shrink: QHeaderView.ResizeMode =\
-            QHeaderView.ResizeMode.ResizeToContents
-        self.__select_rows: QAbstractItemView.SelectionBehavior = \
-            QAbstractItemView.SelectionBehavior.SelectRows
-        self.__select_single: QAbstractItemView.SelectionMode = \
-            QAbstractItemView.SelectionMode.SingleSelection
-
         self.multi_tensiometer_enabled: bool = False
         self.left_spoke_formula: str = ""
         self.right_spoke_formula: str = ""
@@ -89,7 +75,7 @@ class Spokeduino(QMainWindow):
         self.measurement_module = MeasurementModule(
             main_window=self,
             ui=self.ui)
-        self.messagebox = MessageboxModule(self)
+        self.messagebox = Messagebox(self)
         self.spokeduino_module = SpokeduinoModule(
             ui=self.ui,
             db=self.db,
@@ -97,10 +83,7 @@ class Spokeduino(QMainWindow):
             messagebox=self.messagebox)
 
         # Replace the tableWidgetMeasurements with the custom widget
-        custom_table = CustomTableWidget(
-            move_next_callback=self.measurement_module.move_to_next_cell,
-            parent=self
-        )
+        custom_table = CustomTableWidget(parent=self)
 
         # Set the same object name so the rest of the code works seamlessly
         custom_table.setObjectName("tableWidgetMeasurements")
@@ -117,12 +100,8 @@ class Spokeduino(QMainWindow):
         self.ui.tableWidgetMeasurements.deleteLater()
         self.ui.tableWidgetMeasurements = custom_table
 
-
         # Replace the tableViewTensionsLeft with the custom widget
-        custom_tension_table_left = CustomTableWidget(
-            move_next_callback=self.measurement_module.move_to_next_cell,
-            parent=self
-        )
+        custom_tension_table_left = CustomTableWidget(parent=self)
 
         # Set the same object name so the rest of the code works seamlessly
         custom_tension_table_left.setObjectName("tableViewTensionsLeft")
@@ -140,10 +119,7 @@ class Spokeduino(QMainWindow):
         self.ui.tableViewTensionsLeft = custom_tension_table_left
 
         # Replace the tableViewTensionsRight with the custom widget
-        custom_tension_table_right = CustomTableWidget(
-            move_next_callback=self.measurement_module.move_to_next_cell,
-            parent=self
-        )
+        custom_tension_table_right = CustomTableWidget(parent=self)
 
         # Set the same object name so the rest of the code works seamlessly
         custom_tension_table_right.setObjectName("tableViewTensionsRight")
@@ -169,9 +145,8 @@ class Spokeduino(QMainWindow):
         self.setup_module.load_settings()
         self.current_spokes: list[tuple[int, list[str]]] = []
         self.spoke_module.load_manufacturers()
-        self.setup_measurements_table()
         self.toggle_new_manufacturer_button()
-        # Ugly hack
+        # Delay to ensure Qt's focus/selection state is updated
         QTimer.singleShot(
             100,
             self.spoke_module.align_filters_with_table)
@@ -227,10 +202,10 @@ class Spokeduino(QMainWindow):
 
         # Synchronize combobox and table for spokes
         self.ui.comboBoxSpoke.currentIndexChanged.connect(
-            lambda: self.sync_spoke_selection(
+            lambda: self.spoke_module.sync_spoke_selection(
                 self.ui.comboBoxSpoke))
         self.ui.comboBoxSpoke2.currentIndexChanged.connect(
-            lambda: self.sync_spoke_selection(
+            lambda: self.spoke_module.sync_spoke_selection(
                 self.ui.comboBoxSpoke2))
         self.ui.comboBoxSpoke.currentIndexChanged.connect(
             lambda: self.spoke_module.update_spoke_details(
@@ -247,6 +222,7 @@ class Spokeduino(QMainWindow):
 
         # Filters
         self.ui.tabWidget.currentChanged.connect(
+        # Delay to ensure Qt's focus/selection state is updated
         QTimer.singleShot(
             100,
             self.spoke_module.align_filters_with_table))
@@ -278,7 +254,7 @@ class Spokeduino(QMainWindow):
 
         # Tensiometer-related signals
         self.ui.comboBoxTensiometer.currentIndexChanged.connect(
-            self.load_measurements_for_selected_spoke)
+            self.spoke_module.load_spoke_measurements)
         self.ui.lineEditNewTensiometer.textChanged.connect(
             self.toggle_new_tensiometer_button)
         self.ui.pushButtonNewTensiometer.clicked.connect(
@@ -286,10 +262,9 @@ class Spokeduino(QMainWindow):
         self.ui.pushButtonMultipleTensiometers.clicked.connect(
             self.toggle_multi_tensiometer_mode)
         self.ui.pushButtonMultipleTensiometers.setCheckable(True)
-        self.ui.comboBoxTensiometer.currentIndexChanged.connect(
-            self.setup_measurements_table)
 
         # Measurement-related signals
+        self.ui.tabWidget.currentChanged.connect(self.tab_index_changed)
         self.ui.pushButtonDeleteMeasurement.clicked.connect(
             self.delete_measurement)
         self.ui.pushButtonAddMeasurement.clicked.connect(
@@ -304,14 +279,12 @@ class Spokeduino(QMainWindow):
         self.ui.pushButtonCalculateFormula.clicked.connect(
             self.measurement_module.toggle_calculate_button)
         self.ui.pushButtonMeasureSpoke.clicked.connect(
-            self.setup_measurements_table)
-        self.ui.pushButtonMeasureSpoke.clicked.connect(
             lambda: self.spokeduino_module.set_state(
                 SpokeduinoState.MEASURING))
         self.ui.pushButtonPreviousMeasurement.clicked.connect(
-            self.measurement_module.move_to_previous_cell)
+        self.ui.tableWidgetMeasurements.move_to_previous_cell)
         self.ui.pushButtonNextMeasurement.clicked.connect(
-            self.measurement_module.move_to_next_cell)
+            self.ui.tableWidgetMeasurements.move_to_next_cell)
         self.ui.pushButtonSaveMeasurement.clicked.connect(
         lambda: self.spokeduino_module.set_state(
             SpokeduinoState.WAITING))
@@ -349,22 +322,16 @@ class Spokeduino(QMainWindow):
                 self.setup_module.save_setting(
                     "unit", "Newton")
                 if checked else None)
-        self.ui.radioButtonNewton.toggled.connect(
-            self.setup_measurements_table)
         self.ui.radioButtonKgF.toggled.connect(
             lambda checked:
                 self.setup_module.save_setting(
                     "unit", "kgF")
                 if checked else None)
-        self.ui.radioButtonKgF.toggled.connect(
-            self.setup_measurements_table)
         self.ui.radioButtonLbF.toggled.connect(
             lambda checked:
                 self.setup_module.save_setting(
                     "unit", "lbF")
                 if checked else None)
-        self.ui.radioButtonLbF.toggled.connect(
-            self.setup_measurements_table)
 
         # Directional settings
         self.ui.radioButtonMeasurementDown.toggled.connect(
@@ -372,15 +339,11 @@ class Spokeduino(QMainWindow):
                 self.setup_module.save_setting(
                     "spoke_direction",
                     "down") if checked else None)
-        self.ui.radioButtonMeasurementDown.toggled.connect(
-            self.setup_measurements_table)
         self.ui.radioButtonMeasurementUp.toggled.connect(
             lambda checked:
                 self.setup_module.save_setting(
                     "spoke_direction",
                     "up") if checked else None)
-        self.ui.radioButtonMeasurementDown.toggled.connect(
-            self.setup_measurements_table)
         self.ui.radioButtonRotationClockwise.toggled.connect(
             lambda checked:
                 self.setup_module.save_setting(
@@ -434,6 +397,7 @@ class Spokeduino(QMainWindow):
 
         self.spokeduino_state: SpokeduinoState = SpokeduinoState.WAITING
 
+    @override
     def resizeEvent(self, event) -> None:
         """
         Handle window resize event for the main Window.
@@ -442,6 +406,7 @@ class Spokeduino(QMainWindow):
         super().resizeEvent(event)
         self.spoke_module.align_filters_with_table()
 
+    @override
     def closeEvent(self, event) -> None:
         """
         Handle the close event for the main window.
@@ -452,75 +417,10 @@ class Spokeduino(QMainWindow):
             self.db.vacuum()
         event.accept()
 
-    def sync_spoke_selection(self, sender: QComboBox) -> None:
-        """
-        Synchronize the spoke selection between the Database Tab and
-        Measurement Tab while preventing circular calls.
-        """
-        if sender == self.ui.comboBoxSpoke:
-            # Sync comboBoxSpoke2 with comboBoxSpoke
-            self.ui.comboBoxSpoke2.blockSignals(True)
-            self.ui.comboBoxSpoke2.setCurrentIndex(
-                self.ui.comboBoxSpoke.currentIndex()
-            )
-            self.ui.comboBoxSpoke2.blockSignals(False)
-        elif sender == self.ui.comboBoxSpoke2:
-            # Sync comboBoxSpoke with comboBoxSpoke2
-            self.ui.comboBoxSpoke.blockSignals(True)
-            self.ui.comboBoxSpoke.setCurrentIndex(
-                self.ui.comboBoxSpoke2.currentIndex()
-            )
-            self.ui.comboBoxSpoke.blockSignals(False)
-
-        # Update the details for the currently selected spoke
-        self.spoke_module.update_spoke_details(sender)
-        self.load_measurements_for_selected_spoke()
-
-    def load_measurements_for_selected_spoke(self) -> None:
-        """
-        Load all measurements for the selected spoke and tensiometer
-        and populate tableViewMeasurements.
-        """
-        res, spoke_id = self.spoke_module.get_selected_spoke_id()
-        tensiometer_id: int | None = self.ui.comboBoxTensiometer.currentData()
-        view: QTableView = self.ui.tableViewMeasurements
-
-        if not res or tensiometer_id is None:
-            view.setModel(None)
-            return
-        tensiometer_id = int(tensiometer_id)
-
-        measurements: list[Any] = self.db.execute_select(
-            query=SQLQueries.GET_MEASUREMENTS,
-            params=(spoke_id, tensiometer_id)
-        )
-        if not measurements:
-            view.setModel(None)
-            return
-
-        headers: list[str] = [
-            "Comment", "300N", "400N", "500N", "600N", "700N", "800N", "900N",
-            "1000N", "1100N", "1200N", "1300N", "1400N", "1500N", "1600N"
-        ]
-
-        data: list[tuple[Any, list[str]]] = [
-            (measurement[0], [measurement[1]] + list(map(str, measurement[2:])))
-            for measurement in measurements
-        ]
-
-        # Create and set the model
-        model = SpokeTableModel(data, headers)
-        view.setModel(model)
-
-        # Configure table behavior
-        view.setSelectionBehavior(self.__select_rows)
-        view.setSelectionMode(self.__select_single)
-
-        # Adjust column headers
-        resize_mode = view.horizontalHeader().setSectionResizeMode
-        resize_mode(self.__rm_shrink)
-        resize_mode(0, self.__rm_stretch) # Comment
-
+    @override
+    def focusInEvent(self, event: QFocusEvent) -> None:
+        print("Got focus")
+        return super().focusInEvent(event)
 
     def delete_measurement(self) -> None:
         """
@@ -564,7 +464,7 @@ class Spokeduino(QMainWindow):
 
         # Clear selection and reload the measurements
         view.clearSelection()
-        self.load_measurements_for_selected_spoke()
+        self.spoke_module.load_spoke_measurements()
 
     def select_measurement_row(self, index: QModelIndex) -> None:
         """
@@ -633,10 +533,6 @@ class Spokeduino(QMainWindow):
                 item.setData(tensiometer[0], Qt.ItemDataRole.UserRole)
                 model.appendRow(item)
 
-            # Connect itemChanged signal for multi-tensiometer mode
-            model.itemChanged.connect(
-                self.setup_measurements_table)
-
             # Disable manual typing
             self.ui.comboBoxTensiometer.setEditable(False)
 
@@ -644,12 +540,6 @@ class Spokeduino(QMainWindow):
             # Disable multi-selection mode
             self.multi_tensiometer_enabled = False
             self.ui.pushButtonMultipleTensiometers.setChecked(False)
-
-            # Disconnect itemChanged signal to avoid unnecessary updates
-            model = self.ui.comboBoxTensiometer.model()
-            if isinstance(model, QStandardItemModel):
-                model.itemChanged.disconnect(
-                    self.setup_measurements_table)
 
             # Restore single-selection mode
             self.ui.comboBoxTensiometer.clear()
@@ -904,9 +794,6 @@ class Spokeduino(QMainWindow):
             item.setData(Qt.ItemDataRole.UserRole, tensiometer_id)
             view.setHorizontalHeaderItem(col, item)
 
-        delegate = MeasurementItemDelegate(self.ui.tableWidgetMeasurements)
-        view.setItemDelegate(delegate)
-
         # Make all cells editable
         for row in range(len(tensions_converted)):
             for col in range(len(tensiometers)):
@@ -914,8 +801,7 @@ class Spokeduino(QMainWindow):
                 item.setFlags(Qt.ItemFlag.ItemIsEditable |
                               Qt.ItemFlag.ItemIsEnabled)
                 view.setItem(row, col, item)
-
-        self.measurement_module.activate_first_cell()
+        view.move_to_specific_cell(0, 0)
 
     def save_tensiometer(self) -> None:
         if self.multi_tensiometer_enabled: # Runtime only
@@ -996,7 +882,7 @@ class Spokeduino(QMainWindow):
                 item: QTableWidgetItem | None = table.item(row, col)
                 if item:
                     item.setText("")
-        self.load_measurements_for_selected_spoke()
+        self.spoke_module.load_spoke_measurements()
 
     def setup_tension_table(self, is_left: bool) -> None:
         """
@@ -1006,11 +892,9 @@ class Spokeduino(QMainWindow):
         # Select the appropriate UI elements
         if is_left:
             line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountLeft
-            line_edit_target_tension: QLineEdit = self.ui.lineEditTargetTensionLeft
             view: CustomTableWidget = self.ui.tableViewTensionsLeft
         else:
             line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountRight
-            line_edit_target_tension: QLineEdit = self.ui.lineEditTargetTensionRight
             view: CustomTableWidget = self.ui.tableViewTensionsRight
 
         # Get spoke amount and target tension
@@ -1018,9 +902,6 @@ class Spokeduino(QMainWindow):
             spoke_amount = int(line_edit_spoke_amount.text())
         except ValueError:
             spoke_amount = 0
-
-        target_tension = line_edit_target_tension.text()
-        target_tension = float(target_tension) if target_tension else None
 
         # Define headers
         unit: str = self.get_unit()
@@ -1045,48 +926,14 @@ class Spokeduino(QMainWindow):
             view.setItem(row, 1, tension_item)
 
         # Resize columns to fit within the table
-        view.horizontalHeader().setSectionResizeMode(self.__rm_stretch.Stretch)
-        view.horizontalHeader().setHighlightSections(False)
+        view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        view.resize_table_font()
 
-        # Adjust font size to fit the screen
-        self.resize_table_font(view, spoke_amount)
+    def tab_index_changed(self) -> None:
+        match self.ui.tabWidget.currentWidget():
+            case self.ui.measurementTab:
+                self.setup_measurements_table()
 
-    def resize_table_font(self, view, row_count) -> None:
-        """
-        Resize the table font, row heights, and column widths so it fits within the parent layout
-        without scrollbars. Dynamically retrieves the layout size from the table's parent widget.
-
-        :param view: The QTableWidget or QTableView to resize.
-        :param row_count: The number of rows in the table.
-        """
-        if row_count == 0:
-            return  # No rows to resize
-
-        # Get the size of the parent widget
-        parent_widget = view.parentWidget()
-        if not parent_widget:
-            return  # Cannot determine parent size
-
-        layout_size = parent_widget.size()
-        layout_height = layout_size.height()
-        layout_width = layout_size.width()
-
-        # Estimate row height and font size
-        row_height = layout_height // row_count
-        font_size = row_height // 3  # Adjust font size relative to row height
-
-        # Ensure minimum font size
-        font_size = max(font_size, 8)
-
-        # Set font for the table
-        font = view.font()
-        font.setPointSize(font_size)
-        view.setFont(font)
-
-        # Adjust row height and column widths
-        view.verticalHeader().setDefaultSectionSize(row_height)
-        view.horizontalHeader().setDefaultSectionSize(layout_width // view.columnCount())
-        view.resizeRowsToContents()
 
 
 def main() -> None:

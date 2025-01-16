@@ -1,5 +1,4 @@
 from typing import Any
-from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QMainWindow, QTableWidgetItem
 from quartic_fit import PiecewiseQuarticFit
 from setup_module import SetupModule
@@ -68,64 +67,6 @@ class MeasurementModule:
             self.ui.lineEditFormula.setText(str(e))
         except Exception as e:
             self.ui.lineEditFormula.setText(f"Error calculating formula: {e}")
-
-
-    def activate_first_cell(self) -> None:
-        """
-        Activate the first cell in tableWidgetMeasurements.
-        """
-        table = self.ui.tableWidgetMeasurements
-        if table.rowCount() > 0 and table.columnCount() > 0:
-            table.setCurrentCell(0, 0)
-            table.setFocus()
-
-    def move_to_next_cell(self) -> None:
-        """
-        Move to the next editable cell in tableWidgetMeasurements.
-        Wrap around rows and columns as needed.
-        """
-        table = self.ui.tableWidgetMeasurements
-        current_row = table.currentRow()
-        current_column = table.currentColumn()
-
-        if current_row == -1 or current_column == -1:
-            return
-
-        # Calculate the next cell
-        if current_column < table.columnCount() - 1:
-            target_row = current_row
-            target_column = current_column + 1
-        else:
-            target_row = (current_row + 1) % table.rowCount()
-            target_column = 0
-
-        # Ugly hack
-        QTimer.singleShot(50, lambda: table.setCurrentCell(target_row, target_column))
-
-    def move_to_previous_cell(self) -> None:
-        """
-        Move to the previous editable cell in tableWidgetMeasurements.
-        Wrap around to the previous row/column if needed.
-        """
-        table = self.ui.tableWidgetMeasurements
-        current_row = table.currentRow()
-        current_column = table.currentColumn()
-
-        if current_row == -1 or current_column == -1:
-            return
-
-        # Calculate the previous cell
-        if current_column > 0:
-            target_row = current_row
-            target_column = current_column - 1
-        else:
-            # Wrap around to the last column of the previous row
-            target_row = (current_row - 1) if current_row > 0 else table.rowCount() - 1
-            target_column = table.columnCount() - 1
-
-        # Set the previous cell as active
-        table.setCurrentCell(target_row, target_column)
-        table.setFocus()
 
     def update_measurement_button_states(self) -> None:
         """
