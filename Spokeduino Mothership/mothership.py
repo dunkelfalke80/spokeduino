@@ -5,11 +5,13 @@ from typing import cast, Any
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QAbstractItemModel
 from PySide6.QtCore import QModelIndex
+from PySide6.QtCore import QSize
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QFont
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtGui import QStandardItem
-from PySide6.QtWidgets import QApplication, QLineEdit
+from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QLineEdit
 from PySide6.QtWidgets import QComboBox
 from PySide6.QtWidgets import QLayout
 from PySide6.QtWidgets import QGroupBox
@@ -18,11 +20,10 @@ from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QAbstractItemView
 from PySide6.QtWidgets import QTableWidgetItem
-from PySide6.QtWidgets import QSizePolicy
+from PySide6.QtWidgets import QWidget
 from ui import Ui_mainWindow
 from sql_queries import SQLQueries
-from table_helpers import SpokeTableModel
-from table_helpers import MeasurementItemDelegate
+from helpers import SpokeTableModel
 from spokeduino_module import SpokeduinoState
 from spokeduino_module import SpokeduinoModule
 from database_module import DatabaseModule
@@ -31,7 +32,7 @@ from spoke_module import SpokeModule
 from measurement_module import MeasurementModule
 from unit_converter import UnitConverter
 from customtablewidget import CustomTableWidget
-from messagebox_module import MessageboxModule
+from helpers import MessageboxModule
 
 class Spokeduino(QMainWindow):
     """
@@ -97,10 +98,7 @@ class Spokeduino(QMainWindow):
             messagebox=self.messagebox)
 
         # Replace the tableWidgetMeasurements with the custom widget
-        custom_table = CustomTableWidget(
-            move_next_callback=self.measurement_module.move_to_next_cell,
-            parent=self
-        )
+        custom_table = CustomTableWidget(parent=self)
 
         # Set the same object name so the rest of the code works seamlessly
         custom_table.setObjectName("tableWidgetMeasurements")
@@ -117,12 +115,8 @@ class Spokeduino(QMainWindow):
         self.ui.tableWidgetMeasurements.deleteLater()
         self.ui.tableWidgetMeasurements = custom_table
 
-
         # Replace the tableViewTensionsLeft with the custom widget
-        custom_tension_table_left = CustomTableWidget(
-            move_next_callback=self.measurement_module.move_to_next_cell,
-            parent=self
-        )
+        custom_tension_table_left = CustomTableWidget(parent=self)
 
         # Set the same object name so the rest of the code works seamlessly
         custom_tension_table_left.setObjectName("tableViewTensionsLeft")
@@ -140,10 +134,7 @@ class Spokeduino(QMainWindow):
         self.ui.tableViewTensionsLeft = custom_tension_table_left
 
         # Replace the tableViewTensionsRight with the custom widget
-        custom_tension_table_right = CustomTableWidget(
-            move_next_callback=self.measurement_module.move_to_next_cell,
-            parent=self
-        )
+        custom_tension_table_right = CustomTableWidget(parent=self)
 
         # Set the same object name so the rest of the code works seamlessly
         custom_tension_table_right.setObjectName("tableViewTensionsRight")
@@ -309,9 +300,9 @@ class Spokeduino(QMainWindow):
             lambda: self.spokeduino_module.set_state(
                 SpokeduinoState.MEASURING))
         self.ui.pushButtonPreviousMeasurement.clicked.connect(
-            self.measurement_module.move_to_previous_cell)
+        self.ui.tableWidgetMeasurements.move_to_previous_cell)
         self.ui.pushButtonNextMeasurement.clicked.connect(
-            self.measurement_module.move_to_next_cell)
+            self.ui.tableWidgetMeasurements.move_to_next_cell)
         self.ui.pushButtonSaveMeasurement.clicked.connect(
         lambda: self.spokeduino_module.set_state(
             SpokeduinoState.WAITING))
@@ -904,9 +895,6 @@ class Spokeduino(QMainWindow):
             item.setData(Qt.ItemDataRole.UserRole, tensiometer_id)
             view.setHorizontalHeaderItem(col, item)
 
-        delegate = MeasurementItemDelegate(self.ui.tableWidgetMeasurements)
-        view.setItemDelegate(delegate)
-
         # Make all cells editable
         for row in range(len(tensions_converted)):
             for col in range(len(tensiometers)):
@@ -915,7 +903,7 @@ class Spokeduino(QMainWindow):
                               Qt.ItemFlag.ItemIsEnabled)
                 view.setItem(row, col, item)
 
-        self.measurement_module.activate_first_cell()
+        view.activate_cell_editing(0,0)
 
     def save_tensiometer(self) -> None:
         if self.multi_tensiometer_enabled: # Runtime only
@@ -1006,11 +994,9 @@ class Spokeduino(QMainWindow):
         # Select the appropriate UI elements
         if is_left:
             line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountLeft
-            line_edit_target_tension: QLineEdit = self.ui.lineEditTargetTensionLeft
             view: CustomTableWidget = self.ui.tableViewTensionsLeft
         else:
             line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountRight
-            line_edit_target_tension: QLineEdit = self.ui.lineEditTargetTensionRight
             view: CustomTableWidget = self.ui.tableViewTensionsRight
 
         # Get spoke amount and target tension
@@ -1018,9 +1004,6 @@ class Spokeduino(QMainWindow):
             spoke_amount = int(line_edit_spoke_amount.text())
         except ValueError:
             spoke_amount = 0
-
-        target_tension = line_edit_target_tension.text()
-        target_tension = float(target_tension) if target_tension else None
 
         # Define headers
         unit: str = self.get_unit()
@@ -1051,7 +1034,7 @@ class Spokeduino(QMainWindow):
         # Adjust font size to fit the screen
         self.resize_table_font(view, spoke_amount)
 
-    def resize_table_font(self, view, row_count) -> None:
+    def resize_table_font(self, view: CustomTableWidget, row_count: int) -> None:
         """
         Resize the table font, row heights, and column widths so it fits within the parent layout
         without scrollbars. Dynamically retrieves the layout size from the table's parent widget.
@@ -1063,23 +1046,24 @@ class Spokeduino(QMainWindow):
             return  # No rows to resize
 
         # Get the size of the parent widget
-        parent_widget = view.parentWidget()
-        if not parent_widget:
+        parent_widget: QWidget | None = view.parentWidget()
+        if parent_widget is None:
             return  # Cannot determine parent size
+        parent_widget = cast(QWidget, parent_widget)
 
-        layout_size = parent_widget.size()
-        layout_height = layout_size.height()
-        layout_width = layout_size.width()
+        layout_size: QSize = parent_widget.size()
+        layout_height: int = layout_size.height()
+        layout_width: int = layout_size.width()
 
         # Estimate row height and font size
-        row_height = layout_height // row_count
+        row_height: int = layout_height // row_count
         font_size = row_height // 3  # Adjust font size relative to row height
 
         # Ensure minimum font size
-        font_size = max(font_size, 8)
+        font_size: int = max(font_size, 8)
 
         # Set font for the table
-        font = view.font()
+        font: QFont = view.font()
         font.setPointSize(font_size)
         view.setFont(font)
 

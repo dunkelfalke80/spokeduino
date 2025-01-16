@@ -5,16 +5,15 @@ import sqlite3
 from typing import Any
 
 
-def get_line_info() -> str:
-    return f"{inspect.stack()[1][2]}:{inspect.stack()[1][3]}"
-
-
 class DatabaseModule:
     """
     Handles all database interactions for the Spokeduino application.
     """
     def __init__(self, db_path: str) -> None:
         self.db_path = db_path
+
+    def _get_line_info(self) -> str:
+        return f"{inspect.stack()[1][2]}:{inspect.stack()[1][3]}"
 
     def initialize_database(self, schema_file: str, data_file: str) -> None:
         """
@@ -83,7 +82,8 @@ class DatabaseModule:
                 cursor.execute(query, params)
                 return cursor.fetchall()
         except sqlite3.Error as e:
-            logging.error(f"{get_line_info()}: SQL error: {e}\nQuery: {query}")
+            logging.error(f"{self._get_line_info()}: " \
+                          f"SQL error: {e}\nQuery: {query}")
             return []
 
     def execute_query(self, query: str, params: tuple = ()) -> int | None:
@@ -98,7 +98,8 @@ class DatabaseModule:
                 self.db_changed = True
                 return cursor.lastrowid
         except sqlite3.Error as e:
-            logging.error(f"{get_line_info()}: SQL error: {e}\nQuery: {query}")
+            logging.error(f"{self._get_line_info()}: " \
+                          f"SQL error: {e}\nQuery: {query}")
             return None
 
     def vacuum(self) -> None:

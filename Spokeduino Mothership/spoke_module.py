@@ -9,7 +9,7 @@ from PySide6.QtCore import QModelIndex
 from PySide6.QtWidgets import QTableView
 from database_module import DatabaseModule
 from sql_queries import SQLQueries
-from table_helpers import SpokeTableModel
+from helpers import SpokeTableModel
 
 class SpokeModule:
 
