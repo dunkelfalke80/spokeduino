@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1171</width>
-    <height>768</height>
+    <width>1100</width>
+    <height>793</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -1369,7 +1369,23 @@
                <property name="sizeConstraint">
                 <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
                </property>
-               <item row="0" column="3">
+               <item row="0" column="0">
+                <widget class="QPushButton" name="pushButtonStartTensioning">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Start</string>
+                 </property>
+                 <property name="icon">
+                  <iconset theme="QIcon::ThemeIcon::GoUp"/>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="4">
                 <spacer name="horizontalSpacerSpokeEditsLeft">
                  <property name="orientation">
                   <enum>Qt::Orientation::Horizontal</enum>
@@ -1382,7 +1398,23 @@
                  </property>
                 </spacer>
                </item>
-               <item row="0" column="1">
+               <item row="0" column="5">
+                <widget class="QPushButton" name="pushButtonSwitchView">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Switch view</string>
+                 </property>
+                 <property name="icon">
+                  <iconset theme="QIcon::ThemeIcon::MediaPlaylistRepeat"/>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="2">
                 <widget class="QPushButton" name="pushButtonPreviousSpoke">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
@@ -1398,7 +1430,7 @@
                  </property>
                 </widget>
                </item>
-               <item row="0" column="2">
+               <item row="0" column="3">
                 <widget class="QPushButton" name="pushButtonNextSpoke">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
@@ -1414,21 +1446,18 @@
                  </property>
                 </widget>
                </item>
-               <item row="0" column="4">
-                <widget class="QPushButton" name="pushButtonSwitchView">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
+               <item row="0" column="1">
+                <spacer name="horizontalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Horizontal</enum>
                  </property>
-                 <property name="text">
-                  <string>Switch view</string>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>40</width>
+                   <height>20</height>
+                  </size>
                  </property>
-                 <property name="icon">
-                  <iconset theme="QIcon::ThemeIcon::MediaPlaylistRepeat"/>
-                 </property>
-                </widget>
+                </spacer>
                </item>
               </layout>
              </item>
@@ -1999,7 +2028,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1171</width>
+     <width>1100</width>
      <height>22</height>
     </rect>
    </property>
