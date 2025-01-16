@@ -1,4 +1,3 @@
-import inspect
 from typing import override, cast
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QObject
@@ -12,6 +11,7 @@ from PySide6.QtGui import QClipboard
 from PySide6.QtGui import QValidator
 from PySide6.QtGui import QDoubleValidator
 from PySide6.QtGui import QFont
+from PySide6.QtGui import QKeyEvent
 from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QAbstractItemView
@@ -82,7 +82,6 @@ class CustomTableWidget(QTableWidget):
             self.refocus(True)
         self.setCurrentIndex(index)
         self.edit(index)
-        print(f"moving to {column}:{row}")
 
     def move_to_next_cell(self, no_delay: bool = False) -> None:
         """
@@ -116,6 +115,7 @@ class CustomTableWidget(QTableWidget):
             row -= 1
         elif column > 0:
             column -= 1
+            row = self.rowCount() - 1
         else:
             return  # Already at the first cell
 
@@ -229,11 +229,11 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
 
     @override
     def eventFilter(self, object: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Type.KeyPress and event == QKeySequence.StandardKey.Paste:
-            print(f"got paste from {inspect.stack()[1].function} as {event.type()}")
-            table_widget: CustomTableWidget | None = \
-                self._find_table_widget(object)
-            if table_widget is not None:
-                table_widget.paste_row()
-                return True
+        if event.type() == QEvent.Type.KeyPress:
+            if cast(QKeyEvent, event).matches(QKeySequence.StandardKey.Paste):
+                table_widget: CustomTableWidget | None = \
+                    self._find_table_widget(object)
+                if table_widget is not None:
+                    table_widget.paste_row()
+                    return True
         return super().eventFilter(object, event)
