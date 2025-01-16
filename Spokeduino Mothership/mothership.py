@@ -871,8 +871,8 @@ class Spokeduino(QMainWindow):
             # Execute the query
             try:
                 db.execute_query(query=SQLQueries.ADD_MEASUREMENT, params=params)
-            except Exception as e:
-                self.messagebox.err("Failed to save measurement for column {column + 1}: {str(e)}")
+            except Exception as ex:
+                self.messagebox.err(f"Failed to save measurement for column {column + 1}: {str(ex)}")
                 return
 
         # Notify the user

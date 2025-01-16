@@ -1,3 +1,4 @@
+import inspect
 from typing import override, cast
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QObject
@@ -6,13 +7,11 @@ from PySide6.QtCore import QLocale
 from PySide6.QtCore import QTimer
 from PySide6.QtCore import QEvent
 from PySide6.QtCore import QSize
-from PySide6.QtCore import QModelIndex
 from PySide6.QtCore import QPersistentModelIndex
 from PySide6.QtGui import QClipboard
 from PySide6.QtGui import QValidator
 from PySide6.QtGui import QDoubleValidator
 from PySide6.QtGui import QFont
-from PySide6.QtGui import QShortcut
 from PySide6.QtGui import QKeySequence
 from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QAbstractItemView
@@ -53,28 +52,17 @@ class CustomTableWidget(QTableWidget):
             Paste data from the clipboard into the currently selected column,
             starting at the selected row. Supports single-column clipboard data only.
             """
-            selected_row: int = self.currentRow()
-            selected_column: int = self.currentColumn()
-
-            if selected_row == -1 or selected_column == -1:
-                return  # No valid selection
-
             clipboard: QClipboard = QApplication.clipboard()
             clipboard_data: str = clipboard.text()
 
             # Split clipboard data into individual rows
             rows: list[str] = clipboard_data.strip().split("\n")
-            target_row: int = selected_row
-            for r_offset, cell_data in enumerate(rows):
-                target_row = selected_row + r_offset
-
-                # Check bounds to avoid pasting outside the table
-                if target_row < self.rowCount():
-                    item = QTableWidgetItem(cell_data.strip())
-                    item.setFlags(Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
-                    self.setItem(target_row, selected_column, item)
-            self.move_to_specific_cell(target_row, selected_column)
-            self.move_to_next_cell()
+            for entry in rows:
+                text: str= CustomDoubleValidator().check_text(entry)
+                if text in ["", ","]:
+                    continue
+                self.currentItem().setText(entry)
+                self.move_to_next_cell(no_delay=True)
 
     def refocus(self, zero: bool) -> None:
         item: QTableWidgetItem | None = (self.item(0, 0)
@@ -96,7 +84,7 @@ class CustomTableWidget(QTableWidget):
         self.edit(index)
         print(f"moving to {column}:{row}")
 
-    def move_to_next_cell(self) -> None:
+    def move_to_next_cell(self, no_delay: bool = False) -> None:
         """
         Move to the next cell in the table and activate editing.
         """
@@ -112,7 +100,10 @@ class CustomTableWidget(QTableWidget):
             return  # Already at the last cell
 
         # Delay to ensure Qt's focus/selection state is updated
-        QTimer.singleShot(50, lambda: self.move_to_specific_cell(row, column))
+        if no_delay:
+            self.move_to_specific_cell(row, column)
+        else:
+            QTimer.singleShot(50, lambda: self.move_to_specific_cell(row, column))
 
     def move_to_previous_cell(self) -> None:
         """
@@ -177,15 +168,35 @@ class CustomDoubleValidator(QDoubleValidator):
         if not arg__1:
             return QValidator.State.Intermediate, arg__1, arg__2
 
-        decimal_point: str = QLocale().decimalPoint()
-        fixed_input: str = ""
-        for char in arg__1:
-            fixed_input += (char
-                            if char.isdigit()
-                            or char == decimal_point
-                            else decimal_point)
+        res: str = self.check_text(arg__1)
+        if res == "":
+            return QValidator.State.Invalid, "", 0
+        return QValidator.State.Acceptable, res, arg__2
 
-        return super(CustomDoubleValidator, self).validate(fixed_input, arg__2)
+    def check_text(self, text: str) -> str:
+        decimal_point: str = QLocale().decimalPoint()
+        decimal_point_encountered: bool = False
+        fixed_input: str = ""
+
+        # Replace dot and comma with the locale decimal point
+        # and only allow digits and decimal point
+        for char in text:
+            if char in [",", "."] and not decimal_point_encountered:
+                fixed_input += decimal_point
+                decimal_point_encountered = True
+            elif char.isdigit():
+                fixed_input += char
+
+        # Only invalid characters in the text
+        if fixed_input == "":
+            return ""
+
+        # for entering values that only have a fraction
+        if [0] == QLocale().decimalPoint():
+            fixed_input = "0" + fixed_input
+
+        return fixed_input
+
 
 
 class CustomTableWidgetItemDelegate(QStyledItemDelegate):
@@ -218,7 +229,8 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
 
     @override
     def eventFilter(self, object: QObject, event: QEvent) -> bool:
-        if event == QKeySequence.StandardKey.Paste:
+        if event.type() == QEvent.Type.KeyPress and event == QKeySequence.StandardKey.Paste:
+            print(f"got paste from {inspect.stack()[1].function} as {event.type()}")
             table_widget: CustomTableWidget | None = \
                 self._find_table_widget(object)
             if table_widget is not None:
