@@ -35,6 +35,15 @@ class SpokeModule:
         self.__select_single: QAbstractItemView.SelectionMode = \
             QAbstractItemView.SelectionMode.SingleSelection
 
+        self._spoke_headers: list[str] = [
+            "Name",
+            "Type",
+            "Gauge",
+            "Weight",
+            "Dimensions",
+            "Comment"]
+
+
     def get_selected_spoke_id(self) -> tuple[bool, int]:
         spoke_id: int | None = self.ui.comboBoxSpoke.currentData()
         if spoke_id is None:
@@ -199,19 +208,11 @@ class SpokeModule:
         if not spokes:
             return
 
-        headers: list[str] = [
-            "Name",
-            "Type",
-            "Gauge",
-            "Weight",
-            "Dimensions",
-            "Comment"]
-
         # Exclude ID
         self.current_spokes: list[tuple[Any, list[Any]]] = [
             (spoke[0], list(spoke[1:]))
             for spoke in spokes]
-        model = SpokeTableModel(self.current_spokes, headers)
+        model = SpokeTableModel(self.current_spokes, self._spoke_headers)
         view: QTableView = self.ui.tableViewSpokesDatabase
         view.setModel(model)
 
@@ -448,3 +449,69 @@ class SpokeModule:
             self.ui.lineEditFilterGauge.y(),
             gauge_width,
             self.ui.lineEditFilterGauge.height())
+
+    def load_spoke_measurements(self) -> None:
+        """
+        Load all measurements for the selected spoke and tensiometer
+        and populate tableViewMeasurements.
+        """
+        res, spoke_id = self.get_selected_spoke_id()
+        tensiometer_id: int | None = self.ui.comboBoxTensiometer.currentData()
+        view: QTableView = self.ui.tableViewMeasurements
+
+        if not res or tensiometer_id is None:
+            view.setModel(None)
+            return
+        tensiometer_id = int(tensiometer_id)
+
+        measurements: list[Any] = self.db.execute_select(
+            query=SQLQueries.GET_MEASUREMENTS,
+            params=(spoke_id, tensiometer_id)
+        )
+        if not measurements:
+            view.setModel(None)
+            return
+
+        headers: list[str] = [
+            "Comment", "300N", "400N", "500N", "600N", "700N", "800N", "900N",
+            "1000N", "1100N", "1200N", "1300N", "1400N", "1500N", "1600N"
+        ]
+
+        data: list[tuple[Any, list[str]]] = [
+            (measurement[0], [measurement[1]] + list(map(str, measurement[2:])))
+            for measurement in measurements
+        ]
+
+        # Create and set the model
+        model = SpokeTableModel(data, headers)
+        view.setModel(model)
+
+        view.horizontalHeader().setHighlightSections(True)
+        # Adjust column headers
+        resize_mode = view.horizontalHeader().setSectionResizeMode
+        resize_mode(self.__rm_shrink)
+        resize_mode(0, self.__rm_stretch) # Comment
+
+    def sync_spoke_selection(self, sender: QComboBox) -> None:
+        """
+        Synchronize the spoke selection between the Database Tab and
+        Measurement Tab while preventing circular calls.
+        """
+        if sender == self.ui.comboBoxSpoke:
+            # Sync comboBoxSpoke2 with comboBoxSpoke
+            self.ui.comboBoxSpoke2.blockSignals(True)
+            self.ui.comboBoxSpoke2.setCurrentIndex(
+                self.ui.comboBoxSpoke.currentIndex()
+            )
+            self.ui.comboBoxSpoke2.blockSignals(False)
+        elif sender == self.ui.comboBoxSpoke2:
+            # Sync comboBoxSpoke with comboBoxSpoke2
+            self.ui.comboBoxSpoke.blockSignals(True)
+            self.ui.comboBoxSpoke.setCurrentIndex(
+                self.ui.comboBoxSpoke2.currentIndex()
+            )
+            self.ui.comboBoxSpoke.blockSignals(False)
+
+        # Update the details for the currently selected spoke
+        self.update_spoke_details(sender)
+        self.load_spoke_measurements()

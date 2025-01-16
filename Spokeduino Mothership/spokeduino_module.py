@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QTableWidgetItem
 from database_module import DatabaseModule
 from setup_module import SetupModule
-from messagebox_module import MessageboxModule
+from helpers import Messagebox
 from sql_queries import SQLQueries
 
 
@@ -23,7 +23,7 @@ class SpokeduinoModule:
             ui: Any,
             db: DatabaseModule,
             setup_module: SetupModule,
-            messagebox: MessageboxModule) -> None:
+            messagebox: Messagebox) -> None:
         """
         Initialize the Spokeduino communication module.
         :param ui: The main UI object for accessing GUI elements.
@@ -36,7 +36,7 @@ class SpokeduinoModule:
         self.ui = ui
         self.db: DatabaseModule = db
         self.setup_module: SetupModule = setup_module
-        self.messagebox: MessageboxModule = messagebox
+        self.messagebox: Messagebox = messagebox
         self.spokeduino_state: SpokeduinoState = SpokeduinoState.WAITING
         self.waiting_event = threading.Event()
         self.th_spokeduino = None

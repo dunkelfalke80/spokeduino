@@ -50,7 +50,7 @@ class SpokeTableModel(QAbstractTableModel):
         return None
 
 
-class MessageboxModule:
+class Messagebox:
 
     def __init__(self, main_window: QMainWindow) -> None:
         self.main_window = main_window

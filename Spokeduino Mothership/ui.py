@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'spokeduino_mothershipMdoUyv.ui'
+## Form generated from reading UI file 'spokeduino_mothershipbYfeUT.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.1
 ##
@@ -29,7 +29,7 @@ class Ui_mainWindow(object):
     def setupUi(self, mainWindow):
         if not mainWindow.objectName():
             mainWindow.setObjectName(u"mainWindow")
-        mainWindow.resize(1171, 768)
+        mainWindow.resize(1100, 793)
         sizePolicy = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
@@ -918,20 +918,38 @@ class Ui_mainWindow(object):
         self.gridLayoutTensionButtons = QGridLayout()
         self.gridLayoutTensionButtons.setObjectName(u"gridLayoutTensionButtons")
         self.gridLayoutTensionButtons.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
-        self.horizontalSpacerSpokeEditsLeft = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayoutTensionButtons.addItem(self.horizontalSpacerSpokeEditsLeft, 0, 3, 1, 1)
-
-        self.pushButtonPreviousSpoke = QPushButton(self.groupBoxWheel)
-        self.pushButtonPreviousSpoke.setObjectName(u"pushButtonPreviousSpoke")
+        self.pushButtonStartTensioning = QPushButton(self.groupBoxWheel)
+        self.pushButtonStartTensioning.setObjectName(u"pushButtonStartTensioning")
         sizePolicy5 = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
         sizePolicy5.setHorizontalStretch(0)
         sizePolicy5.setVerticalStretch(0)
+        sizePolicy5.setHeightForWidth(self.pushButtonStartTensioning.sizePolicy().hasHeightForWidth())
+        self.pushButtonStartTensioning.setSizePolicy(sizePolicy5)
+        icon11 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoUp))
+        self.pushButtonStartTensioning.setIcon(icon11)
+
+        self.gridLayoutTensionButtons.addWidget(self.pushButtonStartTensioning, 0, 0, 1, 1)
+
+        self.horizontalSpacerSpokeEditsLeft = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayoutTensionButtons.addItem(self.horizontalSpacerSpokeEditsLeft, 0, 4, 1, 1)
+
+        self.pushButtonSwitchView = QPushButton(self.groupBoxWheel)
+        self.pushButtonSwitchView.setObjectName(u"pushButtonSwitchView")
+        sizePolicy5.setHeightForWidth(self.pushButtonSwitchView.sizePolicy().hasHeightForWidth())
+        self.pushButtonSwitchView.setSizePolicy(sizePolicy5)
+        icon12 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaylistRepeat))
+        self.pushButtonSwitchView.setIcon(icon12)
+
+        self.gridLayoutTensionButtons.addWidget(self.pushButtonSwitchView, 0, 5, 1, 1)
+
+        self.pushButtonPreviousSpoke = QPushButton(self.groupBoxWheel)
+        self.pushButtonPreviousSpoke.setObjectName(u"pushButtonPreviousSpoke")
         sizePolicy5.setHeightForWidth(self.pushButtonPreviousSpoke.sizePolicy().hasHeightForWidth())
         self.pushButtonPreviousSpoke.setSizePolicy(sizePolicy5)
         self.pushButtonPreviousSpoke.setIcon(icon)
 
-        self.gridLayoutTensionButtons.addWidget(self.pushButtonPreviousSpoke, 0, 1, 1, 1)
+        self.gridLayoutTensionButtons.addWidget(self.pushButtonPreviousSpoke, 0, 2, 1, 1)
 
         self.pushButtonNextSpoke = QPushButton(self.groupBoxWheel)
         self.pushButtonNextSpoke.setObjectName(u"pushButtonNextSpoke")
@@ -939,16 +957,11 @@ class Ui_mainWindow(object):
         self.pushButtonNextSpoke.setSizePolicy(sizePolicy5)
         self.pushButtonNextSpoke.setIcon(icon1)
 
-        self.gridLayoutTensionButtons.addWidget(self.pushButtonNextSpoke, 0, 2, 1, 1)
+        self.gridLayoutTensionButtons.addWidget(self.pushButtonNextSpoke, 0, 3, 1, 1)
 
-        self.pushButtonSwitchView = QPushButton(self.groupBoxWheel)
-        self.pushButtonSwitchView.setObjectName(u"pushButtonSwitchView")
-        sizePolicy5.setHeightForWidth(self.pushButtonSwitchView.sizePolicy().hasHeightForWidth())
-        self.pushButtonSwitchView.setSizePolicy(sizePolicy5)
-        icon11 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaylistRepeat))
-        self.pushButtonSwitchView.setIcon(icon11)
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayoutTensionButtons.addWidget(self.pushButtonSwitchView, 0, 4, 1, 1)
+        self.gridLayoutTensionButtons.addItem(self.horizontalSpacer, 0, 1, 1, 1)
 
 
         self.verticalLayoutMeasurement.addLayout(self.gridLayoutTensionButtons)
@@ -1038,8 +1051,8 @@ class Ui_mainWindow(object):
         self.pushButtonMultipleTensiometers.setObjectName(u"pushButtonMultipleTensiometers")
         sizePolicy2.setHeightForWidth(self.pushButtonMultipleTensiometers.sizePolicy().hasHeightForWidth())
         self.pushButtonMultipleTensiometers.setSizePolicy(sizePolicy2)
-        icon12 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditSelectAll))
-        self.pushButtonMultipleTensiometers.setIcon(icon12)
+        icon13 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditSelectAll))
+        self.pushButtonMultipleTensiometers.setIcon(icon13)
 
         self.horizontalLayout_3.addWidget(self.pushButtonMultipleTensiometers)
 
@@ -1282,7 +1295,7 @@ class Ui_mainWindow(object):
         mainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QMenuBar(mainWindow)
         self.menubar.setObjectName(u"menubar")
-        self.menubar.setGeometry(QRect(0, 0, 1171, 22))
+        self.menubar.setGeometry(QRect(0, 0, 1100, 22))
         self.menuHelp = QMenu(self.menubar)
         self.menuHelp.setObjectName(u"menuHelp")
         mainWindow.setMenuBar(self.menubar)
@@ -1362,9 +1375,10 @@ class Ui_mainWindow(object):
         self.groupBoxSelectedSpokeRight.setTitle(QCoreApplication.translate("mainWindow", u"Selected spoke", None))
         self.groupBoxTensionValuesRight.setTitle(QCoreApplication.translate("mainWindow", u"Tension values", None))
         self.groupBoxWheel.setTitle(QCoreApplication.translate("mainWindow", u"Tension and dishing diagram", None))
+        self.pushButtonStartTensioning.setText(QCoreApplication.translate("mainWindow", u"Start", None))
+        self.pushButtonSwitchView.setText(QCoreApplication.translate("mainWindow", u"Switch view", None))
         self.pushButtonPreviousSpoke.setText(QCoreApplication.translate("mainWindow", u"Previous spoke", None))
         self.pushButtonNextSpoke.setText(QCoreApplication.translate("mainWindow", u"Next spoke", None))
-        self.pushButtonSwitchView.setText(QCoreApplication.translate("mainWindow", u"Switch view", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tensionTab), QCoreApplication.translate("mainWindow", u"Tension a wheel", None))
         self.groupBoxLanguage.setTitle(QCoreApplication.translate("mainWindow", u"Language", None))
         self.groupBoxSpokeduino.setTitle(QCoreApplication.translate("mainWindow", u"Spokeduino port", None))
