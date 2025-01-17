@@ -57,8 +57,6 @@ class Spokeduino(QMainWindow):
         self.db_changed: bool = False
 
         self.multi_tensiometer_enabled: bool = False
-        self.left_spoke_formula: str = ""
-        self.right_spoke_formula: str = ""
 
         self.ui = Ui_mainWindow()
         self.ui.setupUi(mainWindow=self)
@@ -127,7 +125,6 @@ class Spokeduino(QMainWindow):
             move_to_next_cell_callback=self.next_cell_tensioning_callback_right,
             move_to_previous_cell_callback=self.previous_cell_tensioning_callback_right)
 
-
         # Set the same object name so the rest of the code works seamlessly
         custom_tension_table_right.setObjectName("tableViewTensionsRight")
 
@@ -156,9 +153,12 @@ class Spokeduino(QMainWindow):
         QTimer.singleShot(
             100,
             self.spoke_module.align_filters_with_table)
+
+        # Tensioning related entries
         self.spoke_tensions_left: list[tuple[float, float]] = []
         self.spoke_tensions_right: list[tuple[float, float]] = []
-
+        self.left_spoke_formula: str = ""
+        self.right_spoke_formula: str = ""
 
     def setup_signals_and_slots(self) -> None:
         """
@@ -934,8 +934,12 @@ class Spokeduino(QMainWindow):
         view.setRowCount(spoke_amount)
         view.setColumnCount(2)
         view.setHorizontalHeaderLabels(headers)
-        view.setVerticalHeaderLabels(
-                [f"{value + 1}" for value in range(spoke_amount)])
+        if self.ui.radioButtonRotationClockwise.isChecked():
+            view.setVerticalHeaderLabels(
+                    [f"{value}" for value in range(1, spoke_amount, 1)])
+        elif self.ui.radioButtonRotationAnticlockwise.isChecked():
+            view.setVerticalHeaderLabels(
+                    [f"{value}" for value in range(spoke_amount, 0, -1)])
 
         # Populate rows
         for row in range(spoke_amount):
@@ -969,10 +973,24 @@ class Spokeduino(QMainWindow):
         self.next_cell_tensioning(False)
 
     def next_cell_tensioning(self, left: bool) -> None:
+        view: CustomTableWidget
+        other_view: CustomTableWidget
         if left:
-            print("Next cell left")
+            view = self.ui.tableViewTensioningLeft
+            other_view = self.ui.tableViewTensioningRight
         else:
-            print("Next cell right")
+            view = self.ui.tableViewTensioningRight
+            other_view = self.ui.tableViewTensioningLeft
+
+        row: int = view.currentRow()
+        column: int = view.currentColumn()
+
+        if self.ui.radioButtonLeftRight.isChecked():
+            pass
+        elif self.ui.radioButtonRightLeft.isChecked():
+            pass
+        elif self.ui.radioButtonSideBySide.isChecked():
+            pass
 
     def previous_cell_tensioning(self, left: bool) -> None:
         if left:
