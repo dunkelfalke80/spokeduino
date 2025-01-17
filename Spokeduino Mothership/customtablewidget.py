@@ -1,5 +1,6 @@
 from typing import override, cast, Callable, Optional
 from PySide6.QtCore import Qt
+from PySide6.QtCore import QAbstractItemModel
 from PySide6.QtCore import QObject
 from PySide6.QtCore import QModelIndex
 from PySide6.QtCore import QLocale
@@ -24,11 +25,30 @@ from PySide6.QtWidgets import QWidget
 
 
 class CustomTableWidget(QTableWidget):
+    """
+    A custom table widget designed to handle specific features such as custom
+    navigation callbacks, cell editing, and clipboard paste operations.
+    """
     def __init__(self,
-                 move_to_next_cell_callback: Optional[Callable[[bool], None]] = None,
-                 move_to_previous_cell_callback: Optional[Callable[[], None]] = None,
+                 move_to_next_cell_callback:
+                    Optional[Callable[[bool], None]] = None,
+                 move_to_previous_cell_callback:
+                    Optional[Callable[[], None]] = None,
                  *args,
                  **kwargs) -> None:
+        """
+        Initialize the CustomTableWidget.
+
+        :param move_to_next_cell_callback: Optional callback for navigating
+                                           to the next cell.
+                                           Defaults to the internal
+                                           __move_to_next_cell_default.
+        :param move_to_previous_cell_callback: Optional callback for navigating
+                                               to the previous cell.
+                                               Defaults to the internal
+                                               __move_to_previous_cell_default.
+        """
+        ...
         super().__init__(*args, **kwargs)
         # Configure table behavior
         self.__select_rows: QAbstractItemView.SelectionBehavior = \
@@ -38,35 +58,43 @@ class CustomTableWidget(QTableWidget):
         self.setSelectionBehavior(self.__select_rows)
         self.setSelectionMode(self.__select_single)
         self.setItemDelegate(CustomTableWidgetItemDelegate(self))
-        self.move_to_previous_cell: Callable[[], None] = (
-            self._move_to_previous_cell_default
-            if move_to_previous_cell_callback is None
-            else move_to_previous_cell_callback)
-        if not callable(move_to_previous_cell_callback):
-            raise ValueError("move_to_previous_cell_callback must be a callable.")
-        self.move_to_next_cell: Callable[[bool], None] = (
-            self._move_to_next_cell_default
-            if move_to_next_cell_callback is None
-            else move_to_next_cell_callback)
-        if not callable(move_to_next_cell_callback):
-            raise ValueError("move_to_next_cell_callback must be a callable.")
+
+        if move_to_next_cell_callback is None:
+            self.move_to_next_cell: Callable[[bool], None] = \
+                self.__move_to_next_cell_default
+        else:
+            self.move_to_next_cell = move_to_next_cell_callback
+
+        if move_to_previous_cell_callback is None:
+            self.move_to_previous_cell: Callable[[], None] = \
+                self.__move_to_previous_cell_default
+        else:
+            self.move_to_previous_cell = move_to_previous_cell_callback
 
     @override
     def keyPressEvent(self, event) -> None:
-        if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
+        """
+        Handle key press events.
+
+        Supports Enter/Return for moving to the next cell and Ctrl+V/Shift+Insert
+        for pasting clipboard data.
+
+        :param event: The key press event to handle.
+        """
+        if event.matches(QKeySequence.StandardKey.Paste):
+            self.__paste_row()
+        elif event.matches(QKeySequence.StandardKey.InsertParagraphSeparator):
             super().keyPressEvent(event)
             self.move_to_next_cell(False)
-        # Check for Ctrl+V or Shift+Insert
-        elif (event.key() == Qt.Key.Key_V and event.modifiers() & Qt.KeyboardModifier.ControlModifier) or \
-           (event.key() == Qt.Key.Key_Insert and event.modifiers() & Qt.KeyboardModifier.ShiftModifier):
-            self._paste_row()
         else:
             super().keyPressEvent(event)
 
-    def _paste_row(self) -> None:
+    def __paste_row(self) -> None:
             """
             Paste data from the clipboard into the currently selected column,
-            starting at the selected row. Supports single-column clipboard data only.
+            starting at the selected cell. If the clipboard data is multi-line,
+            automatically moves to next cell for each line, wrapping around columns
+            if required.
             """
             clipboard: QClipboard = QApplication.clipboard()
             clipboard_data: str = clipboard.text()
@@ -81,6 +109,12 @@ class CustomTableWidget(QTableWidget):
                 self.move_to_next_cell(True)
 
     def refocus(self, zero: bool) -> None:
+        """
+        Refocus the table, either on the first cell or the currently active cell.
+
+        :param zero: If True, refocus on the first cell (0, 0).
+                     Otherwise, refocus on the currently active cell.
+        """
         item: QTableWidgetItem | None = (self.item(0, 0)
                                          if zero
                                          else self.currentItem())
@@ -90,6 +124,12 @@ class CustomTableWidget(QTableWidget):
         item.setSelected(True)
 
     def move_to_specific_cell(self, row: int, column: int) -> None:
+        """
+        Move focus to a specific cell and activate editing.
+
+        :param row: The row index of the target cell.
+        :param column: The column index of the target cell.
+        """
         index: QModelIndex = self.model().index(row, column)
         if not index.isValid():
             return
@@ -99,9 +139,14 @@ class CustomTableWidget(QTableWidget):
         self.setCurrentIndex(index)
         self.edit(index)
 
-    def _move_to_next_cell_default(self, no_delay: bool) -> None:
+    def __move_to_next_cell_default(self, no_delay: bool) -> None:
         """
-        Move to the next cell in the table and activate editing.
+        Default implementation for moving to the next cell in the table.
+        Moves to the cell below if possible, otherwise to the first cell
+        of the next column if possible.
+
+        :param no_delay: If True, immediately move to the next cell.
+                        Otherwise, introduce a slight delay.
         """
         row: int = self.currentRow()
         column: int = self.currentColumn()
@@ -120,9 +165,11 @@ class CustomTableWidget(QTableWidget):
         else:
             QTimer.singleShot(50, lambda: self.move_to_specific_cell(row, column))
 
-    def _move_to_previous_cell_default(self) -> None:
+    def __move_to_previous_cell_default(self) -> None:
         """
-        Move to the previous cell in the table and activate editing.
+        Default implementation for moving to the previous cell in the table.
+        Moves to the cell above if possible, otherwise to the last cell
+        of the previous column if possible.
         """
         row: int = self.currentRow()
         column: int = self.currentColumn()
@@ -136,60 +183,86 @@ class CustomTableWidget(QTableWidget):
             return  # Already at the first cell
 
         # Delay to ensure Qt's focus/selection state is updated
-        QTimer.singleShot(50, lambda: self.move_to_specific_cell(row, column))
+        QTimer.singleShot(
+            50,
+            lambda: self.move_to_specific_cell(row, column))
 
     def resize_table_font(self) -> None:
-            """
-            Resize the table font, row heights, and column widths so it fits within the parent layout.
-            """
-            row_count = self.rowCount()
-            if row_count == 0:
-                return  # No rows to resize
+        """
+        Resize the table's font, row heights, and column widths
+        to better fit within the parent layout.
+        """
+        row_count = self.rowCount()
+        if row_count == 0:
+            return  # No rows to resize
 
-            # Get the size of the parent widget
-            parent_widget: QWidget | None = self.parentWidget()
-            if parent_widget is None:
-                return  # Cannot determine parent size
-            parent_widget = cast(QWidget, parent_widget)
+        # Get the size of the parent widget
+        parent_widget: QWidget | None = self.parentWidget()
+        if parent_widget is None:
+            return  # Cannot determine parent size
+        parent_widget = cast(QWidget, parent_widget)
 
-            layout_size: QSize = parent_widget.size()
-            layout_height: int = layout_size.height()
-            layout_width: int = layout_size.width()
+        layout_size: QSize = parent_widget.size()
+        layout_height: int = layout_size.height()
+        layout_width: int = layout_size.width()
 
-            # Estimate row height and font size
-            row_height: int = layout_height // row_count
-            font_size = row_height // 3  # Adjust font size relative to row height
+        # Estimate row height and font size
+        row_height: int = layout_height // row_count
+        font_size = row_height // 3  # Adjust font size relative to row height
 
-            # Ensure minimum font size
-            font_size: int = max(font_size, 8)
+        # Ensure minimum font size
+        font_size: int = max(font_size, 8)
 
-            # Set font for the table
-            font: QFont = self.font()
-            font.setPointSize(font_size)
-            self.setFont(font)
+        # Ensure maximum font size
+        font_size: int = min(font_size, 16)
 
-            # Adjust row height and column widths
-            self.verticalHeader().setDefaultSectionSize(row_height)
-            self.horizontalHeader().setDefaultSectionSize(layout_width // self.columnCount())
-            self.resizeRowsToContents()
+        # Set font for the table
+        font: QFont = self.font()
+        font.setPointSize(font_size)
+        self.setFont(font)
+
+        # Adjust row height and column widths
+        self.verticalHeader().setDefaultSectionSize(row_height)
+        self.horizontalHeader().setDefaultSectionSize(
+            layout_width // self.columnCount())
+        self.resizeRowsToContents()
 
 
 class CustomDoubleValidator(QDoubleValidator):
     """
-    Custom validator to allow both dot and comma as decimal separators.
+    A custom double validator that allows both dot and comma
+    as decimal separators, allows fractional inputs and
+    and ensures these are formatted correctly based on the locale.
     """
     @override
     def validate(self, arg__1, arg__2):
-        # Allow empty input (Intermediate state for typing)
+        """
+        Validate the input dynamically as the user types.
+
+        :param arg__1: The input string to validate.
+        :param arg__2: The current cursor position (not used).
+        :return: A tuple containing the validation state,
+                 the validated string, and the cursor position.
+        """
         if not arg__1:
+            # Allow empty input (Intermediate state for typing)
             return QValidator.State.Intermediate, arg__1, arg__2
 
         res: str = self.check_text(arg__1)
         if res == "":
+            # check_text returns empty string if invalid
             return QValidator.State.Invalid, "", 0
-        return QValidator.State.Acceptable, res, arg__2
+        return QValidator.State.Acceptable, res, len(res)
 
     def check_text(self, text: str) -> str:
+        """
+        Replaces dot and comma with the locale decimal point.
+        Allows only digits and one decimal point.
+        Converts fractional inputs like '.2' to '0.2'.
+
+        :param text: The input text to validate and format.
+        :return: The formatted text or an empty string if invalid.
+        """
         decimal_point: str = QLocale().decimalPoint()
         decimal_point_encountered: bool = False
         fixed_input: str = ""
@@ -208,22 +281,29 @@ class CustomDoubleValidator(QDoubleValidator):
             return ""
 
         # for entering values that only have a fraction
-        if [0] == QLocale().decimalPoint():
+        if fixed_input[0] == QLocale().decimalPoint():
             fixed_input = "0" + fixed_input
 
         return fixed_input
 
 
-
 class CustomTableWidgetItemDelegate(QStyledItemDelegate):
     """
-    Custom delegate to allow both dot and comma
-    as decimal separators.
+    A custom delegate for table widget items, enabling custom validation
+    and handling of cell editing.
     """
     def createEditor(self,
                      parent: QWidget,
                      option: QStyleOptionViewItem,
                      index: QModelIndex | QPersistentModelIndex) -> QLineEdit:
+        """
+        Create an editor widget for editing table cells.
+
+        :param parent: The parent widget for the editor.
+        :param option: The style options for the editor.
+        :param index: The index of the cell being edited.
+        :return: The editor widget.
+        """
         editor = QLineEdit(parent)
         validator = CustomDoubleValidator()
         validator.setNotation(QDoubleValidator.Notation.StandardNotation)
@@ -231,9 +311,12 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
         editor.installEventFilter(self)
         return editor
 
-    def _find_table_widget(self, widget: QObject) -> CustomTableWidget | None:
+    def __find_table_widget(self, widget: QObject) -> CustomTableWidget | None:
         """
-        Traverse the widget hierarchy to find the parent table widget.
+        Traverse the widget hierarchy to find the parent CustomTableWidget.
+
+        :param widget: The starting widget.
+        :return: The parent CustomTableWidget if found, otherwise None.
         """
         while widget is not None:
             # Check if the parent is the table
@@ -245,11 +328,41 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
 
     @override
     def eventFilter(self, object: QObject, event: QEvent) -> bool:
+        """
+        Intercept paste-related key events and delegate them
+        to the parent table widget.
+
+        :param object: The widget receiving the event.
+        :param event: The event to filter.
+        :return: True if the event is handled,
+                 otherwise passes it to the default implementation.
+        """
         if event.type() == QEvent.Type.KeyPress:
             if cast(QKeyEvent, event).matches(QKeySequence.StandardKey.Paste):
                 table_widget: CustomTableWidget | None = \
-                    self._find_table_widget(object)
+                    self.__find_table_widget(object)
                 if table_widget is not None:
-                    table_widget._paste_row()
+                    table_widget.__paste_row()
                     return True
         return super().eventFilter(object, event)
+
+    @override
+    def setModelData(self,
+                    editor: QWidget,
+                    model: QAbstractItemModel,
+                    index: QModelIndex | QPersistentModelIndex) -> None:
+        """
+        Finalize editing by setting the data in the model.
+        Removes trailing decimal separators before saving.
+
+        :param editor: The editor widget.
+        :param model: The model to update.
+        :param index: The index of the cell being edited.
+        """
+        if isinstance(editor, QLineEdit):
+            text: str = editor.text()
+            if text.endswith(QLocale().decimalPoint()):
+                text = text[:-1]
+            model.setData(index, text)
+        else:
+            super().setModelData(editor, model, index)
