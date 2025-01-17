@@ -101,7 +101,10 @@ class Spokeduino(QMainWindow):
         self.ui.tableWidgetMeasurements = custom_table
 
         # Replace the tableViewTensionsLeft with the custom widget
-        custom_tension_table_left = CustomTableWidget(parent=self)
+        custom_tension_table_left = CustomTableWidget(
+            parent=self,
+            move_to_next_cell_callback=self.next_cell_tensioning_callback_left,
+            move_to_previous_cell_callback=self.previous_cell_tensioning_callback_left)
 
         # Set the same object name so the rest of the code works seamlessly
         custom_tension_table_left.setObjectName("tableViewTensionsLeft")
@@ -109,17 +112,21 @@ class Spokeduino(QMainWindow):
         # Replace the widget in the layout
         layout: QLayout | None = cast(
             QGroupBox,
-            self.ui.tableViewTensionsLeft.parent()).layout()
+            self.ui.tableViewTensioningLeft.parent()).layout()
         if layout:
             layout.replaceWidget(
-                self.ui.tableViewTensionsLeft,
+                self.ui.tableViewTensioningLeft,
                 custom_tension_table_left)
 
-        self.ui.tableViewTensionsLeft.deleteLater()
-        self.ui.tableViewTensionsLeft = custom_tension_table_left
+        self.ui.tableViewTensioningLeft.deleteLater()
+        self.ui.tableViewTensioningLeft = custom_tension_table_left
 
         # Replace the tableViewTensionsRight with the custom widget
-        custom_tension_table_right = CustomTableWidget(parent=self)
+        custom_tension_table_right = CustomTableWidget(
+            parent=self,
+            move_to_next_cell_callback=self.next_cell_tensioning_callback_right,
+            move_to_previous_cell_callback=self.previous_cell_tensioning_callback_right)
+
 
         # Set the same object name so the rest of the code works seamlessly
         custom_tension_table_right.setObjectName("tableViewTensionsRight")
@@ -127,14 +134,14 @@ class Spokeduino(QMainWindow):
         # Replace the widget in the layout
         layout: QLayout | None = cast(
             QGroupBox,
-            self.ui.tableViewTensionsRight.parent()).layout()
+            self.ui.tableViewTensioningRight.parent()).layout()
         if layout:
             layout.replaceWidget(
-                self.ui.tableViewTensionsRight,
+                self.ui.tableViewTensioningRight,
                 custom_tension_table_right)
 
-        self.ui.tableViewTensionsRight.deleteLater()
-        self.ui.tableViewTensionsRight = custom_tension_table_right
+        self.ui.tableViewTensioningRight.deleteLater()
+        self.ui.tableViewTensioningRight = custom_tension_table_right
 
         self.unit_converter = UnitConverter(self.ui)
         self.setup_module.setup_language()
@@ -143,13 +150,15 @@ class Spokeduino(QMainWindow):
         self.setup_module.load_tensiometers()
         self.setup_signals_and_slots()
         self.setup_module.load_settings()
-        self.current_spokes: list[tuple[int, list[str]]] = []
         self.spoke_module.load_manufacturers()
         self.toggle_new_manufacturer_button()
         # Delay to ensure Qt's focus/selection state is updated
         QTimer.singleShot(
             100,
             self.spoke_module.align_filters_with_table)
+        self.spoke_tensions_left: list[tuple[float, float]] = []
+        self.spoke_tensions_right: list[tuple[float, float]] = []
+
 
     def setup_signals_and_slots(self) -> None:
         """
@@ -163,16 +172,6 @@ class Spokeduino(QMainWindow):
             self.spoke_module.modify_spoke)
         self.ui.pushButtonDeleteSpoke.clicked.connect(
             self.spoke_module.delete_spoke)
-
-        # Manufacturer-related buttons
-        self.ui.lineEditNewManufacturer.textChanged.connect(
-            self.toggle_new_manufacturer_button)
-        self.ui.lineEditNewManufacturer2.textChanged.connect(
-            self.toggle_new_manufacturer_button)
-        self.ui.pushButtonNewManufacturer.clicked.connect(
-            self.create_new_manufacturer)
-        self.ui.pushButtonNewManufacturer2.clicked.connect(
-            self.create_new_manufacturer)
 
         # Synchronize fields and buttons
         self.ui.lineEditName.textChanged.connect(
@@ -239,6 +238,14 @@ class Spokeduino(QMainWindow):
             self.spoke_module.align_filters_with_table)
 
         # Manufacturer-related buttons and combo boxes
+        self.ui.lineEditNewManufacturer.textChanged.connect(
+            self.toggle_new_manufacturer_button)
+        self.ui.lineEditNewManufacturer2.textChanged.connect(
+            self.toggle_new_manufacturer_button)
+        self.ui.pushButtonNewManufacturer.clicked.connect(
+            self.create_new_manufacturer)
+        self.ui.pushButtonNewManufacturer2.clicked.connect(
+            self.create_new_manufacturer)
         self.ui.comboBoxManufacturer.\
             currentIndexChanged.connect(
                 self.spoke_module.load_spokes)
@@ -291,11 +298,17 @@ class Spokeduino(QMainWindow):
         self.ui.pushButtonSaveMeasurement.clicked.connect(
             self.save_measurements)
 
-        # Use spokes
+        # Tensioning related signals
         self.ui.pushButtonUseLeft.clicked.connect(
             lambda: self.use_spoke(True))
         self.ui.pushButtonUseRight.clicked.connect(
             lambda: self.use_spoke(False))
+        self.ui.pushButtonStartTensioning.clicked.connect(
+            self.start_tensioning)
+        self.ui.tableViewTensioningLeft.cellChanged.connect(
+            self.on_tensioning_cell_changed_left)
+        self.ui.tableViewTensioningRight.cellChanged.connect(
+            self.on_tensioning_cell_changed_right)
 
         # Language selection
         self.ui.comboBoxSelectLanguage.currentTextChanged.connect(
@@ -313,6 +326,7 @@ class Spokeduino(QMainWindow):
             self.spokeduino_module.restart_spokeduino_port)
         self.ui.checkBoxSpokeduinoEnabled.checkStateChanged.connect(
             self.spokeduino_module.restart_spokeduino_port)
+
         # Tensiometer selection
         self.ui.comboBoxTensiometer.currentIndexChanged.connect(self.save_tensiometer)
 
@@ -383,18 +397,19 @@ class Spokeduino(QMainWindow):
             self.ui.tableViewSpokesDatabase.horizontalHeader()
         header.sectionClicked.connect(self.spoke_module.sort_by_column)
 
-        # Left tension table
+        # Left tensioning table
         self.ui.lineEditSpokeAmountLeft.textChanged.connect(
-            lambda: self.setup_tension_table(is_left=True))
+            lambda: self.setup_tensioning_table(is_left=True))
         self.ui.lineEditTargetTensionLeft.textChanged.connect(
-            lambda: self.setup_tension_table(is_left=True))
+            lambda: self.setup_tensioning_table(is_left=True))
 
-        # Right tension table
+        # Right tensioning table
         self.ui.lineEditSpokeAmountRight.textChanged.connect(
-            lambda: self.setup_tension_table(is_left=False))
+            lambda: self.setup_tensioning_table(is_left=False))
         self.ui.lineEditTargetTensionRight.textChanged.connect(
-            lambda: self.setup_tension_table(is_left=False))
+            lambda: self.setup_tensioning_table(is_left=False))
 
+        # Spokeduino
         self.spokeduino_state: SpokeduinoState = SpokeduinoState.WAITING
 
     @override
@@ -417,10 +432,13 @@ class Spokeduino(QMainWindow):
             self.db.vacuum()
         event.accept()
 
-    @override
-    def focusInEvent(self, event: QFocusEvent) -> None:
-        print("Got focus")
-        return super().focusInEvent(event)
+    def tab_index_changed(self) -> None:
+        match self.ui.tabWidget.currentWidget():
+            case self.ui.measurementTab:
+                self.setup_measurements_table()
+            case self.ui.tensioningTab:
+                self.setup_tensioning_table(True)
+                self.setup_tensioning_table(False)
 
     def delete_measurement(self) -> None:
         """
@@ -884,7 +902,7 @@ class Spokeduino(QMainWindow):
                     item.setText("")
         self.spoke_module.load_spoke_measurements()
 
-    def setup_tension_table(self, is_left: bool) -> None:
+    def setup_tensioning_table(self, is_left: bool) -> None:
         """
         Set up tableViewTensionsLeft or tableViewTensionsRight based on spoke amount and target tension.
         Populate the table manually for QTableWidget.
@@ -892,10 +910,10 @@ class Spokeduino(QMainWindow):
         # Select the appropriate UI elements
         if is_left:
             line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountLeft
-            view: CustomTableWidget = self.ui.tableViewTensionsLeft
+            view: CustomTableWidget = self.ui.tableViewTensioningLeft
         else:
             line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountRight
-            view: CustomTableWidget = self.ui.tableViewTensionsRight
+            view: CustomTableWidget = self.ui.tableViewTensioningRight
 
         # Get spoke amount and target tension
         try:
@@ -912,6 +930,8 @@ class Spokeduino(QMainWindow):
         view.setRowCount(spoke_amount)
         view.setColumnCount(2)
         view.setHorizontalHeaderLabels(headers)
+        view.setVerticalHeaderLabels(
+                [f"{value + 1}" for value in range(spoke_amount)])
 
         # Populate rows
         for row in range(spoke_amount):
@@ -929,10 +949,79 @@ class Spokeduino(QMainWindow):
         view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         view.resize_table_font()
 
-    def tab_index_changed(self) -> None:
-        match self.ui.tabWidget.currentWidget():
-            case self.ui.measurementTab:
-                self.setup_measurements_table()
+    def start_tensioning(self) -> None:
+        pass
+
+    def next_cell_tensioning_callback_left(self, no_delay: bool = False) -> None:
+        self.next_cell_tensioning(True)
+
+    def next_cell_tensioning_callback_right(self, no_delay: bool = False) -> None:
+        self.next_cell_tensioning(False)
+
+    def previous_cell_tensioning_callback_left(self) -> None:
+        self.next_cell_tensioning(True)
+
+    def previous_cell_tensioning_callback_right(self) -> None:
+        self.next_cell_tensioning(False)
+
+    def next_cell_tensioning(self, left: bool) -> None:
+        if left:
+            print("Next cell left")
+        else:
+            print("Next cell right")
+
+    def previous_cell_tensioning(self, left: bool) -> None:
+        if left:
+            print("Previous cell left")
+        else:
+            print("Previous cell right")
+
+    def on_tensioning_cell_changed(self, left: bool, row: int, column: int) -> None:
+        """
+        Handle updates when a cell's text changes in real-time.
+
+        :param left: Left or right side of the wheel
+        :param row: The row index of the changed cell.
+        :param column: The column index of the changed cell.
+        """
+        # Get the new value
+        view: CustomTableWidget = (self.ui.tableViewTensioningLeft
+                                   if left
+                                   else self.ui.tableViewTensioningRight)
+        item: QTableWidgetItem | None = view.item(row, column)
+        if item is None:
+            return
+        new_value: str = item.text()
+        print(f"Cell at ({row}, {column}) changed to: {new_value}")
+
+    def on_tensioning_cell_changed_left(self, row: int, column: int) -> None:
+        self.on_tensioning_cell_changed(True, row, column)
+
+    def on_tensioning_cell_changed_right(self, row: int, column: int) -> None:
+        self.on_tensioning_cell_changed(True, row, column)
+
+    def on_tensioning_cell_finalized(
+            self,
+            left: bool,
+            row: int,
+            column: int,
+            value: str) -> None:
+        """
+        Handle updates when data is finalized (e.g., Enter pressed).
+
+        :param left: Left or right side of the wheel
+        :param row: The row index.
+        :param column: The column index.
+        :param value: The finalized value.
+        """
+        print(f"Data finalized at ({row}, {column}): {value}")
+
+    def on_tensioning_cell_finalized_left(self, row: int, column: int) -> None:
+        self.on_tensioning_cell_changed(True, row, column)
+
+    def on_tensioning_cell_finalized_right(self, row: int, column: int) -> None:
+        self.on_tensioning_cell_changed(True, row, column)
+
 
 
 

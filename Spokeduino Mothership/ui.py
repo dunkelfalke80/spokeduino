@@ -730,13 +730,13 @@ class Ui_mainWindow(object):
         self.horizontalLayoutMeasurementTop.addLayout(self.horizontalLayoutMeasurement)
 
         self.tabWidget.addTab(self.measurementTab, "")
-        self.tensionTab = QWidget()
-        self.tensionTab.setObjectName(u"tensionTab")
-        self.horizontalLayoutTensionTabTop = QHBoxLayout(self.tensionTab)
-        self.horizontalLayoutTensionTabTop.setObjectName(u"horizontalLayoutTensionTabTop")
-        self.horizontalLayoutTensionTab = QHBoxLayout()
-        self.horizontalLayoutTensionTab.setObjectName(u"horizontalLayoutTensionTab")
-        self.groupBoxSideLeft = QGroupBox(self.tensionTab)
+        self.tensioningTab = QWidget()
+        self.tensioningTab.setObjectName(u"tensioningTab")
+        self.horizontalLayoutTensioningTabTop = QHBoxLayout(self.tensioningTab)
+        self.horizontalLayoutTensioningTabTop.setObjectName(u"horizontalLayoutTensioningTabTop")
+        self.horizontalLayoutTensioningTab = QHBoxLayout()
+        self.horizontalLayoutTensioningTab.setObjectName(u"horizontalLayoutTensioningTab")
+        self.groupBoxSideLeft = QGroupBox(self.tensioningTab)
         self.groupBoxSideLeft.setObjectName(u"groupBoxSideLeft")
         sizePolicy1.setHeightForWidth(self.groupBoxSideLeft.sizePolicy().hasHeightForWidth())
         self.groupBoxSideLeft.setSizePolicy(sizePolicy1)
@@ -806,10 +806,10 @@ class Ui_mainWindow(object):
         self.verticalLayoutSelectedTensionValuesLeft = QVBoxLayout(self.groupBoxTensionValuesLeft)
         self.verticalLayoutSelectedTensionValuesLeft.setSpacing(6)
         self.verticalLayoutSelectedTensionValuesLeft.setObjectName(u"verticalLayoutSelectedTensionValuesLeft")
-        self.tableViewTensionsLeft = CustomTableWidget()
-        self.tableViewTensionsLeft.setObjectName(u"tableViewTensionsLeft")
+        self.tableViewTensioningLeft = CustomTableWidget()
+        self.tableViewTensioningLeft.setObjectName(u"tableViewTensionsLeft")
 
-        self.verticalLayoutSelectedTensionValuesLeft.addWidget(self.tableViewTensionsLeft)
+        self.verticalLayoutSelectedTensionValuesLeft.addWidget(self.tableViewTensioningLeft)
 
 
         self.verticalLayoutSideLeft.addWidget(self.groupBoxTensionValuesLeft)
@@ -817,9 +817,9 @@ class Ui_mainWindow(object):
         self.verticalLayoutSideLeft.setStretch(1, 2)
         self.verticalLayoutSideLeft.setStretch(2, 10)
 
-        self.horizontalLayoutTensionTab.addWidget(self.groupBoxSideLeft)
+        self.horizontalLayoutTensioningTab.addWidget(self.groupBoxSideLeft)
 
-        self.groupBoxSideRight = QGroupBox(self.tensionTab)
+        self.groupBoxSideRight = QGroupBox(self.tensioningTab)
         self.groupBoxSideRight.setObjectName(u"groupBoxSideRight")
         sizePolicy1.setHeightForWidth(self.groupBoxSideRight.sizePolicy().hasHeightForWidth())
         self.groupBoxSideRight.setSizePolicy(sizePolicy1)
@@ -885,10 +885,10 @@ class Ui_mainWindow(object):
         self.verticalLayoutSelectedTensionValuesRight = QVBoxLayout(self.groupBoxTensionValuesRight)
         self.verticalLayoutSelectedTensionValuesRight.setSpacing(6)
         self.verticalLayoutSelectedTensionValuesRight.setObjectName(u"verticalLayoutSelectedTensionValuesRight")
-        self.tableViewTensionsRight = CustomTableWidget()
-        self.tableViewTensionsRight.setObjectName(u"tableViewTensionsRight")
+        self.tableViewTensioningRight = CustomTableWidget()
+        self.tableViewTensioningRight.setObjectName(u"tableViewTensionsRight")
 
-        self.verticalLayoutSelectedTensionValuesRight.addWidget(self.tableViewTensionsRight)
+        self.verticalLayoutSelectedTensionValuesRight.addWidget(self.tableViewTensioningRight)
 
 
         self.verticalLayoutSideRight.addWidget(self.groupBoxTensionValuesRight)
@@ -896,9 +896,9 @@ class Ui_mainWindow(object):
         self.verticalLayoutSideRight.setStretch(1, 2)
         self.verticalLayoutSideRight.setStretch(2, 10)
 
-        self.horizontalLayoutTensionTab.addWidget(self.groupBoxSideRight)
+        self.horizontalLayoutTensioningTab.addWidget(self.groupBoxSideRight)
 
-        self.groupBoxWheel = QGroupBox(self.tensionTab)
+        self.groupBoxWheel = QGroupBox(self.tensioningTab)
         self.groupBoxWheel.setObjectName(u"groupBoxWheel")
         sizePolicy1.setHeightForWidth(self.groupBoxWheel.sizePolicy().hasHeightForWidth())
         self.groupBoxWheel.setSizePolicy(sizePolicy1)
@@ -968,15 +968,15 @@ class Ui_mainWindow(object):
 
         self.verticalLayoutMeasurement.setStretch(0, 10)
 
-        self.horizontalLayoutTensionTab.addWidget(self.groupBoxWheel)
+        self.horizontalLayoutTensioningTab.addWidget(self.groupBoxWheel)
 
-        self.horizontalLayoutTensionTab.setStretch(0, 1)
-        self.horizontalLayoutTensionTab.setStretch(1, 1)
-        self.horizontalLayoutTensionTab.setStretch(2, 10)
+        self.horizontalLayoutTensioningTab.setStretch(0, 1)
+        self.horizontalLayoutTensioningTab.setStretch(1, 1)
+        self.horizontalLayoutTensioningTab.setStretch(2, 10)
 
-        self.horizontalLayoutTensionTabTop.addLayout(self.horizontalLayoutTensionTab)
+        self.horizontalLayoutTensioningTabTop.addLayout(self.horizontalLayoutTensioningTab)
 
-        self.tabWidget.addTab(self.tensionTab, "")
+        self.tabWidget.addTab(self.tensioningTab, "")
         self.setupTab = QWidget()
         self.setupTab.setObjectName(u"setupTab")
         self.horizontalLayoutSetup = QHBoxLayout(self.setupTab)
@@ -1379,7 +1379,7 @@ class Ui_mainWindow(object):
         self.pushButtonSwitchView.setText(QCoreApplication.translate("mainWindow", u"Switch view", None))
         self.pushButtonPreviousSpoke.setText(QCoreApplication.translate("mainWindow", u"Previous spoke", None))
         self.pushButtonNextSpoke.setText(QCoreApplication.translate("mainWindow", u"Next spoke", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tensionTab), QCoreApplication.translate("mainWindow", u"Tension a wheel", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.tensioningTab), QCoreApplication.translate("mainWindow", u"Tension a wheel", None))
         self.groupBoxLanguage.setTitle(QCoreApplication.translate("mainWindow", u"Language", None))
         self.groupBoxSpokeduino.setTitle(QCoreApplication.translate("mainWindow", u"Spokeduino port", None))
         self.checkBoxSpokeduinoEnabled.setText(QCoreApplication.translate("mainWindow", u"Use Spokeduino", None))

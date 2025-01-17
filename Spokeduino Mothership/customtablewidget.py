@@ -7,6 +7,7 @@ from PySide6.QtCore import QLocale
 from PySide6.QtCore import QTimer
 from PySide6.QtCore import QEvent
 from PySide6.QtCore import QSize
+from PySide6.QtCore import Signal
 from PySide6.QtCore import QPersistentModelIndex
 from PySide6.QtGui import QClipboard
 from PySide6.QtGui import QValidator
@@ -29,6 +30,8 @@ class CustomTableWidget(QTableWidget):
     A custom table widget designed to handle specific features such as custom
     navigation callbacks, cell editing, and clipboard paste operations.
     """
+    cellDataFinalized = Signal(int, int, str)  # row, column, value
+
     def __init__(self,
                  move_to_next_cell_callback:
                     Optional[Callable[[bool], None]] = None,
@@ -71,6 +74,12 @@ class CustomTableWidget(QTableWidget):
         else:
             self.move_to_previous_cell = move_to_previous_cell_callback
 
+    def emit_cell_data_finalized(self, row: int, column: int, value: str) -> None:
+        """
+        Emit the cellDataFinalized signal when editing is finalized.
+        """
+        self.cellDataFinalized.emit(row, column, value)
+
     @override
     def keyPressEvent(self, event) -> None:
         """
@@ -88,6 +97,18 @@ class CustomTableWidget(QTableWidget):
             self.move_to_next_cell(False)
         else:
             super().keyPressEvent(event)
+
+    def get_row_header_text(self, row: Optional[int]) -> str | None:
+        """
+        Retrieve the header text for a specific row.
+
+        :param row: The row index.
+        :return: The header text or None if no header is set.
+        """
+        if row is None:
+            row = self.currentRow()
+        header_item: QTableWidgetItem = self.verticalHeaderItem(row)
+        return header_item.text() if header_item else None
 
     def paste_row(self) -> None:
             """
@@ -295,6 +316,10 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
     A custom delegate for table widget items, enabling custom validation
     and handling of cell editing.
     """
+    def __init__(self, parent: QObject) -> None:
+        super().__init__(parent)
+        self.__parent_table: CustomTableWidget = cast(CustomTableWidget, parent)
+
     def createEditor(self,
                      parent: QWidget,
                      option: QStyleOptionViewItem,
@@ -342,11 +367,12 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
         """
         if event.type() == QEvent.Type.KeyPress:
             if cast(QKeyEvent, event).matches(QKeySequence.StandardKey.Paste):
-                table_widget: CustomTableWidget | None = \
-                    self.__find_table_widget(object)
-                if table_widget is not None:
-                    table_widget.paste_row()
-                    return True
+                # table_widget: CustomTableWidget | None = \
+                #     self.__find_table_widget(object)
+                # if table_widget is not None:
+                #    table_widget.paste_row()
+                self.__parent_table.paste_row()
+                return True
         return super().eventFilter(object, event)
 
     @override
@@ -357,6 +383,7 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
         """
         Finalize editing by setting the data in the model.
         Removes trailing decimal separators before saving.
+        Sends a signal when done.
 
         :param editor: The editor widget.
         :param model: The model to update.
@@ -366,12 +393,17 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
             text: str = editor.text()
             if text.endswith(QLocale().decimalPoint()):
                 text = text[:-1]
-            # Validate and process the text
-            validator = CustomDoubleValidator()
-            validated_text: str = validator.check_text(text, True)
+            # Final check for a valid entry
+            validated_text: str = CustomDoubleValidator().check_text(
+                text=text,
+                full_string=True)
             if validated_text == "":
                 return
 
             model.setData(index, text)
+            self.__parent_table.emit_cell_data_finalized(
+                index.row(),
+                index.column(),
+                text)
         else:
             super().setModelData(editor, model, index)

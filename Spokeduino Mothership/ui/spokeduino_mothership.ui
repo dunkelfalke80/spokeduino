@@ -1074,13 +1074,13 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tensionTab">
+      <widget class="QWidget" name="tensioningTab">
        <attribute name="title">
         <string>Tension a wheel</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayoutTensionTabTop">
+       <layout class="QHBoxLayout" name="horizontalLayoutTensioningTabTop">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutTensionTab" stretch="1,1,10">
+         <layout class="QHBoxLayout" name="horizontalLayoutTensioningTab" stretch="1,1,10">
           <item>
            <widget class="QGroupBox" name="groupBoxSideLeft">
             <property name="sizePolicy">
