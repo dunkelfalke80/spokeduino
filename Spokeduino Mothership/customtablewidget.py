@@ -30,7 +30,7 @@ class CustomTableWidget(QTableWidget):
     A custom table widget designed to handle specific features such as custom
     navigation callbacks, cell editing, and clipboard paste operations.
     """
-    cellDataFinalized = Signal(int, int, str)  # row, column, value
+    onCellDataChanging = Signal(int, int, str)  # row, column, value
 
     def __init__(self,
                  move_to_next_cell_callback:
@@ -74,11 +74,11 @@ class CustomTableWidget(QTableWidget):
         else:
             self.move_to_previous_cell = move_to_previous_cell_callback
 
-    def emit_cell_data_finalized(self, row: int, column: int, value: str) -> None:
+    def emit_on_cell_data_changing(self, value: str) -> None:
         """
-        Emit the cellDataFinalized signal when editing is finalized.
+        Emit the onCellDataChanged signal on editing a cell.
         """
-        self.cellDataFinalized.emit(row, column, value)
+        self.onCellDataChanging.emit(self.currentRow(), self.currentColumn(), value)
 
     @override
     def keyPressEvent(self, event) -> None:
@@ -123,7 +123,7 @@ class CustomTableWidget(QTableWidget):
             # Split clipboard data into individual rows
             rows: list[str] = clipboard_data.strip().split("\n")
             for entry in rows:
-                text: str= CustomDoubleValidator().check_text(entry, True)
+                text: str= CustomDoubleValidator(None).check_text(entry, True)
                 if text in ["", ","]:
                     continue
                 self.currentItem().setText(entry)
@@ -255,6 +255,10 @@ class CustomDoubleValidator(QDoubleValidator):
     as decimal separators, allows fractional inputs and
     and ensures these are formatted correctly based on the locale.
     """
+    def __init__(self, parent: QObject | None) -> None:
+        super().__init__(parent)
+        self.__parent_table: CustomTableWidget = cast(CustomTableWidget, parent)
+
     @override
     def validate(self, arg__1, arg__2):
         """
@@ -267,12 +271,15 @@ class CustomDoubleValidator(QDoubleValidator):
         """
         if not arg__1:
             # Allow empty input (Intermediate state for typing)
+            self.__parent_table.emit_on_cell_data_changing("")
             return QValidator.State.Intermediate, arg__1, arg__2
 
         res: str = self.check_text(arg__1)
         if res == "":
             # check_text returns empty string if invalid
+            self.__parent_table.emit_on_cell_data_changing("")
             return QValidator.State.Invalid, "", 0
+        self.__parent_table.emit_on_cell_data_changing(res)
         return QValidator.State.Acceptable, res, len(res)
 
     def check_text(self, text: str, full_string: bool = False) -> str:
@@ -333,26 +340,11 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
         :return: The editor widget.
         """
         editor = QLineEdit(parent)
-        validator = CustomDoubleValidator()
+        validator = CustomDoubleValidator(self.__parent_table)
         validator.setNotation(QDoubleValidator.Notation.StandardNotation)
         editor.setValidator(validator)
         editor.installEventFilter(self)
         return editor
-
-    def __find_table_widget(self, widget: QObject) -> CustomTableWidget | None:
-        """
-        Traverse the widget hierarchy to find the parent CustomTableWidget.
-
-        :param widget: The starting widget.
-        :return: The parent CustomTableWidget if found, otherwise None.
-        """
-        while widget is not None:
-            # Check if the parent is the table
-            if isinstance(widget, CustomTableWidget):
-                return cast(CustomTableWidget, widget)
-            # Move up the widget hierarchy
-            widget = widget.parent()
-        return None
 
     @override
     def eventFilter(self, object: QObject, event: QEvent) -> bool:
@@ -383,7 +375,6 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
         """
         Finalize editing by setting the data in the model.
         Removes trailing decimal separators before saving.
-        Sends a signal when done.
 
         :param editor: The editor widget.
         :param model: The model to update.
@@ -394,16 +385,12 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
             if text.endswith(QLocale().decimalPoint()):
                 text = text[:-1]
             # Final check for a valid entry
-            validated_text: str = CustomDoubleValidator().check_text(
+            validated_text: str = CustomDoubleValidator(None).check_text(
                 text=text,
                 full_string=True)
             if validated_text == "":
                 return
 
             model.setData(index, text)
-            self.__parent_table.emit_cell_data_finalized(
-                index.row(),
-                index.column(),
-                text)
         else:
             super().setModelData(editor, model, index)

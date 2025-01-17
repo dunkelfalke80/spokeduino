@@ -298,18 +298,6 @@ class Spokeduino(QMainWindow):
         self.ui.pushButtonSaveMeasurement.clicked.connect(
             self.save_measurements)
 
-        # Tensioning related signals
-        self.ui.pushButtonUseLeft.clicked.connect(
-            lambda: self.use_spoke(True))
-        self.ui.pushButtonUseRight.clicked.connect(
-            lambda: self.use_spoke(False))
-        self.ui.pushButtonStartTensioning.clicked.connect(
-            self.start_tensioning)
-        self.ui.tableViewTensioningLeft.cellChanged.connect(
-            self.on_tensioning_cell_changed_left)
-        self.ui.tableViewTensioningRight.cellChanged.connect(
-            self.on_tensioning_cell_changed_right)
-
         # Language selection
         self.ui.comboBoxSelectLanguage.currentTextChanged.connect(
             lambda language: self.setup_module.save_setting(
@@ -397,17 +385,33 @@ class Spokeduino(QMainWindow):
             self.ui.tableViewSpokesDatabase.horizontalHeader()
         header.sectionClicked.connect(self.spoke_module.sort_by_column)
 
+        # Tensioning related signals
+        self.ui.pushButtonStartTensioning.clicked.connect(
+            self.start_tensioning)
+
         # Left tensioning table
+        self.ui.pushButtonUseLeft.clicked.connect(
+            lambda: self.use_spoke(True))
         self.ui.lineEditSpokeAmountLeft.textChanged.connect(
             lambda: self.setup_tensioning_table(is_left=True))
         self.ui.lineEditTargetTensionLeft.textChanged.connect(
             lambda: self.setup_tensioning_table(is_left=True))
+        self.ui.tableViewTensioningLeft.cellChanged.connect(
+            self.on_tensioning_cell_changed_left)
+        self.ui.tableViewTensioningLeft.onCellDataChanging.connect(
+            self.on_tensioning_cell_changing_left)
 
         # Right tensioning table
+        self.ui.pushButtonUseRight.clicked.connect(
+            lambda: self.use_spoke(False))
         self.ui.lineEditSpokeAmountRight.textChanged.connect(
             lambda: self.setup_tensioning_table(is_left=False))
         self.ui.lineEditTargetTensionRight.textChanged.connect(
             lambda: self.setup_tensioning_table(is_left=False))
+        self.ui.tableViewTensioningRight.cellChanged.connect(
+            self.on_tensioning_cell_changed_right)
+        self.ui.tableViewTensioningRight.onCellDataChanging.connect(
+            self.on_tensioning_cell_changing_right)
 
         # Spokeduino
         self.spokeduino_state: SpokeduinoState = SpokeduinoState.WAITING
@@ -976,9 +980,13 @@ class Spokeduino(QMainWindow):
         else:
             print("Previous cell right")
 
-    def on_tensioning_cell_changed(self, left: bool, row: int, column: int) -> None:
+    def on_tensioning_cell_changed(
+            self,
+            left: bool,
+            row: int,
+            column: int) -> None:
         """
-        Handle updates when a cell's text changes in real-time.
+        Handle updates when a cell's text has changed.
 
         :param left: Left or right side of the wheel
         :param row: The row index of the changed cell.
@@ -991,8 +999,8 @@ class Spokeduino(QMainWindow):
         item: QTableWidgetItem | None = view.item(row, column)
         if item is None:
             return
-        new_value: str = item.text()
-        print(f"Cell at ({row}, {column}) changed to: {new_value}")
+        value: str = item.text()
+        print(f"Cell changed ({row}, {column}): {value}")
 
     def on_tensioning_cell_changed_left(self, row: int, column: int) -> None:
         self.on_tensioning_cell_changed(True, row, column)
@@ -1000,29 +1008,27 @@ class Spokeduino(QMainWindow):
     def on_tensioning_cell_changed_right(self, row: int, column: int) -> None:
         self.on_tensioning_cell_changed(True, row, column)
 
-    def on_tensioning_cell_finalized(
+    def on_tensioning_cell_changing(
             self,
             left: bool,
             row: int,
             column: int,
             value: str) -> None:
         """
-        Handle updates when data is finalized (e.g., Enter pressed).
+        Handle updates when a cell's text is changed in real time.
 
         :param left: Left or right side of the wheel
         :param row: The row index.
         :param column: The column index.
         :param value: The finalized value.
         """
-        print(f"Data finalized at ({row}, {column}): {value}")
+        print(f"Cell changing ({row}, {column}): {value}")
 
-    def on_tensioning_cell_finalized_left(self, row: int, column: int) -> None:
-        self.on_tensioning_cell_changed(True, row, column)
+    def on_tensioning_cell_changing_left(self, row: int, column: int, value: str) -> None:
+        self.on_tensioning_cell_changing(True, row, column, value)
 
-    def on_tensioning_cell_finalized_right(self, row: int, column: int) -> None:
-        self.on_tensioning_cell_changed(True, row, column)
-
-
+    def on_tensioning_cell_changing_right(self, row: int, column: int, value: str) -> None:
+        self.on_tensioning_cell_changing(True, row, column, value)
 
 
 def main() -> None:
