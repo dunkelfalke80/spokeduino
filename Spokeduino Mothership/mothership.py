@@ -966,31 +966,46 @@ class Spokeduino(QMainWindow):
     def next_cell_tensioning_callback_right(self, no_delay: bool = False) -> None:
         self.next_cell_tensioning(False)
 
+    def next_cell_tensioning(self, left: bool) -> None:
+        this_view: CustomTableWidget
+        other_view: CustomTableWidget
+        if left:
+            this_view = self.ui.tableViewTensioningLeft
+            other_view = self.ui.tableViewTensioningRight
+        else:
+            this_view = self.ui.tableViewTensioningRight
+            other_view = self.ui.tableViewTensioningLeft
+
+        this_row: int = this_view.currentRow()
+        other_row: int = other_view.currentRow()
+        this_count: int = this_view.rowCount()
+        other_count: int = other_view.rowCount()
+
+        if self.ui.radioButtonLeftRight.isChecked() \
+            or self.ui.radioButtonRightLeft.isChecked():
+            print(f"This row: {this_row}")
+            print(f"Other row: {other_row}")
+            if other_row == other_count -1:
+                this_row = 0
+            else:
+                this_row = other_row + 1
+            this_view = other_view
+        elif self.ui.radioButtonSideBySide.isChecked():
+            print(f"This row: {this_row}")
+            print(f"Other row: {other_row}")
+            if this_row == this_count - 1:
+                this_view = other_view
+                this_row = 0
+            else:
+                this_row += 1
+
+        QTimer.singleShot(50, lambda: this_view.move_to_specific_cell(this_row, 0))
+
     def previous_cell_tensioning_callback_left(self) -> None:
         self.next_cell_tensioning(True)
 
     def previous_cell_tensioning_callback_right(self) -> None:
         self.next_cell_tensioning(False)
-
-    def next_cell_tensioning(self, left: bool) -> None:
-        view: CustomTableWidget
-        other_view: CustomTableWidget
-        if left:
-            view = self.ui.tableViewTensioningLeft
-            other_view = self.ui.tableViewTensioningRight
-        else:
-            view = self.ui.tableViewTensioningRight
-            other_view = self.ui.tableViewTensioningLeft
-
-        row: int = view.currentRow()
-        column: int = view.currentColumn()
-
-        if self.ui.radioButtonLeftRight.isChecked():
-            pass
-        elif self.ui.radioButtonRightLeft.isChecked():
-            pass
-        elif self.ui.radioButtonSideBySide.isChecked():
-            pass
 
     def previous_cell_tensioning(self, left: bool) -> None:
         if left:
@@ -1018,13 +1033,15 @@ class Spokeduino(QMainWindow):
         if item is None:
             return
         value: str = item.text()
+        if value == "":
+            return
         print(f"Cell changed ({row}, {column}): {value}")
 
     def on_tensioning_cell_changed_left(self, row: int, column: int) -> None:
         self.on_tensioning_cell_changed(True, row, column)
 
     def on_tensioning_cell_changed_right(self, row: int, column: int) -> None:
-        self.on_tensioning_cell_changed(True, row, column)
+        self.on_tensioning_cell_changed(False, row, column)
 
     def on_tensioning_cell_changing(
             self,
@@ -1040,7 +1057,7 @@ class Spokeduino(QMainWindow):
         :param column: The column index.
         :param value: The finalized value.
         """
-        print(f"Cell changing ({row}, {column}): {value}")
+        #print(f"Cell changing ({row}, {column}): {value}")
 
     def on_tensioning_cell_changing_left(self, row: int, column: int, value: str) -> None:
         self.on_tensioning_cell_changing(True, row, column, value)

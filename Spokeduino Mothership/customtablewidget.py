@@ -235,7 +235,7 @@ class CustomTableWidget(QTableWidget):
         font_size: int = max(font_size, 8)
 
         # Ensure maximum font size
-        font_size: int = min(font_size, 16)
+        font_size: int = min(font_size, 12)
 
         # Set font for the table
         font: QFont = self.font()
