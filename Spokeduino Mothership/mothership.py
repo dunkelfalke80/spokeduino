@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtCore import QAbstractItemModel
 from PySide6.QtCore import QModelIndex
 from PySide6.QtCore import QTimer
-from PySide6.QtGui import QFocusEvent, QStandardItemModel
+from PySide6.QtGui import QStandardItemModel
 from PySide6.QtGui import QStandardItem
 from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QLineEdit
@@ -397,9 +397,11 @@ class Spokeduino(QMainWindow):
         self.ui.lineEditTargetTensionLeft.textChanged.connect(
             lambda: self.setup_tensioning_table(is_left=True))
         self.ui.tableViewTensioningLeft.cellChanged.connect(
-            self.on_tensioning_cell_changed_left)
+            lambda row, column: self.on_tensioning_cell_changed(
+                is_left=True, row=row, column=column))
         self.ui.tableViewTensioningLeft.onCellDataChanging.connect(
-            self.on_tensioning_cell_changing_left)
+            lambda row, column, value: self.on_tensioning_cell_changing(
+                left=True, row=row, column=column, value=value))
 
         # Right tensioning table
         self.ui.pushButtonUseRight.clicked.connect(
@@ -409,9 +411,11 @@ class Spokeduino(QMainWindow):
         self.ui.lineEditTargetTensionRight.textChanged.connect(
             lambda: self.setup_tensioning_table(is_left=False))
         self.ui.tableViewTensioningRight.cellChanged.connect(
-            self.on_tensioning_cell_changed_right)
+            lambda row, column: self.on_tensioning_cell_changed(
+                is_left=False, row=row, column=column))
         self.ui.tableViewTensioningRight.onCellDataChanging.connect(
-            self.on_tensioning_cell_changing_right)
+            lambda row, column, value: self.on_tensioning_cell_changing(
+                left=True, row=row, column=column, value=value))
 
         # Spokeduino
         self.spokeduino_state: SpokeduinoState = SpokeduinoState.WAITING
@@ -961,15 +965,15 @@ class Spokeduino(QMainWindow):
         pass
 
     def next_cell_tensioning_callback_left(self, no_delay: bool = False) -> None:
-        self.next_cell_tensioning(True)
+        self.next_cell_tensioning_callback(True)
 
     def next_cell_tensioning_callback_right(self, no_delay: bool = False) -> None:
-        self.next_cell_tensioning(False)
+        self.next_cell_tensioning_callback(False)
 
-    def next_cell_tensioning(self, left: bool) -> None:
+    def next_cell_tensioning_callback(self, is_left: bool) -> None:
         this_view: CustomTableWidget
         other_view: CustomTableWidget
-        if left:
+        if is_left:
             this_view = self.ui.tableViewTensioningLeft
             other_view = self.ui.tableViewTensioningRight
         else:
@@ -1002,12 +1006,12 @@ class Spokeduino(QMainWindow):
         QTimer.singleShot(50, lambda: this_view.move_to_specific_cell(this_row, 0))
 
     def previous_cell_tensioning_callback_left(self) -> None:
-        self.next_cell_tensioning(True)
+        self.previous_cell_tensioning_callback(True)
 
     def previous_cell_tensioning_callback_right(self) -> None:
-        self.next_cell_tensioning(False)
+        self.previous_cell_tensioning_callback(False)
 
-    def previous_cell_tensioning(self, left: bool) -> None:
+    def previous_cell_tensioning_callback(self, left: bool) -> None:
         if left:
             print("Previous cell left")
         else:
@@ -1015,7 +1019,7 @@ class Spokeduino(QMainWindow):
 
     def on_tensioning_cell_changed(
             self,
-            left: bool,
+            is_left: bool,
             row: int,
             column: int) -> None:
         """
@@ -1027,7 +1031,7 @@ class Spokeduino(QMainWindow):
         """
         # Get the new value
         view: CustomTableWidget = (self.ui.tableViewTensioningLeft
-                                   if left
+                                   if is_left
                                    else self.ui.tableViewTensioningRight)
         item: QTableWidgetItem | None = view.item(row, column)
         if item is None:
@@ -1036,12 +1040,6 @@ class Spokeduino(QMainWindow):
         if value == "":
             return
         print(f"Cell changed ({row}, {column}): {value}")
-
-    def on_tensioning_cell_changed_left(self, row: int, column: int) -> None:
-        self.on_tensioning_cell_changed(True, row, column)
-
-    def on_tensioning_cell_changed_right(self, row: int, column: int) -> None:
-        self.on_tensioning_cell_changed(False, row, column)
 
     def on_tensioning_cell_changing(
             self,
@@ -1058,12 +1056,6 @@ class Spokeduino(QMainWindow):
         :param value: The finalized value.
         """
         #print(f"Cell changing ({row}, {column}): {value}")
-
-    def on_tensioning_cell_changing_left(self, row: int, column: int, value: str) -> None:
-        self.on_tensioning_cell_changing(True, row, column, value)
-
-    def on_tensioning_cell_changing_right(self, row: int, column: int, value: str) -> None:
-        self.on_tensioning_cell_changing(True, row, column, value)
 
 
 def main() -> None:
