@@ -1,9 +1,8 @@
-from typing import override, cast, Callable, Optional
-from PySide6.QtCore import Qt
+from typing import override, cast
+from collections.abc import Callable
 from PySide6.QtCore import QAbstractItemModel
 from PySide6.QtCore import QObject
 from PySide6.QtCore import QModelIndex
-from PySide6.QtCore import QLocale
 from PySide6.QtCore import QTimer
 from PySide6.QtCore import QEvent
 from PySide6.QtCore import QSize
@@ -23,6 +22,7 @@ from PySide6.QtWidgets import QStyledItemDelegate
 from PySide6.QtWidgets import QStyleOptionViewItem
 from PySide6.QtWidgets import QLineEdit
 from PySide6.QtWidgets import QWidget
+from helpers import TextChecker
 
 
 class CustomTableWidget(QTableWidget):
@@ -34,9 +34,9 @@ class CustomTableWidget(QTableWidget):
 
     def __init__(self,
                  move_to_next_cell_callback:
-                    Optional[Callable[[bool], None]] = None,
+                    Callable[[bool], None] | None = None,
                  move_to_previous_cell_callback:
-                    Optional[Callable[[], None]] = None,
+                    Callable[[], None] | None = None,
                  *args,
                  **kwargs) -> None:
         """
@@ -98,7 +98,7 @@ class CustomTableWidget(QTableWidget):
         else:
             super().keyPressEvent(event)
 
-    def get_row_header_text(self, row: Optional[int]) -> str | None:
+    def get_row_header_text(self, row: int | None) -> str | None:
         """
         Retrieve the header text for a specific row.
 
@@ -123,7 +123,7 @@ class CustomTableWidget(QTableWidget):
             # Split clipboard data into individual rows
             rows: list[str] = clipboard_data.strip().split("\n")
             for entry in rows:
-                text: str= CustomDoubleValidator(None).check_text(entry, True)
+                text: str = TextChecker.check_text(entry, True)
                 if text in ["", ","]:
                     continue
                 self.currentItem().setText(entry)
@@ -184,7 +184,9 @@ class CustomTableWidget(QTableWidget):
         if no_delay:
             self.move_to_specific_cell(row, column)
         else:
-            QTimer.singleShot(50, lambda: self.move_to_specific_cell(row, column))
+            QTimer.singleShot(50,
+                lambda: self.move_to_specific_cell(
+                    row=row, column=column))
 
     def __move_to_previous_cell_default(self) -> None:
         """
@@ -204,9 +206,10 @@ class CustomTableWidget(QTableWidget):
             return  # Already at the first cell
 
         # Delay to ensure Qt's focus/selection state is updated
-        QTimer.singleShot(
-            50,
-            lambda: self.move_to_specific_cell(row, column))
+        QTimer.singleShot(50,
+                lambda: self.move_to_specific_cell(
+                row=row,
+                column=column))
 
     def resize_table_font(self) -> None:
         """
@@ -274,48 +277,13 @@ class CustomDoubleValidator(QDoubleValidator):
             self.__parent_table.emit_on_cell_data_changing("")
             return QValidator.State.Intermediate, arg__1, arg__2
 
-        res: str = self.check_text(arg__1)
+        res: str = TextChecker.check_text(arg__1)
         if res == "":
             # check_text returns empty string if invalid
             self.__parent_table.emit_on_cell_data_changing("")
             return QValidator.State.Invalid, "", 0
         self.__parent_table.emit_on_cell_data_changing(res)
         return QValidator.State.Acceptable, res, len(res)
-
-    def check_text(self, text: str, full_string: bool = False) -> str:
-        """
-        Replaces dot and comma with the locale decimal point.
-        Allows only digits and one decimal point.
-        Converts fractional inputs like '.2' to '0.2'.
-
-        :param text: The input text to validate and format.
-        :return: The formatted text or an empty string if invalid.
-        """
-        decimal_point: str = QLocale().decimalPoint()
-        decimal_point_encountered: bool = False
-        fixed_input: str = ""
-
-        # Replace dot and comma with the locale decimal point
-        # and only allow digits and decimal point
-        for char in text:
-            if char in [",", "."] and not decimal_point_encountered:
-                fixed_input += decimal_point
-                decimal_point_encountered = True
-            elif char.isdigit():
-                fixed_input += char
-
-        # Only invalid characters in the text
-        if fixed_input == "":
-            return ""
-
-        # for entering values that only have a fraction
-        if fixed_input[0] == QLocale().decimalPoint():
-            # Not a fraction, just text
-            if full_string and len(fixed_input) == 1:
-                return ""
-            fixed_input = "0" + fixed_input
-
-        return fixed_input
 
 
 class CustomTableWidgetItemDelegate(QStyledItemDelegate):
@@ -382,10 +350,8 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
         """
         if isinstance(editor, QLineEdit):
             text: str = editor.text()
-            if text.endswith(QLocale().decimalPoint()):
-                text = text[:-1]
             # Final check for a valid entry
-            validated_text: str = CustomDoubleValidator(None).check_text(
+            validated_text: str = TextChecker.check_text(
                 text=text,
                 full_string=True)
             if validated_text == "":

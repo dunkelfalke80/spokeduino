@@ -1,8 +1,8 @@
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QAbstractTableModel
+from PySide6.QtCore import QLocale
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QMessageBox
-
 
 class SpokeTableModel(QAbstractTableModel):
     """
@@ -64,3 +64,44 @@ class Messagebox:
                             text,
                             QMessageBox.StandardButton.Discard,
                             QMessageBox.StandardButton.Discard)
+
+
+class TextChecker:
+
+    @staticmethod
+    def check_text(text: str, full_string: bool = False) -> str:
+        """
+        Replaces dot and comma with the locale decimal point.
+        Allows only digits and one decimal point.
+        Converts fractional inputs like '.2' to '0.2'.
+
+        :param text: The input text to validate and format.
+        :return: The formatted text or an empty string if invalid.
+        """
+        decimal_point: str = QLocale().decimalPoint()
+        decimal_point_encountered: bool = False
+        fixed_input: str = ""
+
+        # Replace dot and comma with the locale decimal point
+        # and only allow digits and decimal point
+        for char in text:
+            if char in [",", "."] and not decimal_point_encountered:
+                fixed_input += decimal_point
+                decimal_point_encountered = True
+            elif char.isdigit():
+                fixed_input += char
+
+        # Only invalid characters in the text
+        if fixed_input == "":
+            return ""
+
+        # for entering values that only have a fraction
+        if fixed_input[0] == QLocale().decimalPoint():
+            # Not a fraction, just text
+            if full_string and len(fixed_input) == 1:
+                return ""
+            fixed_input = "0" + fixed_input
+
+        if full_string and fixed_input.endswith(QLocale().decimalPoint()):
+            fixed_input = fixed_input[:-1]
+        return fixed_input

@@ -19,6 +19,7 @@ from PySide6.QtWidgets import QTableWidgetItem
 from ui import Ui_mainWindow
 from sql_queries import SQLQueries
 from helpers import SpokeTableModel
+from helpers import TextChecker
 from spokeduino_module import SpokeduinoState
 from spokeduino_module import SpokeduinoModule
 from database_module import DatabaseModule
@@ -26,6 +27,7 @@ from setup_module import SetupModule
 from spoke_module import SpokeModule
 from measurement_module import MeasurementModule
 from unit_converter import UnitConverter
+from unit_converter import UnitEnum
 from customtablewidget import CustomTableWidget
 from helpers import Messagebox
 
@@ -150,8 +152,7 @@ class Spokeduino(QMainWindow):
         self.spoke_module.load_manufacturers()
         self.toggle_new_manufacturer_button()
         # Delay to ensure Qt's focus/selection state is updated
-        QTimer.singleShot(
-            100,
+        QTimer.singleShot(100,
             self.spoke_module.align_filters_with_table)
 
         # Tensioning related entries
@@ -159,6 +160,7 @@ class Spokeduino(QMainWindow):
         self.spoke_tensions_right: list[tuple[float, float]] = []
         self.left_spoke_formula: str = ""
         self.right_spoke_formula: str = ""
+        self.unit: UnitEnum = self.get_unit()
 
     def setup_signals_and_slots(self) -> None:
         """
@@ -222,8 +224,7 @@ class Spokeduino(QMainWindow):
         # Filters
         self.ui.tabWidget.currentChanged.connect(
         # Delay to ensure Qt's focus/selection state is updated
-        QTimer.singleShot(
-            100,
+        QTimer.singleShot(100,
             self.spoke_module.align_filters_with_table))
         self.ui.lineEditFilterName.textChanged.connect(
             self.spoke_module.filter_spoke_table)
@@ -334,6 +335,21 @@ class Spokeduino(QMainWindow):
                 self.setup_module.save_setting(
                     "unit", "lbF")
                 if checked else None)
+        self.ui.radioButtonNewton.toggled.connect(
+            lambda checked:
+                self.set_unit(
+                    UnitEnum.NEWTON)
+                if checked else None)
+        self.ui.radioButtonKgF.toggled.connect(
+            lambda checked:
+                self.set_unit(
+                    UnitEnum.KGF)
+                if checked else None)
+        self.ui.radioButtonLbF.toggled.connect(
+            lambda checked:
+                self.set_unit(
+                    UnitEnum.LBF)
+                if checked else None)
 
         # Directional settings
         self.ui.radioButtonMeasurementDown.toggled.connect(
@@ -374,11 +390,11 @@ class Spokeduino(QMainWindow):
 
         # Unit converter
         self.ui.lineEditConverterNewton.textChanged.connect(
-            lambda: self.unit_converter.convert_units_realtime("newton"))
+            lambda: self.unit_converter.convert_units_realtime(UnitEnum.NEWTON))
         self.ui.lineEditConverterKgF.textChanged.connect(
-            lambda: self.unit_converter.convert_units_realtime("kgf"))
+            lambda: self.unit_converter.convert_units_realtime(UnitEnum.KGF))
         self.ui.lineEditConverterLbF.textChanged.connect(
-            lambda: self.unit_converter.convert_units_realtime("lbf"))
+            lambda: self.unit_converter.convert_units_realtime(UnitEnum.LBF))
 
         # Table sorting
         header: QHeaderView = \
@@ -401,7 +417,7 @@ class Spokeduino(QMainWindow):
                 is_left=True, row=row, column=column))
         self.ui.tableViewTensioningLeft.onCellDataChanging.connect(
             lambda row, column, value: self.on_tensioning_cell_changing(
-                left=True, row=row, column=column, value=value))
+                is_left=True, row=row, column=column, value=value))
 
         # Right tensioning table
         self.ui.pushButtonUseRight.clicked.connect(
@@ -415,7 +431,7 @@ class Spokeduino(QMainWindow):
                 is_left=False, row=row, column=column))
         self.ui.tableViewTensioningRight.onCellDataChanging.connect(
             lambda row, column, value: self.on_tensioning_cell_changing(
-                left=True, row=row, column=column, value=value))
+                is_left=True, row=row, column=column, value=value))
 
         # Spokeduino
         self.spokeduino_state: SpokeduinoState = SpokeduinoState.WAITING
@@ -723,12 +739,18 @@ class Spokeduino(QMainWindow):
             self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
             self.right_spoke_formula = formula
 
-    def get_unit(self) -> str:
+    def get_unit(self) -> UnitEnum:
+        """
+        Returns the tension unit currently set, or Newton as default
+        """
         if self.ui.radioButtonKgF.isChecked():
-            return "kgF"
+            return UnitEnum.KGF
         elif self.ui.radioButtonLbF.isChecked():
-            return "lbF"
-        return "Newton"
+            return UnitEnum.LBF
+        return UnitEnum.NEWTON
+
+    def set_unit(self, unit: UnitEnum) -> None:
+        self.unit = unit
 
     def get_selected_tensiometers(self) -> list[tuple[int, str]]:
         """
@@ -792,24 +814,28 @@ class Spokeduino(QMainWindow):
             tensions_newton = list(range(300, 1700, 100))
 
         # Handle the measurement units
-        unit: str = self.get_unit()
+        unit_index_map: dict[UnitEnum, int] = {
+            UnitEnum.NEWTON: 0,
+            UnitEnum.KGF: 1,
+            UnitEnum.LBF: 2,
+        }
+        unit_index: int = unit_index_map[self.unit]
+
         tensions_converted: list[float] = [
-            self.unit_converter.convert_units(value, "newton")[{
-                "Newton": 0,
-                "kgF": 1,
-                "lbF": 2}[unit]]
-            for value in tensions_newton
-        ]
+            self.unit_converter.convert_units(
+                value=value,
+                source=UnitEnum.NEWTON)[unit_index]
+            for value in tensions_newton]
 
         # Populate row headers with converted force values
         view.setRowCount(len(tensions_converted))
-        if unit == "Newton":
+        if self.unit == UnitEnum.NEWTON:
             view.setVerticalHeaderLabels(
-                [f"{value} {unit}" for value in tensions_converted]
+                [f"{value} {self.unit.value}" for value in tensions_converted]
             )
         else:
             view.setVerticalHeaderLabels(
-                [f"{value:.1f} {unit}" for value in tensions_converted]
+                [f"{value:.1f} {self.unit.value}" for value in tensions_converted]
             )
 
         # Get selected tensiometers and populate column headers
@@ -879,7 +905,9 @@ class Spokeduino(QMainWindow):
 
             tensiometer_id = header_item.data(Qt.ItemDataRole.UserRole)
             if tensiometer_id is None:
-                self.messagebox.err(f"Column {column + 1}: No tensiometer ID found in the header {header_item}")
+                self.messagebox.err(
+                    f"Column {column + 1}: No tensiometer ID "
+                    f"found in the header {header_item}")
                 return
 
             # Extract tension values in the correct order
@@ -898,7 +926,8 @@ class Spokeduino(QMainWindow):
             try:
                 db.execute_query(query=SQLQueries.ADD_MEASUREMENT, params=params)
             except Exception as ex:
-                self.messagebox.err(f"Failed to save measurement for column {column + 1}: {str(ex)}")
+                self.messagebox.err(f"Failed to save measurement for "
+                                    f"column {column + 1}: {str(ex)}")
                 return
 
         # Notify the user
@@ -912,7 +941,8 @@ class Spokeduino(QMainWindow):
 
     def setup_tensioning_table(self, is_left: bool) -> None:
         """
-        Set up tableViewTensionsLeft or tableViewTensionsRight based on spoke amount and target tension.
+        Set up tableViewTensionsLeft or tableViewTensionsRight
+        based on spoke amount and target tension.
         Populate the table manually for QTableWidget.
         """
         # Select the appropriate UI elements
@@ -929,9 +959,12 @@ class Spokeduino(QMainWindow):
         except ValueError:
             spoke_amount = 0
 
+        if is_left:
+            self.spoke_tensions_left = [(0.0, 0.0)] * spoke_amount
+        else:
+            self.spoke_tensions_right = [(0.0, 0.0)] * spoke_amount
         # Define headers
-        unit: str = self.get_unit()
-        headers: list[str] = ["mm", unit]
+        headers: list[str] = ["mm", self.unit.value]
 
         # Clear and set up the table
         view.clear()
@@ -1003,16 +1036,19 @@ class Spokeduino(QMainWindow):
             else:
                 this_row += 1
 
-        QTimer.singleShot(50, lambda: this_view.move_to_specific_cell(this_row, 0))
+        QTimer.singleShot(50,
+            lambda: this_view.move_to_specific_cell(
+                row=this_row,
+                column=0))
 
     def previous_cell_tensioning_callback_left(self) -> None:
-        self.previous_cell_tensioning_callback(True)
+        self.previous_cell_tensioning_callback(is_left=True)
 
     def previous_cell_tensioning_callback_right(self) -> None:
-        self.previous_cell_tensioning_callback(False)
+        self.previous_cell_tensioning_callback(is_left=False)
 
-    def previous_cell_tensioning_callback(self, left: bool) -> None:
-        if left:
+    def previous_cell_tensioning_callback(self, is_left: bool) -> None:
+        if is_left:
             print("Previous cell left")
         else:
             print("Previous cell right")
@@ -1025,7 +1061,7 @@ class Spokeduino(QMainWindow):
         """
         Handle updates when a cell's text has changed.
 
-        :param left: Left or right side of the wheel
+        :param is_left: Left or right side of the wheel
         :param row: The row index of the changed cell.
         :param column: The column index of the changed cell.
         """
@@ -1037,25 +1073,34 @@ class Spokeduino(QMainWindow):
         if item is None:
             return
         value: str = item.text()
+        header: str | None = view.get_row_header_text(row)
+        if header is None:
+            return
+
+        spoke_no: int = int(header)
         if value == "":
             return
-        print(f"Cell changed ({row}, {column}): {value}")
+
+        print(f"Spoke {spoke_no} {value}")
 
     def on_tensioning_cell_changing(
             self,
-            left: bool,
+            is_left: bool,
             row: int,
             column: int,
             value: str) -> None:
         """
         Handle updates when a cell's text is changed in real time.
 
-        :param left: Left or right side of the wheel
+        :param is_left: Left or right side of the wheel
         :param row: The row index.
         :param column: The column index.
-        :param value: The finalized value.
+        :param value: The current value.
         """
-        #print(f"Cell changing ({row}, {column}): {value}")
+        value = TextChecker.check_text(value, True)
+        if value == "":
+            return
+        print(value)
 
 
 def main() -> None:
