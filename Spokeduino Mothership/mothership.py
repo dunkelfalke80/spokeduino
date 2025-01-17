@@ -284,7 +284,7 @@ class Spokeduino(QMainWindow):
         self.ui.pushButtonPreviousMeasurement.clicked.connect(
         self.ui.tableWidgetMeasurements.move_to_previous_cell)
         self.ui.pushButtonNextMeasurement.clicked.connect(
-            self.ui.tableWidgetMeasurements.move_to_next_cell)
+            lambda: self.ui.tableWidgetMeasurements.move_to_next_cell(False))
         self.ui.pushButtonSaveMeasurement.clicked.connect(
         lambda: self.spokeduino_module.set_state(
             SpokeduinoState.WAITING))

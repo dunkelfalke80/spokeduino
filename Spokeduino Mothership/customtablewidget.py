@@ -1,4 +1,4 @@
-from typing import override, cast
+from typing import override, cast, Callable, Optional
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QObject
 from PySide6.QtCore import QModelIndex
@@ -24,7 +24,11 @@ from PySide6.QtWidgets import QWidget
 
 
 class CustomTableWidget(QTableWidget):
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self,
+                 move_to_next_cell_callback: Optional[Callable[[bool], None]] = None,
+                 move_to_previous_cell_callback: Optional[Callable[[], None]] = None,
+                 *args,
+                 **kwargs) -> None:
         super().__init__(*args, **kwargs)
         # Configure table behavior
         self.__select_rows: QAbstractItemView.SelectionBehavior = \
@@ -34,20 +38,32 @@ class CustomTableWidget(QTableWidget):
         self.setSelectionBehavior(self.__select_rows)
         self.setSelectionMode(self.__select_single)
         self.setItemDelegate(CustomTableWidgetItemDelegate(self))
+        self.move_to_previous_cell: Callable[[], None] = (
+            self._move_to_previous_cell_default
+            if move_to_previous_cell_callback is None
+            else move_to_previous_cell_callback)
+        if not callable(move_to_previous_cell_callback):
+            raise ValueError("move_to_previous_cell_callback must be a callable.")
+        self.move_to_next_cell: Callable[[bool], None] = (
+            self._move_to_next_cell_default
+            if move_to_next_cell_callback is None
+            else move_to_next_cell_callback)
+        if not callable(move_to_next_cell_callback):
+            raise ValueError("move_to_next_cell_callback must be a callable.")
 
     @override
     def keyPressEvent(self, event) -> None:
         if event.key() in (Qt.Key.Key_Return, Qt.Key.Key_Enter):
             super().keyPressEvent(event)
-            self.move_to_next_cell()
+            self.move_to_next_cell(False)
         # Check for Ctrl+V or Shift+Insert
         elif (event.key() == Qt.Key.Key_V and event.modifiers() & Qt.KeyboardModifier.ControlModifier) or \
            (event.key() == Qt.Key.Key_Insert and event.modifiers() & Qt.KeyboardModifier.ShiftModifier):
-            self.paste_row()
+            self._paste_row()
         else:
             super().keyPressEvent(event)
 
-    def paste_row(self) -> None:
+    def _paste_row(self) -> None:
             """
             Paste data from the clipboard into the currently selected column,
             starting at the selected row. Supports single-column clipboard data only.
@@ -62,7 +78,7 @@ class CustomTableWidget(QTableWidget):
                 if text in ["", ","]:
                     continue
                 self.currentItem().setText(entry)
-                self.move_to_next_cell(no_delay=True)
+                self.move_to_next_cell(True)
 
     def refocus(self, zero: bool) -> None:
         item: QTableWidgetItem | None = (self.item(0, 0)
@@ -83,7 +99,7 @@ class CustomTableWidget(QTableWidget):
         self.setCurrentIndex(index)
         self.edit(index)
 
-    def move_to_next_cell(self, no_delay: bool = False) -> None:
+    def _move_to_next_cell_default(self, no_delay: bool) -> None:
         """
         Move to the next cell in the table and activate editing.
         """
@@ -104,7 +120,7 @@ class CustomTableWidget(QTableWidget):
         else:
             QTimer.singleShot(50, lambda: self.move_to_specific_cell(row, column))
 
-    def move_to_previous_cell(self) -> None:
+    def _move_to_previous_cell_default(self) -> None:
         """
         Move to the previous cell in the table and activate editing.
         """
@@ -234,6 +250,6 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
                 table_widget: CustomTableWidget | None = \
                     self._find_table_widget(object)
                 if table_widget is not None:
-                    table_widget.paste_row()
+                    table_widget._paste_row()
                     return True
         return super().eventFilter(object, event)
