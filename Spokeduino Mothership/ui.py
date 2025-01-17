@@ -439,7 +439,7 @@ class Ui_mainWindow(object):
         self.verticalLayoutManufacturer.setObjectName(u"verticalLayoutManufacturer")
         self.horizontalLayoutManufacturerLeft = QHBoxLayout()
         self.horizontalLayoutManufacturerLeft.setObjectName(u"horizontalLayoutManufacturerLeft")
-        self.tableWidgetMeasurements = CustomTableWidget(self.groupBoxMeasurement)
+        self.tableWidgetMeasurements = CustomTableWidget()
         self.tableWidgetMeasurements.setObjectName(u"tableWidgetMeasurements")
 
         self.horizontalLayoutManufacturerLeft.addWidget(self.tableWidgetMeasurements)
@@ -806,7 +806,7 @@ class Ui_mainWindow(object):
         self.verticalLayoutSelectedTensionValuesLeft = QVBoxLayout(self.groupBoxTensionValuesLeft)
         self.verticalLayoutSelectedTensionValuesLeft.setSpacing(6)
         self.verticalLayoutSelectedTensionValuesLeft.setObjectName(u"verticalLayoutSelectedTensionValuesLeft")
-        self.tableViewTensionsLeft = CustomTableWidget(self.groupBoxTensionValuesLeft)
+        self.tableViewTensionsLeft = CustomTableWidget()
         self.tableViewTensionsLeft.setObjectName(u"tableViewTensionsLeft")
 
         self.verticalLayoutSelectedTensionValuesLeft.addWidget(self.tableViewTensionsLeft)
@@ -885,7 +885,7 @@ class Ui_mainWindow(object):
         self.verticalLayoutSelectedTensionValuesRight = QVBoxLayout(self.groupBoxTensionValuesRight)
         self.verticalLayoutSelectedTensionValuesRight.setSpacing(6)
         self.verticalLayoutSelectedTensionValuesRight.setObjectName(u"verticalLayoutSelectedTensionValuesRight")
-        self.tableViewTensionsRight = CustomTableWidget(self.groupBoxTensionValuesRight)
+        self.tableViewTensionsRight = CustomTableWidget()
         self.tableViewTensionsRight.setObjectName(u"tableViewTensionsRight")
 
         self.verticalLayoutSelectedTensionValuesRight.addWidget(self.tableViewTensionsRight)

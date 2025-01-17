@@ -82,14 +82,14 @@ class CustomTableWidget(QTableWidget):
         :param event: The key press event to handle.
         """
         if event.matches(QKeySequence.StandardKey.Paste):
-            self.__paste_row()
+            self.paste_row()
         elif event.matches(QKeySequence.StandardKey.InsertParagraphSeparator):
             super().keyPressEvent(event)
             self.move_to_next_cell(False)
         else:
             super().keyPressEvent(event)
 
-    def __paste_row(self) -> None:
+    def paste_row(self) -> None:
             """
             Paste data from the clipboard into the currently selected column,
             starting at the selected cell. If the clipboard data is multi-line,
@@ -102,7 +102,7 @@ class CustomTableWidget(QTableWidget):
             # Split clipboard data into individual rows
             rows: list[str] = clipboard_data.strip().split("\n")
             for entry in rows:
-                text: str= CustomDoubleValidator().check_text(entry)
+                text: str= CustomDoubleValidator().check_text(entry, True)
                 if text in ["", ","]:
                     continue
                 self.currentItem().setText(entry)
@@ -254,7 +254,7 @@ class CustomDoubleValidator(QDoubleValidator):
             return QValidator.State.Invalid, "", 0
         return QValidator.State.Acceptable, res, len(res)
 
-    def check_text(self, text: str) -> str:
+    def check_text(self, text: str, full_string: bool = False) -> str:
         """
         Replaces dot and comma with the locale decimal point.
         Allows only digits and one decimal point.
@@ -282,6 +282,9 @@ class CustomDoubleValidator(QDoubleValidator):
 
         # for entering values that only have a fraction
         if fixed_input[0] == QLocale().decimalPoint():
+            # Not a fraction, just text
+            if full_string and len(fixed_input) == 1:
+                return ""
             fixed_input = "0" + fixed_input
 
         return fixed_input
@@ -342,7 +345,7 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
                 table_widget: CustomTableWidget | None = \
                     self.__find_table_widget(object)
                 if table_widget is not None:
-                    table_widget.__paste_row()
+                    table_widget.paste_row()
                     return True
         return super().eventFilter(object, event)
 
@@ -363,6 +366,12 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
             text: str = editor.text()
             if text.endswith(QLocale().decimalPoint()):
                 text = text[:-1]
+            # Validate and process the text
+            validator = CustomDoubleValidator()
+            validated_text: str = validator.check_text(text, True)
+            if validated_text == "":
+                return
+
             model.setData(index, text)
         else:
             super().setModelData(editor, model, index)
