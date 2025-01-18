@@ -47,30 +47,33 @@ class SQLQueries:
     GET_SPOKES_BY_ID: str = \
         GET_SPOKES + " WHERE s.id = ?"
 
+    GET_MEASUREMENT_SETS: str = """
+                SELECT
+                    id, comment, ts
+                FROM
+                    measurement_sets
+                WHERE
+                    spoke_id = ? AND ms.tensiometer_id = ?"""
+
     GET_MEASUREMENTS: str = """
                 SELECT
-                    id, comment, tension_300N, tension_400N,
-                    tension_500N, tension_600N, tension_700N,
-                    tension_800N, tension_900N, tension_1000N,
-                    tension_1100N, tension_1200N, tension_1300N,
-                    tension_1400N, tension_1500N, tension_1600N
+                    tenson, deflection
                 FROM
                     measurements
                 WHERE
-                    spoke_id = ?
-                AND
-                    tensiometer_id = ?"""
+                    set_id = ?"""
+
+    ADD_MEASUREMENT_SET: str = """
+                INSERT INTO
+                    measurement_sets (spoke_id, tensiometer_id, comment)
+                VALUES
+                    (?, ?, ?)"""
 
     ADD_MEASUREMENT: str = """
                 INSERT INTO
-                    measurements (spoke_id, tensiometer_id,
-                    tension_300N, tension_400N, tension_500N,
-                    tension_600N, tension_700N, tension_800N,
-                    tension_900N, tension_1000N, tension_1100N,
-                    tension_1200N, tension_1300N, tension_1400N,
-                    tension_1500N, tension_1600N, formula, comment)
+                    measurements (set_id, tension, deflection)
                 VALUES
-                    (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
+                    (?, ?, ?)"""
 
     ADD_TENSIOMETER: str = """
                 INSERT INTO

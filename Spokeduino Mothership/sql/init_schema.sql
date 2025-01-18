@@ -1,7 +1,7 @@
 PRAGMA foreign_keys = ON;
 
 -- Manufacturers table
-CREATE TABLE manufacturers 
+CREATE TABLE manufacturers
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE
@@ -32,11 +32,27 @@ CREATE TABLE spokes
     name TEXT NOT NULL,
     dimensions TEXT NOT NULL,
     comment TEXT DEFAULT '',
-    FOREIGN KEY (manufacturer_id) 
-        REFERENCES manufacturers(id) 
+    FOREIGN KEY (manufacturer_id)
+        REFERENCES manufacturers(id)
         ON DELETE CASCADE,
-    FOREIGN KEY (type_id) 
-        REFERENCES types(id) 
+    FOREIGN KEY (type_id)
+        REFERENCES types(id)
+        ON DELETE CASCADE
+);
+
+-- Measurement sets table
+CREATE TABLE measurement_sets
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    spoke_id INTEGER NOT NULL,
+    tensiometer_id INTEGER NOT NULL,
+    comment TEXT DEFAULT '',
+    ts DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (tensiometer_id)
+        REFERENCES tensiometers(id)
+        ON DELETE CASCADE,
+    FOREIGN KEY (spoke_id)
+        REFERENCES spokes(id)
         ON DELETE CASCADE
 );
 
@@ -44,34 +60,16 @@ CREATE TABLE spokes
 CREATE TABLE measurements
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    tensiometer_id INTEGER NOT NULL,
-    spoke_id INTEGER NOT NULL,
-    tension_300N DECIMAL(5, 2) DEFAULT 0.00,
-    tension_400N DECIMAL(5, 2) DEFAULT 0.00,
-    tension_500N DECIMAL(5, 2) DEFAULT 0.00,
-    tension_600N DECIMAL(5, 2) DEFAULT 0.00,
-    tension_700N DECIMAL(5, 2) DEFAULT 0.00,
-    tension_800N DECIMAL(5, 2) DEFAULT 0.00,
-    tension_900N DECIMAL(5, 2) DEFAULT 0.00,
-    tension_1000N DECIMAL(5, 2) DEFAULT 0.00,
-    tension_1100N DECIMAL(5, 2) DEFAULT 0.00,
-    tension_1200N DECIMAL(5, 2) DEFAULT 0.00,
-    tension_1300N DECIMAL(5, 2) DEFAULT 0.00,
-    tension_1400N DECIMAL(5, 2) DEFAULT 0.00,
-    tension_1500N DECIMAL(5, 2) DEFAULT 0.00,
-    tension_1600N DECIMAL(5, 2) DEFAULT 0.00,
-    formula TEXT DEFAULT '',
-    comment TEXT DEFAULT '',
-    FOREIGN KEY (tensiometer_id) 
-        REFERENCES tensiometers(id)
-        ON DELETE CASCADE,
-    FOREIGN KEY (spoke_id) 
-        REFERENCES spokes(id)
+    set_id INTEGER NOT NULL,
+    tension DECIMAL(5, 2) NOT NULL,
+    deflection DECIMAL(5, 2) NOT NULL,
+    FOREIGN KEY (set_id)
+        REFERENCES measurement_sets(id)
         ON DELETE CASCADE
 );
 
 -- Settings table
-CREATE TABLE settings 
+CREATE TABLE settings
 (
 	key TEXT PRIMARY KEY,
 	value TEXT
