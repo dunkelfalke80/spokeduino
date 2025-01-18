@@ -30,6 +30,7 @@ from unit_converter import UnitConverter
 from unit_converter import UnitEnum
 from customtablewidget import CustomTableWidget
 from helpers import Messagebox
+from quartic_fit import PiecewiseQuarticFit
 
 class Spokeduino(QMainWindow):
     """
@@ -678,7 +679,7 @@ class Spokeduino(QMainWindow):
             self.ui.comboBoxSpoke2.findData(new_spoke_id)
         )
 
-    def use_spoke(self, left: bool) -> None:
+    def use_spoke(self, is_left: bool) -> None:
         """
         Write the selected spoke details to plainTextEditSelectedSpoke
         and save the formula for the spoke based on the selected or first measurement.
@@ -714,25 +715,24 @@ class Spokeduino(QMainWindow):
 
         # Determine which measurement to use
         selected_index: QModelIndex = self.ui.tableViewMeasurements.currentIndex()
+        selected_row: int = 0
         if selected_index.isValid():
             # Use the selected measurement
-            selected_row = selected_index.row()
-            formula = measurements[selected_row][-2]  # Assuming formula is the second-to-last field
-        else:
-            # Use the first measurement
-            formula = measurements[0][-2]
+            selected_row: int = selected_index.row()
 
+        relevant_measurements: list[float] = measurements[selected_row][2:]
+        tensions: list[int] = list(range(300, 1700, 100))  # 300 N to 1600 N
+        formula: str = PiecewiseQuarticFit.generate_model(list(zip( tensions, relevant_measurements)))
         # Extract and format spoke details
         _, name, _, gauge, _, dimensions, comment, *_ = spoke[0]
-        spoke_details = (
-            f"Name: {name}\n"
-            f"Gauge: {gauge}\n"
-            f"Dimensions: {dimensions}\n"
-            f"Comment: {comment}"
+        spoke_details: str = (
+            f"{name} {gauge}G\n"
+            f"{dimensions}\n"
+            f"{comment}"
         )
 
         # Set the details and save the formula
-        if left:
+        if is_left:
             self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
             self.left_spoke_formula = formula
         else:
@@ -775,7 +775,7 @@ class Spokeduino(QMainWindow):
             if isinstance(model, QStandardItemModel):
                 # Multi-tensiometer mode: return all checked tensiometers
                 for row in range(model.rowCount()):
-                    item = model.item(row)  # Safely access item()
+                    item: QStandardItem = model.item(row)  # Safely access item()
                     if item and item.checkState() == Qt.CheckState.Checked:
                         tensiometer_id = item.data(Qt.ItemDataRole.UserRole)
                         tensiometer_name = item.text()
@@ -841,18 +841,18 @@ class Spokeduino(QMainWindow):
         # Get selected tensiometers and populate column headers
         tensiometers: list[tuple[int, str]] = self.get_selected_tensiometers()
         view.setColumnCount(len(tensiometers))
-        for col, (tensiometer_id, tensiometer_name) in enumerate(tensiometers):
+        for column, (tensiometer_id, tensiometer_name) in enumerate(tensiometers):
             item = QTableWidgetItem(tensiometer_name)
             item.setData(Qt.ItemDataRole.UserRole, tensiometer_id)
-            view.setHorizontalHeaderItem(col, item)
+            view.setHorizontalHeaderItem(column, item)
 
         # Make all cells editable
         for row in range(len(tensions_converted)):
-            for col in range(len(tensiometers)):
+            for column in range(len(tensiometers)):
                 item = QTableWidgetItem()
                 item.setFlags(Qt.ItemFlag.ItemIsEditable |
                               Qt.ItemFlag.ItemIsEnabled)
-                view.setItem(row, col, item)
+                view.setItem(row, column, item)
         view.move_to_specific_cell(0, 0)
 
     def save_tensiometer(self) -> None:
@@ -888,8 +888,8 @@ class Spokeduino(QMainWindow):
                 # Get measurements and formula for the column
                 measurements, formula = \
                     self.measurement_module.calculate_formula(column)
-            except ValueError as e:
-                self.messagebox.err(f"Column {column + 1}: {str(e)}")
+            except ValueError as ex:
+                self.messagebox.err(f"Column {column + 1}: {str(ex)}")
                 return
 
             # Fetch the tensiometer ID for the column
@@ -1073,15 +1073,48 @@ class Spokeduino(QMainWindow):
         if item is None:
             return
         value: str = item.text()
+        if value == "":
+            return
+
         header: str | None = view.get_row_header_text(row)
         if header is None:
             return
 
         spoke_no: int = int(header)
-        if value == "":
+        value = value.replace(",", ".")
+        deflection: float = float(value)
+        tension: float = 0.0
+        formula: str = self.left_spoke_formula if is_left else self.right_spoke_formula
+        try:
+            tension = PiecewiseQuarticFit.evaluate(formula, deflection)
+        except Exception as ex:
+            print(ex)
             return
 
-        print(f"Spoke {spoke_no} {value}")
+        if tension == 0.0:
+            return
+
+        _, kgf, lbf = self.unit_converter.convert_units(
+            value=deflection,
+            source=UnitEnum.NEWTON)
+        # Newton is the base unit for this applicaiton
+        tension_converted: float = tension
+
+        match self.unit:
+            case UnitEnum.KGF:
+                tension_converted = kgf
+            case UnitEnum.LBF:
+                tension_converted = lbf
+
+        if tension_converted == 0.0:
+            return
+
+        value = (f"{tension:.0f}"
+                 if self.unit == UnitEnum.NEWTON
+                 else f"{tension:.1f}")
+        item = QTableWidgetItem(value)
+        item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+        view.setItem(row, 1, item)
 
     def on_tensioning_cell_changing(
             self,
@@ -1100,7 +1133,7 @@ class Spokeduino(QMainWindow):
         value = TextChecker.check_text(value, True)
         if value == "":
             return
-        print(value)
+        self.on_tensioning_cell_changed(is_left=is_left, row=row, column=column)
 
 
 def main() -> None:

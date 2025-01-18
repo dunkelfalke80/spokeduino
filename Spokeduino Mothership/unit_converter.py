@@ -15,8 +15,8 @@ class UnitConverter:
                  ) -> None:
         self.ui = ui
 
-    def convert_units(
-            self, value: float, source: UnitEnum) -> tuple[float, float, float]:
+    @staticmethod
+    def convert_units(value: float, source: UnitEnum) -> tuple[float, float, float]:
         """
         Convert units
         :param value: The value to be converted.
