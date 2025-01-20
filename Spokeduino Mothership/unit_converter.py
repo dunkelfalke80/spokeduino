@@ -91,3 +91,13 @@ class UnitConverter:
                 case UnitEnum.LBF:
                     self.ui.lineEditConverterNewton.clear()
                     self.ui.lineEditConverterKgF.clear()
+
+    def get_unit(self) -> UnitEnum:
+        """
+        Returns the tension unit currently set, or Newton as default
+        """
+        if self.ui.radioButtonKgF.isChecked():
+            return UnitEnum.KGF
+        elif self.ui.radioButtonLbF.isChecked():
+            return UnitEnum.LBF
+        return UnitEnum.NEWTON

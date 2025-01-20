@@ -49,25 +49,19 @@ class SQLQueries:
 
     GET_MEASUREMENT_SETS: str = """
                 SELECT
-                    id, comment, ts
+                    id, comment, strftime('%Y-%m-%d %H:%M', ts) AS ts
                 FROM
                     measurement_sets
                 WHERE
-                    spoke_id = ? AND ms.tensiometer_id = ?"""
+                    spoke_id = ? AND tensiometer_id = ?"""
 
     GET_MEASUREMENTS: str = """
                 SELECT
-                    tenson, deflection
+                    tension, deflection
                 FROM
                     measurements
                 WHERE
-                    set_id = ?"""
-
-    ADD_MEASUREMENT_SET: str = """
-                INSERT INTO
-                    measurement_sets (spoke_id, tensiometer_id, comment)
-                VALUES
-                    (?, ?, ?)"""
+                    set_id IN"""
 
     ADD_MEASUREMENT: str = """
                 INSERT INTO

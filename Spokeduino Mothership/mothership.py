@@ -30,7 +30,6 @@ from unit_converter import UnitConverter
 from unit_converter import UnitEnum
 from customtablewidget import CustomTableWidget
 from helpers import Messagebox
-from quartic_fit import PiecewiseQuarticFit
 
 class Spokeduino(QMainWindow):
     """
@@ -50,7 +49,7 @@ class Spokeduino(QMainWindow):
 
         # Initialize database
         schema_file: str = os.path.join(self.current_path, "sql", "init_schema.sql")
-        data_file: str = os.path.join(self.current_path, "sql", "default_data.sql")
+        data_file: str = os.path.join(self.current_path, "sql", "spoke_data.sql")
         self.db = DatabaseModule(self.db_path)
         self.db.initialize_database(schema_file, data_file)
         self.serial_port = None
@@ -63,6 +62,7 @@ class Spokeduino(QMainWindow):
 
         self.ui = Ui_mainWindow()
         self.ui.setupUi(mainWindow=self)
+        self.unit_converter = UnitConverter(self.ui)
         self.setup_module = SetupModule(
             main_window=self,
             ui=self.ui,
@@ -71,8 +71,9 @@ class Spokeduino(QMainWindow):
         self.spoke_module = SpokeModule(
             main_window=self,
             ui=self.ui,
-            current_path=self.current_path,
-            db=self.db)
+            unit_converter=self.unit_converter,
+            db=self.db,
+            current_path=self.current_path)
         self.measurement_module = MeasurementModule(
             main_window=self,
             ui=self.ui)
@@ -143,7 +144,6 @@ class Spokeduino(QMainWindow):
         self.ui.tableViewTensioningRight.deleteLater()
         self.ui.tableViewTensioningRight = custom_tension_table_right
 
-        self.unit_converter = UnitConverter(self.ui)
         self.setup_module.setup_language()
         self.setup_module.populate_language_combobox()
         self.setup_module.load_available_com_ports()
@@ -161,7 +161,7 @@ class Spokeduino(QMainWindow):
         self.spoke_tensions_right: list[tuple[float, float]] = []
         self.left_spoke_formula: str = ""
         self.right_spoke_formula: str = ""
-        self.unit: UnitEnum = self.get_unit()
+        self.unit: UnitEnum = self.unit_converter.get_unit()
 
     def setup_signals_and_slots(self) -> None:
         """
@@ -507,7 +507,7 @@ class Spokeduino(QMainWindow):
 
         # Clear selection and reload the measurements
         view.clearSelection()
-        self.spoke_module.load_spoke_measurements()
+        self.spoke_module.load_spoke_measurements(None, None)
 
     def select_measurement_row(self, index: QModelIndex) -> None:
         """
@@ -569,7 +569,9 @@ class Spokeduino(QMainWindow):
             model = QStandardItemModel(self.ui.comboBoxTensiometer)
             self.ui.comboBoxTensiometer.setModel(model)  # Set the model early
 
-            for tensiometer in self.db.execute_select(SQLQueries.GET_TENSIOMETERS):
+            for tensiometer in self.db.execute_select(
+                query=SQLQueries.GET_TENSIOMETERS,
+                params=None):
                 item = QStandardItem(tensiometer[1])
                 item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
                 item.setCheckState(Qt.CheckState.Unchecked)
@@ -705,11 +707,11 @@ class Spokeduino(QMainWindow):
         tensiometer_id = int(tensiometer_id)
 
         # Fetch measurements for the selected spoke and tensiometer
-        measurements: list[Any] = self.db.execute_select(
-            query=SQLQueries.GET_MEASUREMENTS,
-            params=(spoke_id, tensiometer_id)
-        )
-        if not measurements:
+        measurements: list[Any] | None = (
+            self.spoke_module.load_spoke_measurements(
+                spoke_id=spoke_id,
+                tensiometer_id=tensiometer_id))
+        if measurements is None:
             self.messagebox.err("No measurements found for the selected spoke.")
             return
 
@@ -722,7 +724,7 @@ class Spokeduino(QMainWindow):
 
         relevant_measurements: list[float] = measurements[selected_row][2:]
         tensions: list[int] = list(range(300, 1700, 100))  # 300 N to 1600 N
-        formula: str = PiecewiseQuarticFit.generate_model(list(zip( tensions, relevant_measurements)))
+        # formula: str = PiecewiseQuarticFit.generate_model(list(zip( tensions, relevant_measurements)))
         # Extract and format spoke details
         _, name, _, gauge, _, dimensions, comment, *_ = spoke[0]
         spoke_details: str = (
@@ -734,20 +736,10 @@ class Spokeduino(QMainWindow):
         # Set the details and save the formula
         if is_left:
             self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
-            self.left_spoke_formula = formula
+            # self.left_spoke_formula = formula
         else:
             self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
-            self.right_spoke_formula = formula
-
-    def get_unit(self) -> UnitEnum:
-        """
-        Returns the tension unit currently set, or Newton as default
-        """
-        if self.ui.radioButtonKgF.isChecked():
-            return UnitEnum.KGF
-        elif self.ui.radioButtonLbF.isChecked():
-            return UnitEnum.LBF
-        return UnitEnum.NEWTON
+            # self.right_spoke_formula = formula
 
     def set_unit(self, unit: UnitEnum) -> None:
         self.unit = unit
@@ -886,8 +878,9 @@ class Spokeduino(QMainWindow):
         for column in range(table.columnCount()):
             try:
                 # Get measurements and formula for the column
-                measurements, formula = \
-                    self.measurement_module.calculate_formula(column)
+                #measurements, formula = \
+                #    self.measurement_module.calculate_formula(column)
+                pass
             except ValueError as ex:
                 self.messagebox.err(f"Column {column + 1}: {str(ex)}")
                 return
@@ -911,20 +904,21 @@ class Spokeduino(QMainWindow):
                 return
 
             # Extract tension values in the correct order
-            tension_values: list[float] = [value for _, value in measurements]
+            #tension_values: list[float] = [value for _, value in measurements]
 
             # Prepare query parameters
-            params = (
-                spoke_id,
-                tensiometer_id,
-                *tension_values,
-                formula,
-                comment,
-            )
+            #params = (
+            #    spoke_id,
+             #   tensiometer_id,
+             #   *tension_values,
+             #   formula,
+             #   comment,
+            #)
 
             # Execute the query
             try:
-                db.execute_query(query=SQLQueries.ADD_MEASUREMENT, params=params)
+                #db.execute_query(query=SQLQueries.ADD_MEASUREMENT, params=params)
+                pass
             except Exception as ex:
                 self.messagebox.err(f"Failed to save measurement for "
                                     f"column {column + 1}: {str(ex)}")
@@ -937,7 +931,7 @@ class Spokeduino(QMainWindow):
                 item: QTableWidgetItem | None = table.item(row, col)
                 if item:
                     item.setText("")
-        self.spoke_module.load_spoke_measurements()
+        self.spoke_module.load_spoke_measurements(None, None)
 
     def setup_tensioning_table(self, is_left: bool) -> None:
         """
@@ -1086,7 +1080,8 @@ class Spokeduino(QMainWindow):
         tension: float = 0.0
         formula: str = self.left_spoke_formula if is_left else self.right_spoke_formula
         try:
-            tension = PiecewiseQuarticFit.evaluate(formula, deflection)
+            # tension = PiecewiseQuarticFit.evaluate(formula, deflection)
+            pass
         except Exception as ex:
             print(ex)
             return

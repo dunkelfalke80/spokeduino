@@ -1,5 +1,5 @@
 import logging
-from typing import Any, cast
+from typing import Any, LiteralString, cast
 from PySide6.QtCore import QTranslator
 from PySide6.QtWidgets import QAbstractItemView
 from PySide6.QtWidgets import QComboBox
@@ -10,20 +10,24 @@ from PySide6.QtWidgets import QTableView
 from database_module import DatabaseModule
 from sql_queries import SQLQueries
 from helpers import SpokeTableModel
+from unit_converter import UnitConverter
+from unit_converter import UnitEnum
 
 class SpokeModule:
 
     def __init__(self,
                  main_window: QMainWindow,
                  ui: Any,
-                 current_path: str,
-                 db: DatabaseModule) -> None:
+                 unit_converter: UnitConverter,
+                 db: DatabaseModule,
+                 current_path: str) -> None:
         self.ui = ui
         self.main_window: QMainWindow = main_window
         self.current_path: str = current_path
         self.translator = QTranslator()
         self.current_language = "en"
         self.db: DatabaseModule = db
+        self.unit_converter: UnitConverter = unit_converter
 
         # Reducing verbosity
         self.__rm_stretch: QHeaderView.ResizeMode = \
@@ -155,7 +159,7 @@ class SpokeModule:
         """
         # Load manufacturers
         manufacturers: list[Any] = self.db.execute_select(
-            query=SQLQueries.GET_MANUFACTURERS)
+            query=SQLQueries.GET_MANUFACTURERS, params=None)
         if not manufacturers:
             return
 
@@ -170,7 +174,7 @@ class SpokeModule:
 
         # Load types
         spoke_types: list[Any] = self.db.execute_select(
-            query=SQLQueries.GET_TYPES)
+            query=SQLQueries.GET_TYPES, params=None)
         if not spoke_types:
             return
 
@@ -251,7 +255,7 @@ class SpokeModule:
             for spoke in self.current_spokes}
 
         # Fetch all types from the database
-        types: list[Any] = self.db.execute_select(SQLQueries.GET_TYPES)
+        types: list[Any] = self.db.execute_select(SQLQueries.GET_TYPES, None)
         if not types:
             return
 
@@ -450,47 +454,101 @@ class SpokeModule:
             gauge_width,
             self.ui.lineEditFilterGauge.height())
 
-    def load_spoke_measurements(self) -> None:
+    def load_spoke_measurements(
+            self,
+            spoke_id: int | None,
+            tensiometer_id: int | None) -> list[Any] | None:
         """
         Load all measurements for the selected spoke and tensiometer
         and populate tableViewMeasurements.
+        Each row corresponds to a measurement set
+        with the first column as a comment,
+        the second as the timestamp (up to minutes),
+        and subsequent columns displaying
+        tension:deflection pairs with unit conversion.
         """
-        res, spoke_id = self.get_selected_spoke_id()
-        tensiometer_id: int | None = self.ui.comboBoxTensiometer.currentData()
+        list_only: bool = False
+        if spoke_id is None:
+            res, spoke_id = self.get_selected_spoke_id()
+        else:
+            res: bool = True
+            list_only = True
+
+        if tensiometer_id is None:
+            tensiometer_id = self.ui.comboBoxTensiometer.currentData()
         view: QTableView = self.ui.tableViewMeasurements
 
         if not res or tensiometer_id is None:
             view.setModel(None)
-            return
+            return None
         tensiometer_id = int(tensiometer_id)
 
-        measurements: list[Any] = self.db.execute_select(
-            query=SQLQueries.GET_MEASUREMENTS,
+        print(f"Spoke id {spoke_id}, tensio id {tensiometer_id}")
+
+        # Fetch measurement sets
+        measurement_sets: list[Any] = self.db.execute_select(
+            query=SQLQueries.GET_MEASUREMENT_SETS,
             params=(spoke_id, tensiometer_id)
+        )
+
+        if not measurement_sets:
+            view.setModel(None)
+            return None
+
+        # Fetch all measurements linked to the retrieved measurement sets
+        set_ids: list[Any] = [ms[0] for ms in measurement_sets]
+        query_string: str = f"{SQLQueries.GET_MEASUREMENTS} " \
+            f"({', '.join('?' for _ in set_ids)})"
+        measurements: list[Any] = self.db.execute_select(
+            query=query_string,
+            params=set_ids  # Pass the list directly
         )
         if not measurements:
             view.setModel(None)
-            return
+            return None
 
-        headers: list[str] = [
-            "Comment", "300N", "400N", "500N", "600N", "700N", "800N", "900N",
-            "1000N", "1100N", "1200N", "1300N", "1400N", "1500N", "1600N"
-        ]
+        if list_only:
+            return measurements
 
-        data: list[tuple[Any, list[str]]] = [
-            (measurement[0], [measurement[1]] + list(map(str, measurement[2:])))
-            for measurement in measurements
-        ]
+        # Prepare rows for the table
+        unit: UnitEnum = self.unit_converter.get_unit()
+
+        # Map set_id to its info
+        set_info: dict[Any, Any] = {ms[0]: ms[1:] for ms in measurement_sets}
+        data: list[tuple[Any, list[str]]] = []
+
+        # Organize measurements by set and build rows
+        grouped_measurements = {}
+        for set_id, tension, deflection in measurements:
+            if set_id not in grouped_measurements:
+                grouped_measurements[set_id] = []
+            converted_tensions = self.unit_converter.convert_units(
+                value=tension, source=UnitEnum.NEWTON)
+            tension_converted = {
+                UnitEnum.NEWTON: f"{converted_tensions[0]:.2f} N",
+                UnitEnum.KGF: f"{converted_tensions[1]:.2f} kgF",
+                UnitEnum.LBF: f"{converted_tensions[2]:.2f} lbF"
+            }[unit]
+            grouped_measurements[set_id].append(f"{tension_converted}: {deflection:.2f} mm")
+
+        for set_id, measurements_list in grouped_measurements.items():
+            comment, ts = set_info[set_id]
+            timestamp = ts.split(":")[0]  # Keep only up to minutes
+            data.append((comment, [timestamp] + measurements_list))
+
+        # Headers
+        headers: list[str] = ["Comment", "Timestamp"] + [f"Measurement {i+1}" for i in range(len(data[0][1]) - 2)]
 
         # Create and set the model
         model = SpokeTableModel(data, headers)
         view.setModel(model)
 
         view.horizontalHeader().setHighlightSections(True)
-        # Adjust column headers
         resize_mode = view.horizontalHeader().setSectionResizeMode
         resize_mode(self.__rm_shrink)
-        resize_mode(0, self.__rm_stretch) # Comment
+        resize_mode(0, self.__rm_stretch)  # Comment
+        return None
+
 
     def sync_spoke_selection(self, sender: QComboBox) -> None:
         """
@@ -514,4 +572,4 @@ class SpokeModule:
 
         # Update the details for the currently selected spoke
         self.update_spoke_details(sender)
-        self.load_spoke_measurements()
+        self.load_spoke_measurements(None, None)

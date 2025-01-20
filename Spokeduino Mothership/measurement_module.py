@@ -1,6 +1,5 @@
 from typing import Any
 from PySide6.QtWidgets import QMainWindow, QTableWidgetItem
-from quartic_fit import PiecewiseQuarticFit
 from setup_module import SetupModule
 from customtablewidget import CustomTableWidget
 
@@ -12,42 +11,6 @@ class MeasurementModule:
         self.ui = ui
         self.main_window: QMainWindow = main_window
         self.setup_module = SetupModule
-
-    def calculate_formula(self,
-                          column: int) -> tuple[list[tuple[int, float]], str]:
-        """
-        Calculate the quartic fit formula for the specified column.
-        :param column: The column index to extract measurements from.
-        :return: The calculated fit formula as a string.
-        :raises ValueError: If data is invalid or the formula cannot be calculated.
-        """
-        table: CustomTableWidget = self.ui.tableWidgetMeasurements
-        # Determine the measurement direction
-        if self.ui.radioButtonMeasurementUp.isChecked():
-            tensions = list(range(300, 1700, 100))  # 300 N to 1600 N
-        elif self.ui.radioButtonMeasurementDown.isChecked():
-            tensions = list(range(1600, 200, -100))  # 1600 N to 300 N
-        else:
-            raise ValueError("Measurement direction not selected")
-
-        # Extract deflection values and pair with tensions
-        measurements : list[tuple[int, float]] = []
-        for i, tension in enumerate(tensions):
-            row: int = (i if self.ui.radioButtonMeasurementUp.isChecked()
-                        else len(tensions) - 1 - i)
-            item: QTableWidgetItem | None = table.item(row, column)
-            if item and item.text().strip():
-                try:
-                    deflection = float(item.text().replace(",", "."))
-                    measurements.append((tension, deflection))
-                except ValueError:
-                    raise ValueError("Invalid data in table")
-
-        if not measurements:
-            raise ValueError("No data in selected column")
-
-        # Run the quartic fit model
-        return measurements, PiecewiseQuarticFit.generate_model(measurements)
 
     def toggle_calculate_button(self) -> None:
         """
@@ -61,8 +24,7 @@ class MeasurementModule:
             return
 
         try:
-            _, fit = self.calculate_formula(selected_column)
-            self.ui.lineEditFormula.setText(fit)
+            pass
         except ValueError as e:
             self.ui.lineEditFormula.setText(str(e))
         except Exception as e:

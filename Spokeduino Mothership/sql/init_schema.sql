@@ -74,9 +74,3 @@ CREATE TABLE settings
 	key TEXT PRIMARY KEY,
 	value TEXT
 );
-
--- Indexes for optimization
-CREATE INDEX idx_manufacturer_id ON spokes(manufacturer_id);
-CREATE INDEX idx_type_id ON spokes(type_id);
-CREATE INDEX idx_tensiometer_id ON measurements(tensiometer_id);
-CREATE INDEX idx_spoke_id ON measurements(spoke_id);

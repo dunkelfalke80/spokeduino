@@ -33,7 +33,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="databaseTab">
        <attribute name="title">
@@ -1476,7 +1476,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayoutSetupLeft">
           <item>
-           <layout class="QVBoxLayout" name="verticalLayoutSetupLeft" stretch="1,1,0,1,1">
+           <layout class="QVBoxLayout" name="verticalLayoutSetupLeft" stretch="1,1,0,0,1">
             <item>
              <widget class="QGroupBox" name="groupBoxLanguage">
               <property name="sizePolicy">
@@ -1639,7 +1639,7 @@
                     <item>
                      <widget class="QLineEdit" name="lineEditNewTensiometer">
                       <property name="sizePolicy">
-                       <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                       <sizepolicy hsizetype="Preferred" vsizetype="Minimum">
                         <horstretch>0</horstretch>
                         <verstretch>0</verstretch>
                        </sizepolicy>
@@ -1648,6 +1648,19 @@
                     </item>
                    </layout>
                   </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_5">
+                   <property name="orientation">
+                    <enum>Qt::Orientation::Horizontal</enum>
+                   </property>
+                   <property name="sizeHint" stdset="0">
+                    <size>
+                     <width>40</width>
+                     <height>20</height>
+                    </size>
+                   </property>
+                  </spacer>
                  </item>
                  <item>
                   <widget class="QPushButton" name="pushButtonNewTensiometer">
@@ -1684,6 +1697,19 @@
              </spacer>
             </item>
            </layout>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_2">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
           </item>
           <item>
            <layout class="QVBoxLayout" name="verticalLayoutDirectionsConverter">
@@ -1809,198 +1835,274 @@
               </property>
              </spacer>
             </item>
-            <item>
-             <widget class="QGroupBox" name="groupBoxUnitSetup">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>250</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="title">
-               <string>Unit</string>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayoutButtonNewton" stretch="0,0,0">
-               <item>
-                <widget class="QRadioButton" name="radioButtonNewton">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Newton</string>
-                 </property>
-                 <property name="checked">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QRadioButton" name="radioButtonKgF">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>kgF</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QRadioButton" name="radioButtonLbF">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>lbF</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <spacer name="verticalSpacerDirectionsConverter">
-              <property name="orientation">
-               <enum>Qt::Orientation::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-            <item>
-             <widget class="QGroupBox" name="groupBoxUnitConverter">
-              <property name="title">
-               <string>Unit converter</string>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayoutUnitCoverter">
-               <item>
-                <widget class="QGroupBox" name="groupBoxTensionConverterNewton">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="title">
-                  <string>Newton</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayoutConverterNewton">
-                  <item>
-                   <widget class="QLineEdit" name="lineEditConverterNewton">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <widget class="QGroupBox" name="groupBoxTensionConverterKgF">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="title">
-                  <string>kgF</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayoutConverterKgF">
-                  <item>
-                   <widget class="QLineEdit" name="lineEditConverterKgF">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <widget class="QGroupBox" name="groupBoxTensionConverterLbF">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>0</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="title">
-                  <string>lbF</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayoutLbFConverter">
-                  <item>
-                   <widget class="QLineEdit" name="lineEditConverterLbF">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </item>
-            <item>
-             <spacer name="verticalSpacerDirectionsConverterReserved">
-              <property name="orientation">
-               <enum>Qt::Orientation::Vertical</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>20</width>
-                <height>40</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
            </layout>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBoxDirectionsSetup_2">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="title">
+             <string>Directions</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayoutMeasurementDirection_2">
+             <item>
+              <widget class="QGroupBox" name="groupBoxSpokeMeasurementType">
+               <property name="title">
+                <string>Measurement type</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayoutMeasurementType">
+                <item>
+                 <widget class="QRadioButton" name="radioButtonMeasurementDefault">
+                  <property name="text">
+                   <string>Default values</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButtonMeasurementCustom">
+                  <property name="text">
+                   <string>Custom values</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <spacer name="verticalSpacer">
+               <property name="orientation">
+                <enum>Qt::Orientation::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
+           <spacer name="horizontalSpacer_4">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>40</width>
+              <height>20</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QGroupBox" name="groupBoxUnits">
+            <property name="title">
+             <string>Units</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayoutUnits">
+             <item>
+              <widget class="QGroupBox" name="groupBoxUnitSetup">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>250</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="title">
+                <string>Unit</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayoutButtonNewton" stretch="0,0,0">
+                <item>
+                 <widget class="QRadioButton" name="radioButtonNewton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Newton</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButtonKgF">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>kgF</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButtonLbF">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>lbF</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGroupBox" name="groupBoxUnitConverter">
+               <property name="title">
+                <string>Unit converter</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayoutUnitCoverter">
+                <item>
+                 <widget class="QGroupBox" name="groupBoxTensionConverterNewton">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="title">
+                   <string>Newton</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayoutConverterNewton">
+                   <item>
+                    <widget class="QLineEdit" name="lineEditConverterNewton">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QGroupBox" name="groupBoxTensionConverterKgF">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="title">
+                   <string>kgF</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayoutConverterKgF">
+                   <item>
+                    <widget class="QLineEdit" name="lineEditConverterKgF">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QGroupBox" name="groupBoxTensionConverterLbF">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="title">
+                   <string>lbF</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayoutLbFConverter">
+                   <item>
+                    <widget class="QLineEdit" name="lineEditConverterLbF">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <spacer name="verticalSpacer_2">
+               <property name="orientation">
+                <enum>Qt::Orientation::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
           </item>
           <item>
            <spacer name="horizontalSpacerReserved">

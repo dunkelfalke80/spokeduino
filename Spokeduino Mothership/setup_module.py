@@ -77,7 +77,7 @@ class SetupModule:
         and populate comboBoxTensiometer.
         """
         tensiometers: list[Any] = self.db.execute_select(
-            query=SQLQueries.GET_TENSIOMETERS)
+            query=SQLQueries.GET_TENSIOMETERS, params=None)
         if not tensiometers:
             return
 
@@ -120,7 +120,7 @@ class SetupModule:
         Load settings from the database and update the UI accordingly.
         """
         settings: list[Any] = self.db.execute_select(
-            query=SQLQueries.GET_SETTINGS)
+            query=SQLQueries.GET_SETTINGS, params=None)
         settings_dict: dict[str, str] = {
             key: value for key,
             value in settings}

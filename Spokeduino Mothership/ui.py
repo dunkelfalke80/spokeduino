@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'spokeduino_mothershipbYfeUT.ui'
+## Form generated from reading UI file 'spokeduino_mothershipBErMYr.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.1
 ##
@@ -109,83 +109,114 @@ class Ui_mainWindow(object):
 
         self.groupBoxListMeasurementsDatabase = QGroupBox(self.databaseTab)
         self.groupBoxListMeasurementsDatabase.setObjectName(u"groupBoxListMeasurementsDatabase")
-        self.verticalLayoutMeasurementsDatabase = QVBoxLayout(self.groupBoxListMeasurementsDatabase)
-        self.verticalLayoutMeasurementsDatabase.setObjectName(u"verticalLayoutMeasurementsDatabase")
-        self.verticalLayoutMeasurements = QVBoxLayout()
-        self.verticalLayoutMeasurements.setObjectName(u"verticalLayoutMeasurements")
+        self.horizontalLayout_4 = QHBoxLayout(self.groupBoxListMeasurementsDatabase)
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.verticalLayout_4 = QVBoxLayout()
+        self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.horizontalLayoutSpokeDefinitionsDatabase_4 = QHBoxLayout()
+        self.horizontalLayoutSpokeDefinitionsDatabase_4.setObjectName(u"horizontalLayoutSpokeDefinitionsDatabase_4")
         self.tableViewMeasurements = QTableView(self.groupBoxListMeasurementsDatabase)
         self.tableViewMeasurements.setObjectName(u"tableViewMeasurements")
         sizePolicy1.setHeightForWidth(self.tableViewMeasurements.sizePolicy().hasHeightForWidth())
         self.tableViewMeasurements.setSizePolicy(sizePolicy1)
 
-        self.verticalLayoutMeasurements.addWidget(self.tableViewMeasurements)
+        self.horizontalLayoutSpokeDefinitionsDatabase_4.addWidget(self.tableViewMeasurements)
 
-
-        self.verticalLayoutMeasurementsDatabase.addLayout(self.verticalLayoutMeasurements)
-
-        self.horizontalLayoutMeasurementsButtonsDatabase = QHBoxLayout()
-        self.horizontalLayoutMeasurementsButtonsDatabase.setObjectName(u"horizontalLayoutMeasurementsButtonsDatabase")
-        self.pushButtonUseLeft = QPushButton(self.groupBoxListMeasurementsDatabase)
-        self.pushButtonUseLeft.setObjectName(u"pushButtonUseLeft")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        self.verticalLayout_7 = QVBoxLayout()
+        self.verticalLayout_7.setObjectName(u"verticalLayout_7")
+        self.verticalLayout_8 = QVBoxLayout()
+        self.verticalLayout_8.setObjectName(u"verticalLayout_8")
+        self.pushButtonEditMeasurement = QPushButton(self.groupBoxListMeasurementsDatabase)
+        self.pushButtonEditMeasurement.setObjectName(u"pushButtonEditMeasurement")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         sizePolicy2.setHorizontalStretch(0)
         sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.pushButtonUseLeft.sizePolicy().hasHeightForWidth())
-        self.pushButtonUseLeft.setSizePolicy(sizePolicy2)
-        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoPrevious))
-        self.pushButtonUseLeft.setIcon(icon)
+        sizePolicy2.setHeightForWidth(self.pushButtonEditMeasurement.sizePolicy().hasHeightForWidth())
+        self.pushButtonEditMeasurement.setSizePolicy(sizePolicy2)
+        icon = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditPaste))
+        self.pushButtonEditMeasurement.setIcon(icon)
 
-        self.horizontalLayoutMeasurementsButtonsDatabase.addWidget(self.pushButtonUseLeft)
-
-        self.pushButtonUseRight = QPushButton(self.groupBoxListMeasurementsDatabase)
-        self.pushButtonUseRight.setObjectName(u"pushButtonUseRight")
-        sizePolicy2.setHeightForWidth(self.pushButtonUseRight.sizePolicy().hasHeightForWidth())
-        self.pushButtonUseRight.setSizePolicy(sizePolicy2)
-        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoNext))
-        self.pushButtonUseRight.setIcon(icon1)
-
-        self.horizontalLayoutMeasurementsButtonsDatabase.addWidget(self.pushButtonUseRight)
-
-        self.horizontalSpacerMeasurementsBottom = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayoutMeasurementsButtonsDatabase.addItem(self.horizontalSpacerMeasurementsBottom)
+        self.verticalLayout_8.addWidget(self.pushButtonEditMeasurement)
 
         self.pushButtonAddMeasurement = QPushButton(self.groupBoxListMeasurementsDatabase)
         self.pushButtonAddMeasurement.setObjectName(u"pushButtonAddMeasurement")
         sizePolicy2.setHeightForWidth(self.pushButtonAddMeasurement.sizePolicy().hasHeightForWidth())
         self.pushButtonAddMeasurement.setSizePolicy(sizePolicy2)
-        icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.ListAdd))
-        self.pushButtonAddMeasurement.setIcon(icon2)
+        icon1 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.ListAdd))
+        self.pushButtonAddMeasurement.setIcon(icon1)
 
-        self.horizontalLayoutMeasurementsButtonsDatabase.addWidget(self.pushButtonAddMeasurement)
+        self.verticalLayout_8.addWidget(self.pushButtonAddMeasurement)
 
         self.pushButtonDeleteMeasurement = QPushButton(self.groupBoxListMeasurementsDatabase)
         self.pushButtonDeleteMeasurement.setObjectName(u"pushButtonDeleteMeasurement")
-        sizePolicy2.setHeightForWidth(self.pushButtonDeleteMeasurement.sizePolicy().hasHeightForWidth())
-        self.pushButtonDeleteMeasurement.setSizePolicy(sizePolicy2)
-        icon3 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.ListRemove))
-        self.pushButtonDeleteMeasurement.setIcon(icon3)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.pushButtonDeleteMeasurement.sizePolicy().hasHeightForWidth())
+        self.pushButtonDeleteMeasurement.setSizePolicy(sizePolicy3)
+        icon2 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.ListRemove))
+        self.pushButtonDeleteMeasurement.setIcon(icon2)
 
-        self.horizontalLayoutMeasurementsButtonsDatabase.addWidget(self.pushButtonDeleteMeasurement)
+        self.verticalLayout_8.addWidget(self.pushButtonDeleteMeasurement)
 
-        self.pushButtonDeleteSpoke = QPushButton(self.groupBoxListMeasurementsDatabase)
-        self.pushButtonDeleteSpoke.setObjectName(u"pushButtonDeleteSpoke")
-        sizePolicy2.setHeightForWidth(self.pushButtonDeleteSpoke.sizePolicy().hasHeightForWidth())
-        self.pushButtonDeleteSpoke.setSizePolicy(sizePolicy2)
-        icon4 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditDelete))
-        self.pushButtonDeleteSpoke.setIcon(icon4)
+        self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.horizontalLayoutMeasurementsButtonsDatabase.addWidget(self.pushButtonDeleteSpoke)
+        self.verticalLayout_8.addItem(self.verticalSpacer_3)
 
 
-        self.verticalLayoutMeasurementsDatabase.addLayout(self.horizontalLayoutMeasurementsButtonsDatabase)
+        self.verticalLayout_7.addLayout(self.verticalLayout_8)
 
-        self.verticalLayoutMeasurementsDatabase.setStretch(0, 1)
+
+        self.horizontalLayoutSpokeDefinitionsDatabase_4.addLayout(self.verticalLayout_7)
+
+        self.horizontalLayoutSpokeDefinitionsDatabase_4.setStretch(0, 1)
+
+        self.verticalLayout_4.addLayout(self.horizontalLayoutSpokeDefinitionsDatabase_4)
+
+        self.verticalLayout_6 = QVBoxLayout()
+        self.verticalLayout_6.setObjectName(u"verticalLayout_6")
+        self.horizontalLayoutSpokeDefinitionsDatabase_6 = QHBoxLayout()
+        self.horizontalLayoutSpokeDefinitionsDatabase_6.setObjectName(u"horizontalLayoutSpokeDefinitionsDatabase_6")
+        self.pushButtonUseLeft = QPushButton(self.groupBoxListMeasurementsDatabase)
+        self.pushButtonUseLeft.setObjectName(u"pushButtonUseLeft")
+        sizePolicy3.setHeightForWidth(self.pushButtonUseLeft.sizePolicy().hasHeightForWidth())
+        self.pushButtonUseLeft.setSizePolicy(sizePolicy3)
+        icon3 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoPrevious))
+        self.pushButtonUseLeft.setIcon(icon3)
+
+        self.horizontalLayoutSpokeDefinitionsDatabase_6.addWidget(self.pushButtonUseLeft)
+
+        self.pushButtonUseRight = QPushButton(self.groupBoxListMeasurementsDatabase)
+        self.pushButtonUseRight.setObjectName(u"pushButtonUseRight")
+        sizePolicy3.setHeightForWidth(self.pushButtonUseRight.sizePolicy().hasHeightForWidth())
+        self.pushButtonUseRight.setSizePolicy(sizePolicy3)
+        icon4 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoNext))
+        self.pushButtonUseRight.setIcon(icon4)
+
+        self.horizontalLayoutSpokeDefinitionsDatabase_6.addWidget(self.pushButtonUseRight)
+
+        self.horizontalSpacerTypeDatabase_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayoutSpokeDefinitionsDatabase_6.addItem(self.horizontalSpacerTypeDatabase_6)
+
+
+        self.verticalLayout_6.addLayout(self.horizontalLayoutSpokeDefinitionsDatabase_6)
+
+
+        self.verticalLayout_4.addLayout(self.verticalLayout_6)
+
+
+        self.horizontalLayout_4.addLayout(self.verticalLayout_4)
+
+        self.verticalLayoutMeasurements = QVBoxLayout()
+        self.verticalLayoutMeasurements.setObjectName(u"verticalLayoutMeasurements")
+
+        self.horizontalLayout_4.addLayout(self.verticalLayoutMeasurements)
+
 
         self.verticalLayoutDatabaseLeft.addWidget(self.groupBoxListMeasurementsDatabase)
 
         self.verticalLayoutDatabaseLeft.setStretch(0, 3)
-        self.verticalLayoutDatabaseLeft.setStretch(1, 2)
 
         self.horizontalLayoutDatabase.addLayout(self.verticalLayoutDatabaseLeft)
 
@@ -233,11 +264,8 @@ class Ui_mainWindow(object):
 
         self.pushButtonNewManufacturer = QPushButton(self.groupBoxManufacturer)
         self.pushButtonNewManufacturer.setObjectName(u"pushButtonNewManufacturer")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.pushButtonNewManufacturer.sizePolicy().hasHeightForWidth())
-        self.pushButtonNewManufacturer.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.pushButtonNewManufacturer.sizePolicy().hasHeightForWidth())
+        self.pushButtonNewManufacturer.setSizePolicy(sizePolicy2)
         icon5 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentNew))
         self.pushButtonNewManufacturer.setIcon(icon5)
 
@@ -381,9 +409,9 @@ class Ui_mainWindow(object):
         self.horizontalLayoutSpokeButtonsDatabase.setObjectName(u"horizontalLayoutSpokeButtonsDatabase")
         self.pushButtonCreateSpoke = QPushButton(self.groupBoxSpokeDatabase)
         self.pushButtonCreateSpoke.setObjectName(u"pushButtonCreateSpoke")
-        sizePolicy2.setHeightForWidth(self.pushButtonCreateSpoke.sizePolicy().hasHeightForWidth())
-        self.pushButtonCreateSpoke.setSizePolicy(sizePolicy2)
-        self.pushButtonCreateSpoke.setIcon(icon2)
+        sizePolicy3.setHeightForWidth(self.pushButtonCreateSpoke.sizePolicy().hasHeightForWidth())
+        self.pushButtonCreateSpoke.setSizePolicy(sizePolicy3)
+        self.pushButtonCreateSpoke.setIcon(icon1)
 
         self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonCreateSpoke)
 
@@ -393,8 +421,8 @@ class Ui_mainWindow(object):
 
         self.pushButtonEditSpoke = QPushButton(self.groupBoxSpokeDatabase)
         self.pushButtonEditSpoke.setObjectName(u"pushButtonEditSpoke")
-        sizePolicy2.setHeightForWidth(self.pushButtonEditSpoke.sizePolicy().hasHeightForWidth())
-        self.pushButtonEditSpoke.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.pushButtonEditSpoke.sizePolicy().hasHeightForWidth())
+        self.pushButtonEditSpoke.setSizePolicy(sizePolicy3)
         icon6 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentSaveAs))
         self.pushButtonEditSpoke.setIcon(icon6)
 
@@ -406,12 +434,21 @@ class Ui_mainWindow(object):
 
         self.pushButtonClearSpoke = QPushButton(self.groupBoxSpokeDatabase)
         self.pushButtonClearSpoke.setObjectName(u"pushButtonClearSpoke")
-        sizePolicy2.setHeightForWidth(self.pushButtonClearSpoke.sizePolicy().hasHeightForWidth())
-        self.pushButtonClearSpoke.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.pushButtonClearSpoke.sizePolicy().hasHeightForWidth())
+        self.pushButtonClearSpoke.setSizePolicy(sizePolicy3)
         icon7 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditUndo))
         self.pushButtonClearSpoke.setIcon(icon7)
 
         self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonClearSpoke)
+
+        self.pushButtonDeleteSpoke = QPushButton(self.groupBoxSpokeDatabase)
+        self.pushButtonDeleteSpoke.setObjectName(u"pushButtonDeleteSpoke")
+        sizePolicy3.setHeightForWidth(self.pushButtonDeleteSpoke.sizePolicy().hasHeightForWidth())
+        self.pushButtonDeleteSpoke.setSizePolicy(sizePolicy3)
+        icon8 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditDelete))
+        self.pushButtonDeleteSpoke.setIcon(icon8)
+
+        self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonDeleteSpoke)
 
 
         self.verticalLayoutSpokeDatabase.addLayout(self.horizontalLayoutSpokeButtonsDatabase)
@@ -439,7 +476,7 @@ class Ui_mainWindow(object):
         self.verticalLayoutManufacturer.setObjectName(u"verticalLayoutManufacturer")
         self.horizontalLayoutManufacturerLeft = QHBoxLayout()
         self.horizontalLayoutManufacturerLeft.setObjectName(u"horizontalLayoutManufacturerLeft")
-        self.tableWidgetMeasurements = CustomTableWidget()
+        self.tableWidgetMeasurements = CustomTableWidget(self.groupBoxMeasurement)
         self.tableWidgetMeasurements.setObjectName(u"tableWidgetMeasurements")
 
         self.horizontalLayoutManufacturerLeft.addWidget(self.tableWidgetMeasurements)
@@ -463,8 +500,8 @@ class Ui_mainWindow(object):
 
         self.pushButtonCalculateFormula = QPushButton(self.groupBoxFormula)
         self.pushButtonCalculateFormula.setObjectName(u"pushButtonCalculateFormula")
-        icon8 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.SyncSynchronizing))
-        self.pushButtonCalculateFormula.setIcon(icon8)
+        icon9 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.SyncSynchronizing))
+        self.pushButtonCalculateFormula.setIcon(icon9)
 
         self.horizontalLayoutFormula.addWidget(self.pushButtonCalculateFormula)
 
@@ -488,13 +525,13 @@ class Ui_mainWindow(object):
         self.horizontalLayoutMeasurementsButtons.setObjectName(u"horizontalLayoutMeasurementsButtons")
         self.pushButtonPreviousMeasurement = QPushButton(self.groupBoxMeasurement)
         self.pushButtonPreviousMeasurement.setObjectName(u"pushButtonPreviousMeasurement")
-        self.pushButtonPreviousMeasurement.setIcon(icon)
+        self.pushButtonPreviousMeasurement.setIcon(icon3)
 
         self.horizontalLayoutMeasurementsButtons.addWidget(self.pushButtonPreviousMeasurement)
 
         self.pushButtonNextMeasurement = QPushButton(self.groupBoxMeasurement)
         self.pushButtonNextMeasurement.setObjectName(u"pushButtonNextMeasurement")
-        self.pushButtonNextMeasurement.setIcon(icon1)
+        self.pushButtonNextMeasurement.setIcon(icon4)
 
         self.horizontalLayoutMeasurementsButtons.addWidget(self.pushButtonNextMeasurement)
 
@@ -504,8 +541,8 @@ class Ui_mainWindow(object):
 
         self.pushButtonSaveMeasurement = QPushButton(self.groupBoxMeasurement)
         self.pushButtonSaveMeasurement.setObjectName(u"pushButtonSaveMeasurement")
-        icon9 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentSave))
-        self.pushButtonSaveMeasurement.setIcon(icon9)
+        icon10 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentSave))
+        self.pushButtonSaveMeasurement.setIcon(icon10)
 
         self.horizontalLayoutMeasurementsButtons.addWidget(self.pushButtonSaveMeasurement)
 
@@ -561,8 +598,8 @@ class Ui_mainWindow(object):
 
         self.pushButtonNewManufacturer2 = QPushButton(self.groupBoxManufacturer2)
         self.pushButtonNewManufacturer2.setObjectName(u"pushButtonNewManufacturer2")
-        sizePolicy3.setHeightForWidth(self.pushButtonNewManufacturer2.sizePolicy().hasHeightForWidth())
-        self.pushButtonNewManufacturer2.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.pushButtonNewManufacturer2.sizePolicy().hasHeightForWidth())
+        self.pushButtonNewManufacturer2.setSizePolicy(sizePolicy2)
         self.pushButtonNewManufacturer2.setIcon(icon5)
 
         self.horizontalLayoutManufacturer.addWidget(self.pushButtonNewManufacturer2)
@@ -699,9 +736,9 @@ class Ui_mainWindow(object):
         self.horizontalLayoutSpokeButtonsMeasurement.setObjectName(u"horizontalLayoutSpokeButtonsMeasurement")
         self.pushButtonCreateSpoke2 = QPushButton(self.groupBoxSpokeMeasurement)
         self.pushButtonCreateSpoke2.setObjectName(u"pushButtonCreateSpoke2")
-        sizePolicy2.setHeightForWidth(self.pushButtonCreateSpoke2.sizePolicy().hasHeightForWidth())
-        self.pushButtonCreateSpoke2.setSizePolicy(sizePolicy2)
-        self.pushButtonCreateSpoke2.setIcon(icon2)
+        sizePolicy3.setHeightForWidth(self.pushButtonCreateSpoke2.sizePolicy().hasHeightForWidth())
+        self.pushButtonCreateSpoke2.setSizePolicy(sizePolicy3)
+        self.pushButtonCreateSpoke2.setIcon(icon1)
 
         self.horizontalLayoutSpokeButtonsMeasurement.addWidget(self.pushButtonCreateSpoke2)
 
@@ -711,10 +748,10 @@ class Ui_mainWindow(object):
 
         self.pushButtonMeasureSpoke = QPushButton(self.groupBoxSpokeMeasurement)
         self.pushButtonMeasureSpoke.setObjectName(u"pushButtonMeasureSpoke")
-        sizePolicy2.setHeightForWidth(self.pushButtonMeasureSpoke.sizePolicy().hasHeightForWidth())
-        self.pushButtonMeasureSpoke.setSizePolicy(sizePolicy2)
-        icon10 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentProperties))
-        self.pushButtonMeasureSpoke.setIcon(icon10)
+        sizePolicy3.setHeightForWidth(self.pushButtonMeasureSpoke.sizePolicy().hasHeightForWidth())
+        self.pushButtonMeasureSpoke.setSizePolicy(sizePolicy3)
+        icon11 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentProperties))
+        self.pushButtonMeasureSpoke.setIcon(icon11)
 
         self.horizontalLayoutSpokeButtonsMeasurement.addWidget(self.pushButtonMeasureSpoke)
 
@@ -756,8 +793,8 @@ class Ui_mainWindow(object):
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.lineEditSpokeAmountLeft = QLineEdit(self.groupBoxSpokeAmountLeft)
         self.lineEditSpokeAmountLeft.setObjectName(u"lineEditSpokeAmountLeft")
-        sizePolicy2.setHeightForWidth(self.lineEditSpokeAmountLeft.sizePolicy().hasHeightForWidth())
-        self.lineEditSpokeAmountLeft.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.lineEditSpokeAmountLeft.sizePolicy().hasHeightForWidth())
+        self.lineEditSpokeAmountLeft.setSizePolicy(sizePolicy3)
 
         self.verticalLayout.addWidget(self.lineEditSpokeAmountLeft)
 
@@ -770,14 +807,14 @@ class Ui_mainWindow(object):
 
         self.GroupBoxTargetTensionLeft = QGroupBox(self.groupBoxSideLeft)
         self.GroupBoxTargetTensionLeft.setObjectName(u"GroupBoxTargetTensionLeft")
-        sizePolicy2.setHeightForWidth(self.GroupBoxTargetTensionLeft.sizePolicy().hasHeightForWidth())
-        self.GroupBoxTargetTensionLeft.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.GroupBoxTargetTensionLeft.sizePolicy().hasHeightForWidth())
+        self.GroupBoxTargetTensionLeft.setSizePolicy(sizePolicy3)
         self.horizontalLayoutNewtonKgfLeft = QHBoxLayout(self.GroupBoxTargetTensionLeft)
         self.horizontalLayoutNewtonKgfLeft.setObjectName(u"horizontalLayoutNewtonKgfLeft")
         self.lineEditTargetTensionLeft = QLineEdit(self.GroupBoxTargetTensionLeft)
         self.lineEditTargetTensionLeft.setObjectName(u"lineEditTargetTensionLeft")
-        sizePolicy2.setHeightForWidth(self.lineEditTargetTensionLeft.sizePolicy().hasHeightForWidth())
-        self.lineEditTargetTensionLeft.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.lineEditTargetTensionLeft.sizePolicy().hasHeightForWidth())
+        self.lineEditTargetTensionLeft.setSizePolicy(sizePolicy3)
 
         self.horizontalLayoutNewtonKgfLeft.addWidget(self.lineEditTargetTensionLeft)
 
@@ -806,8 +843,8 @@ class Ui_mainWindow(object):
         self.verticalLayoutSelectedTensionValuesLeft = QVBoxLayout(self.groupBoxTensionValuesLeft)
         self.verticalLayoutSelectedTensionValuesLeft.setSpacing(6)
         self.verticalLayoutSelectedTensionValuesLeft.setObjectName(u"verticalLayoutSelectedTensionValuesLeft")
-        self.tableViewTensioningLeft = CustomTableWidget()
-        self.tableViewTensioningLeft.setObjectName(u"tableViewTensionsLeft")
+        self.tableViewTensioningLeft = CustomTableWidget(self.groupBoxTensionValuesLeft)
+        self.tableViewTensioningLeft.setObjectName(u"tableViewTensioningLeft")
 
         self.verticalLayoutSelectedTensionValuesLeft.addWidget(self.tableViewTensioningLeft)
 
@@ -849,14 +886,14 @@ class Ui_mainWindow(object):
 
         self.GroupBoxTargetTensionRight = QGroupBox(self.groupBoxSideRight)
         self.GroupBoxTargetTensionRight.setObjectName(u"GroupBoxTargetTensionRight")
-        sizePolicy2.setHeightForWidth(self.GroupBoxTargetTensionRight.sizePolicy().hasHeightForWidth())
-        self.GroupBoxTargetTensionRight.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.GroupBoxTargetTensionRight.sizePolicy().hasHeightForWidth())
+        self.GroupBoxTargetTensionRight.setSizePolicy(sizePolicy3)
         self.horizontalLayoutNewtonKgfRight = QHBoxLayout(self.GroupBoxTargetTensionRight)
         self.horizontalLayoutNewtonKgfRight.setObjectName(u"horizontalLayoutNewtonKgfRight")
         self.lineEditTargetTensionRight = QLineEdit(self.GroupBoxTargetTensionRight)
         self.lineEditTargetTensionRight.setObjectName(u"lineEditTargetTensionRight")
-        sizePolicy2.setHeightForWidth(self.lineEditTargetTensionRight.sizePolicy().hasHeightForWidth())
-        self.lineEditTargetTensionRight.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.lineEditTargetTensionRight.sizePolicy().hasHeightForWidth())
+        self.lineEditTargetTensionRight.setSizePolicy(sizePolicy3)
 
         self.horizontalLayoutNewtonKgfRight.addWidget(self.lineEditTargetTensionRight)
 
@@ -885,8 +922,8 @@ class Ui_mainWindow(object):
         self.verticalLayoutSelectedTensionValuesRight = QVBoxLayout(self.groupBoxTensionValuesRight)
         self.verticalLayoutSelectedTensionValuesRight.setSpacing(6)
         self.verticalLayoutSelectedTensionValuesRight.setObjectName(u"verticalLayoutSelectedTensionValuesRight")
-        self.tableViewTensioningRight = CustomTableWidget()
-        self.tableViewTensioningRight.setObjectName(u"tableViewTensionsRight")
+        self.tableViewTensioningRight = CustomTableWidget(self.groupBoxTensionValuesRight)
+        self.tableViewTensioningRight.setObjectName(u"tableViewTensioningRight")
 
         self.verticalLayoutSelectedTensionValuesRight.addWidget(self.tableViewTensioningRight)
 
@@ -925,8 +962,8 @@ class Ui_mainWindow(object):
         sizePolicy5.setVerticalStretch(0)
         sizePolicy5.setHeightForWidth(self.pushButtonStartTensioning.sizePolicy().hasHeightForWidth())
         self.pushButtonStartTensioning.setSizePolicy(sizePolicy5)
-        icon11 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoUp))
-        self.pushButtonStartTensioning.setIcon(icon11)
+        icon12 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoUp))
+        self.pushButtonStartTensioning.setIcon(icon12)
 
         self.gridLayoutTensionButtons.addWidget(self.pushButtonStartTensioning, 0, 0, 1, 1)
 
@@ -938,8 +975,8 @@ class Ui_mainWindow(object):
         self.pushButtonSwitchView.setObjectName(u"pushButtonSwitchView")
         sizePolicy5.setHeightForWidth(self.pushButtonSwitchView.sizePolicy().hasHeightForWidth())
         self.pushButtonSwitchView.setSizePolicy(sizePolicy5)
-        icon12 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaylistRepeat))
-        self.pushButtonSwitchView.setIcon(icon12)
+        icon13 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaylistRepeat))
+        self.pushButtonSwitchView.setIcon(icon13)
 
         self.gridLayoutTensionButtons.addWidget(self.pushButtonSwitchView, 0, 5, 1, 1)
 
@@ -947,7 +984,7 @@ class Ui_mainWindow(object):
         self.pushButtonPreviousSpoke.setObjectName(u"pushButtonPreviousSpoke")
         sizePolicy5.setHeightForWidth(self.pushButtonPreviousSpoke.sizePolicy().hasHeightForWidth())
         self.pushButtonPreviousSpoke.setSizePolicy(sizePolicy5)
-        self.pushButtonPreviousSpoke.setIcon(icon)
+        self.pushButtonPreviousSpoke.setIcon(icon3)
 
         self.gridLayoutTensionButtons.addWidget(self.pushButtonPreviousSpoke, 0, 2, 1, 1)
 
@@ -955,7 +992,7 @@ class Ui_mainWindow(object):
         self.pushButtonNextSpoke.setObjectName(u"pushButtonNextSpoke")
         sizePolicy5.setHeightForWidth(self.pushButtonNextSpoke.sizePolicy().hasHeightForWidth())
         self.pushButtonNextSpoke.setSizePolicy(sizePolicy5)
-        self.pushButtonNextSpoke.setIcon(icon1)
+        self.pushButtonNextSpoke.setIcon(icon4)
 
         self.gridLayoutTensionButtons.addWidget(self.pushButtonNextSpoke, 0, 3, 1, 1)
 
@@ -987,15 +1024,15 @@ class Ui_mainWindow(object):
         self.verticalLayoutSetupLeft.setObjectName(u"verticalLayoutSetupLeft")
         self.groupBoxLanguage = QGroupBox(self.setupTab)
         self.groupBoxLanguage.setObjectName(u"groupBoxLanguage")
-        sizePolicy3.setHeightForWidth(self.groupBoxLanguage.sizePolicy().hasHeightForWidth())
-        self.groupBoxLanguage.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.groupBoxLanguage.sizePolicy().hasHeightForWidth())
+        self.groupBoxLanguage.setSizePolicy(sizePolicy2)
         self.groupBoxLanguage.setMinimumSize(QSize(250, 0))
         self.verticalLayoutSetupLaguage = QVBoxLayout(self.groupBoxLanguage)
         self.verticalLayoutSetupLaguage.setObjectName(u"verticalLayoutSetupLaguage")
         self.comboBoxSelectLanguage = QComboBox(self.groupBoxLanguage)
         self.comboBoxSelectLanguage.setObjectName(u"comboBoxSelectLanguage")
-        sizePolicy3.setHeightForWidth(self.comboBoxSelectLanguage.sizePolicy().hasHeightForWidth())
-        self.comboBoxSelectLanguage.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboBoxSelectLanguage.sizePolicy().hasHeightForWidth())
+        self.comboBoxSelectLanguage.setSizePolicy(sizePolicy2)
 
         self.verticalLayoutSetupLaguage.addWidget(self.comboBoxSelectLanguage)
 
@@ -1004,23 +1041,23 @@ class Ui_mainWindow(object):
 
         self.groupBoxSpokeduino = QGroupBox(self.setupTab)
         self.groupBoxSpokeduino.setObjectName(u"groupBoxSpokeduino")
-        sizePolicy3.setHeightForWidth(self.groupBoxSpokeduino.sizePolicy().hasHeightForWidth())
-        self.groupBoxSpokeduino.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.groupBoxSpokeduino.sizePolicy().hasHeightForWidth())
+        self.groupBoxSpokeduino.setSizePolicy(sizePolicy2)
         self.groupBoxSpokeduino.setMinimumSize(QSize(250, 0))
         self.horizontalLayout_2 = QHBoxLayout(self.groupBoxSpokeduino)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.comboBoxSpokeduinoPort = QComboBox(self.groupBoxSpokeduino)
         self.comboBoxSpokeduinoPort.setObjectName(u"comboBoxSpokeduinoPort")
-        sizePolicy3.setHeightForWidth(self.comboBoxSpokeduinoPort.sizePolicy().hasHeightForWidth())
-        self.comboBoxSpokeduinoPort.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboBoxSpokeduinoPort.sizePolicy().hasHeightForWidth())
+        self.comboBoxSpokeduinoPort.setSizePolicy(sizePolicy2)
 
         self.horizontalLayout_2.addWidget(self.comboBoxSpokeduinoPort)
 
         self.checkBoxSpokeduinoEnabled = QCheckBox(self.groupBoxSpokeduino)
         self.checkBoxSpokeduinoEnabled.setObjectName(u"checkBoxSpokeduinoEnabled")
         self.checkBoxSpokeduinoEnabled.setEnabled(True)
-        sizePolicy2.setHeightForWidth(self.checkBoxSpokeduinoEnabled.sizePolicy().hasHeightForWidth())
-        self.checkBoxSpokeduinoEnabled.setSizePolicy(sizePolicy2)
+        sizePolicy3.setHeightForWidth(self.checkBoxSpokeduinoEnabled.sizePolicy().hasHeightForWidth())
+        self.checkBoxSpokeduinoEnabled.setSizePolicy(sizePolicy3)
 
         self.horizontalLayout_2.addWidget(self.checkBoxSpokeduinoEnabled)
 
@@ -1033,8 +1070,8 @@ class Ui_mainWindow(object):
 
         self.groupBoxTensiometer = QGroupBox(self.setupTab)
         self.groupBoxTensiometer.setObjectName(u"groupBoxTensiometer")
-        sizePolicy3.setHeightForWidth(self.groupBoxTensiometer.sizePolicy().hasHeightForWidth())
-        self.groupBoxTensiometer.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.groupBoxTensiometer.sizePolicy().hasHeightForWidth())
+        self.groupBoxTensiometer.setSizePolicy(sizePolicy2)
         self.groupBoxTensiometer.setMinimumSize(QSize(250, 0))
         self.verticalLayoutTensiometer = QVBoxLayout(self.groupBoxTensiometer)
         self.verticalLayoutTensiometer.setObjectName(u"verticalLayoutTensiometer")
@@ -1042,17 +1079,17 @@ class Ui_mainWindow(object):
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
         self.comboBoxTensiometer = QComboBox(self.groupBoxTensiometer)
         self.comboBoxTensiometer.setObjectName(u"comboBoxTensiometer")
-        sizePolicy3.setHeightForWidth(self.comboBoxTensiometer.sizePolicy().hasHeightForWidth())
-        self.comboBoxTensiometer.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.comboBoxTensiometer.sizePolicy().hasHeightForWidth())
+        self.comboBoxTensiometer.setSizePolicy(sizePolicy2)
 
         self.horizontalLayout_3.addWidget(self.comboBoxTensiometer)
 
         self.pushButtonMultipleTensiometers = QPushButton(self.groupBoxTensiometer)
         self.pushButtonMultipleTensiometers.setObjectName(u"pushButtonMultipleTensiometers")
-        sizePolicy2.setHeightForWidth(self.pushButtonMultipleTensiometers.sizePolicy().hasHeightForWidth())
-        self.pushButtonMultipleTensiometers.setSizePolicy(sizePolicy2)
-        icon13 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditSelectAll))
-        self.pushButtonMultipleTensiometers.setIcon(icon13)
+        sizePolicy3.setHeightForWidth(self.pushButtonMultipleTensiometers.sizePolicy().hasHeightForWidth())
+        self.pushButtonMultipleTensiometers.setSizePolicy(sizePolicy3)
+        icon14 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditSelectAll))
+        self.pushButtonMultipleTensiometers.setIcon(icon14)
 
         self.horizontalLayout_3.addWidget(self.pushButtonMultipleTensiometers)
 
@@ -1063,26 +1100,33 @@ class Ui_mainWindow(object):
         self.horizontalLayoutNewTensiometer.setObjectName(u"horizontalLayoutNewTensiometer")
         self.groupBoxtNewTensiometer = QGroupBox(self.groupBoxTensiometer)
         self.groupBoxtNewTensiometer.setObjectName(u"groupBoxtNewTensiometer")
-        sizePolicy3.setHeightForWidth(self.groupBoxtNewTensiometer.sizePolicy().hasHeightForWidth())
-        self.groupBoxtNewTensiometer.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.groupBoxtNewTensiometer.sizePolicy().hasHeightForWidth())
+        self.groupBoxtNewTensiometer.setSizePolicy(sizePolicy2)
         self.groupBoxtNewTensiometer.setMinimumSize(QSize(250, 0))
         self.verticalLayoutNewTensiometer = QVBoxLayout(self.groupBoxtNewTensiometer)
         self.verticalLayoutNewTensiometer.setObjectName(u"verticalLayoutNewTensiometer")
         self.lineEditNewTensiometer = QLineEdit(self.groupBoxtNewTensiometer)
         self.lineEditNewTensiometer.setObjectName(u"lineEditNewTensiometer")
-        sizePolicy3.setHeightForWidth(self.lineEditNewTensiometer.sizePolicy().hasHeightForWidth())
-        self.lineEditNewTensiometer.setSizePolicy(sizePolicy3)
+        sizePolicy6 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
+        sizePolicy6.setHorizontalStretch(0)
+        sizePolicy6.setVerticalStretch(0)
+        sizePolicy6.setHeightForWidth(self.lineEditNewTensiometer.sizePolicy().hasHeightForWidth())
+        self.lineEditNewTensiometer.setSizePolicy(sizePolicy6)
 
         self.verticalLayoutNewTensiometer.addWidget(self.lineEditNewTensiometer)
 
 
         self.horizontalLayoutNewTensiometer.addWidget(self.groupBoxtNewTensiometer)
 
+        self.horizontalSpacer_5 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayoutNewTensiometer.addItem(self.horizontalSpacer_5)
+
         self.pushButtonNewTensiometer = QPushButton(self.groupBoxTensiometer)
         self.pushButtonNewTensiometer.setObjectName(u"pushButtonNewTensiometer")
-        sizePolicy2.setHeightForWidth(self.pushButtonNewTensiometer.sizePolicy().hasHeightForWidth())
-        self.pushButtonNewTensiometer.setSizePolicy(sizePolicy2)
-        self.pushButtonNewTensiometer.setIcon(icon2)
+        sizePolicy3.setHeightForWidth(self.pushButtonNewTensiometer.sizePolicy().hasHeightForWidth())
+        self.pushButtonNewTensiometer.setSizePolicy(sizePolicy3)
+        self.pushButtonNewTensiometer.setIcon(icon1)
 
         self.horizontalLayoutNewTensiometer.addWidget(self.pushButtonNewTensiometer)
 
@@ -1098,10 +1142,13 @@ class Ui_mainWindow(object):
 
         self.verticalLayoutSetupLeft.setStretch(0, 1)
         self.verticalLayoutSetupLeft.setStretch(1, 1)
-        self.verticalLayoutSetupLeft.setStretch(3, 1)
         self.verticalLayoutSetupLeft.setStretch(4, 1)
 
         self.horizontalLayoutSetupLeft.addLayout(self.verticalLayoutSetupLeft)
+
+        self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayoutSetupLeft.addItem(self.horizontalSpacer_2)
 
         self.verticalLayoutDirectionsConverter = QVBoxLayout()
         self.verticalLayoutDirectionsConverter.setObjectName(u"verticalLayoutDirectionsConverter")
@@ -1180,25 +1227,71 @@ class Ui_mainWindow(object):
 
         self.verticalLayoutDirectionsConverter.addItem(self.verticalSpacerUnit)
 
-        self.groupBoxUnitSetup = QGroupBox(self.setupTab)
+
+        self.horizontalLayoutSetupLeft.addLayout(self.verticalLayoutDirectionsConverter)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayoutSetupLeft.addItem(self.horizontalSpacer_3)
+
+        self.groupBoxDirectionsSetup_2 = QGroupBox(self.setupTab)
+        self.groupBoxDirectionsSetup_2.setObjectName(u"groupBoxDirectionsSetup_2")
+        sizePolicy1.setHeightForWidth(self.groupBoxDirectionsSetup_2.sizePolicy().hasHeightForWidth())
+        self.groupBoxDirectionsSetup_2.setSizePolicy(sizePolicy1)
+        self.verticalLayoutMeasurementDirection_2 = QVBoxLayout(self.groupBoxDirectionsSetup_2)
+        self.verticalLayoutMeasurementDirection_2.setObjectName(u"verticalLayoutMeasurementDirection_2")
+        self.groupBoxSpokeMeasurementType = QGroupBox(self.groupBoxDirectionsSetup_2)
+        self.groupBoxSpokeMeasurementType.setObjectName(u"groupBoxSpokeMeasurementType")
+        self.verticalLayoutMeasurementType = QVBoxLayout(self.groupBoxSpokeMeasurementType)
+        self.verticalLayoutMeasurementType.setObjectName(u"verticalLayoutMeasurementType")
+        self.radioButtonMeasurementDefault = QRadioButton(self.groupBoxSpokeMeasurementType)
+        self.radioButtonMeasurementDefault.setObjectName(u"radioButtonMeasurementDefault")
+        self.radioButtonMeasurementDefault.setChecked(True)
+
+        self.verticalLayoutMeasurementType.addWidget(self.radioButtonMeasurementDefault)
+
+        self.radioButtonMeasurementCustom = QRadioButton(self.groupBoxSpokeMeasurementType)
+        self.radioButtonMeasurementCustom.setObjectName(u"radioButtonMeasurementCustom")
+
+        self.verticalLayoutMeasurementType.addWidget(self.radioButtonMeasurementCustom)
+
+
+        self.verticalLayoutMeasurementDirection_2.addWidget(self.groupBoxSpokeMeasurementType)
+
+        self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.verticalLayoutMeasurementDirection_2.addItem(self.verticalSpacer)
+
+
+        self.horizontalLayoutSetupLeft.addWidget(self.groupBoxDirectionsSetup_2)
+
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayoutSetupLeft.addItem(self.horizontalSpacer_4)
+
+        self.groupBoxUnits = QGroupBox(self.setupTab)
+        self.groupBoxUnits.setObjectName(u"groupBoxUnits")
+        self.verticalLayoutUnits = QVBoxLayout(self.groupBoxUnits)
+        self.verticalLayoutUnits.setObjectName(u"verticalLayoutUnits")
+        self.groupBoxUnitSetup = QGroupBox(self.groupBoxUnits)
         self.groupBoxUnitSetup.setObjectName(u"groupBoxUnitSetup")
-        sizePolicy3.setHeightForWidth(self.groupBoxUnitSetup.sizePolicy().hasHeightForWidth())
-        self.groupBoxUnitSetup.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.groupBoxUnitSetup.sizePolicy().hasHeightForWidth())
+        self.groupBoxUnitSetup.setSizePolicy(sizePolicy2)
         self.groupBoxUnitSetup.setMinimumSize(QSize(250, 0))
         self.verticalLayoutButtonNewton = QVBoxLayout(self.groupBoxUnitSetup)
         self.verticalLayoutButtonNewton.setObjectName(u"verticalLayoutButtonNewton")
         self.radioButtonNewton = QRadioButton(self.groupBoxUnitSetup)
         self.radioButtonNewton.setObjectName(u"radioButtonNewton")
-        sizePolicy3.setHeightForWidth(self.radioButtonNewton.sizePolicy().hasHeightForWidth())
-        self.radioButtonNewton.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.radioButtonNewton.sizePolicy().hasHeightForWidth())
+        self.radioButtonNewton.setSizePolicy(sizePolicy2)
         self.radioButtonNewton.setChecked(True)
 
         self.verticalLayoutButtonNewton.addWidget(self.radioButtonNewton)
 
         self.radioButtonKgF = QRadioButton(self.groupBoxUnitSetup)
         self.radioButtonKgF.setObjectName(u"radioButtonKgF")
-        sizePolicy3.setHeightForWidth(self.radioButtonKgF.sizePolicy().hasHeightForWidth())
-        self.radioButtonKgF.setSizePolicy(sizePolicy3)
+        sizePolicy2.setHeightForWidth(self.radioButtonKgF.sizePolicy().hasHeightForWidth())
+        self.radioButtonKgF.setSizePolicy(sizePolicy2)
 
         self.verticalLayoutButtonNewton.addWidget(self.radioButtonKgF)
 
@@ -1210,13 +1303,9 @@ class Ui_mainWindow(object):
         self.verticalLayoutButtonNewton.addWidget(self.radioButtonLbF)
 
 
-        self.verticalLayoutDirectionsConverter.addWidget(self.groupBoxUnitSetup)
+        self.verticalLayoutUnits.addWidget(self.groupBoxUnitSetup)
 
-        self.verticalSpacerDirectionsConverter = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-
-        self.verticalLayoutDirectionsConverter.addItem(self.verticalSpacerDirectionsConverter)
-
-        self.groupBoxUnitConverter = QGroupBox(self.setupTab)
+        self.groupBoxUnitConverter = QGroupBox(self.groupBoxUnits)
         self.groupBoxUnitConverter.setObjectName(u"groupBoxUnitConverter")
         self.verticalLayoutUnitCoverter = QVBoxLayout(self.groupBoxUnitConverter)
         self.verticalLayoutUnitCoverter.setObjectName(u"verticalLayoutUnitCoverter")
@@ -1272,14 +1361,14 @@ class Ui_mainWindow(object):
         self.verticalLayoutUnitCoverter.addWidget(self.groupBoxTensionConverterLbF)
 
 
-        self.verticalLayoutDirectionsConverter.addWidget(self.groupBoxUnitConverter)
+        self.verticalLayoutUnits.addWidget(self.groupBoxUnitConverter)
 
-        self.verticalSpacerDirectionsConverterReserved = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.verticalLayoutDirectionsConverter.addItem(self.verticalSpacerDirectionsConverterReserved)
+        self.verticalLayoutUnits.addItem(self.verticalSpacer_2)
 
 
-        self.horizontalLayoutSetupLeft.addLayout(self.verticalLayoutDirectionsConverter)
+        self.horizontalLayoutSetupLeft.addWidget(self.groupBoxUnits)
 
         self.horizontalSpacerReserved = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -1323,11 +1412,11 @@ class Ui_mainWindow(object):
         self.actionBuild_a_wheel.setText(QCoreApplication.translate("mainWindow", u"Build a wheel", None))
         self.groupBoxListSpokesDatabase.setTitle(QCoreApplication.translate("mainWindow", u"Spokes", None))
         self.groupBoxListMeasurementsDatabase.setTitle(QCoreApplication.translate("mainWindow", u"Measurements", None))
-        self.pushButtonUseLeft.setText(QCoreApplication.translate("mainWindow", u"Use on the left", None))
-        self.pushButtonUseRight.setText(QCoreApplication.translate("mainWindow", u"Use on the right", None))
+        self.pushButtonEditMeasurement.setText(QCoreApplication.translate("mainWindow", u"Edit measurement", None))
         self.pushButtonAddMeasurement.setText(QCoreApplication.translate("mainWindow", u"Add measurement", None))
         self.pushButtonDeleteMeasurement.setText(QCoreApplication.translate("mainWindow", u"Delete measurement", None))
-        self.pushButtonDeleteSpoke.setText(QCoreApplication.translate("mainWindow", u"Delete spoke", None))
+        self.pushButtonUseLeft.setText(QCoreApplication.translate("mainWindow", u"Use on the left", None))
+        self.pushButtonUseRight.setText(QCoreApplication.translate("mainWindow", u"Use on the right", None))
         self.groupBoxSpokeDatabase.setTitle(QCoreApplication.translate("mainWindow", u"Select or create a spoke", None))
         self.groupBoxManufacturer.setTitle(QCoreApplication.translate("mainWindow", u"Manufacturer", None))
         self.groupBoxNewManufacturer.setTitle(QCoreApplication.translate("mainWindow", u"New manufacturer", None))
@@ -1342,6 +1431,7 @@ class Ui_mainWindow(object):
         self.pushButtonCreateSpoke.setText(QCoreApplication.translate("mainWindow", u"Create", None))
         self.pushButtonEditSpoke.setText(QCoreApplication.translate("mainWindow", u"Edit", None))
         self.pushButtonClearSpoke.setText(QCoreApplication.translate("mainWindow", u"Clear", None))
+        self.pushButtonDeleteSpoke.setText(QCoreApplication.translate("mainWindow", u"Delete", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.databaseTab), QCoreApplication.translate("mainWindow", u"Browse the spoke database", None))
         self.groupBoxMeasurement.setTitle(QCoreApplication.translate("mainWindow", u"Measurement", None))
         self.groupBoxFormula.setTitle(QCoreApplication.translate("mainWindow", u"Formula", None))
@@ -1398,6 +1488,11 @@ class Ui_mainWindow(object):
         self.radioButtonLeftRight.setText(QCoreApplication.translate("mainWindow", u"Left-Right", None))
         self.radioButtonSideBySide.setText(QCoreApplication.translate("mainWindow", u"Side by side", None))
         self.radioButtonRightLeft.setText(QCoreApplication.translate("mainWindow", u"Right-Left", None))
+        self.groupBoxDirectionsSetup_2.setTitle(QCoreApplication.translate("mainWindow", u"Directions", None))
+        self.groupBoxSpokeMeasurementType.setTitle(QCoreApplication.translate("mainWindow", u"Measurement type", None))
+        self.radioButtonMeasurementDefault.setText(QCoreApplication.translate("mainWindow", u"Default values", None))
+        self.radioButtonMeasurementCustom.setText(QCoreApplication.translate("mainWindow", u"Custom values", None))
+        self.groupBoxUnits.setTitle(QCoreApplication.translate("mainWindow", u"Units", None))
         self.groupBoxUnitSetup.setTitle(QCoreApplication.translate("mainWindow", u"Unit", None))
         self.radioButtonNewton.setText(QCoreApplication.translate("mainWindow", u"Newton", None))
         self.radioButtonKgF.setText(QCoreApplication.translate("mainWindow", u"kgF", None))
