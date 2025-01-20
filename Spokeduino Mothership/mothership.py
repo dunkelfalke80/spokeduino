@@ -8,11 +8,10 @@ from PySide6.QtCore import QModelIndex
 from PySide6.QtCore import QTimer
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtGui import QStandardItem
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QTableWidget
 from PySide6.QtWidgets import QLineEdit
 from PySide6.QtWidgets import QLayout
 from PySide6.QtWidgets import QGroupBox
-from PySide6.QtWidgets import QTableView
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QTableWidgetItem
@@ -68,21 +67,22 @@ class Spokeduino(QMainWindow):
             ui=self.ui,
             current_path=self.current_path,
             db=self.db)
+        self.messagebox = Messagebox(self)
+        self.measurement_module = MeasurementModule(
+            main_window=self,
+            ui=self.ui,
+            messagebox=self.messagebox)
+        self.spokeduino_module = SpokeduinoModule(
+            ui=self.ui,
+            db=self.db,
+            setup_module=self.setup_module,
+            messagebox=self.messagebox)
         self.spoke_module = SpokeModule(
             main_window=self,
             ui=self.ui,
             unit_converter=self.unit_converter,
             db=self.db,
             current_path=self.current_path)
-        self.measurement_module = MeasurementModule(
-            main_window=self,
-            ui=self.ui)
-        self.messagebox = Messagebox(self)
-        self.spokeduino_module = SpokeduinoModule(
-            ui=self.ui,
-            db=self.db,
-            setup_module=self.setup_module,
-            messagebox=self.messagebox)
 
         # Replace the tableWidgetMeasurements with the custom widget
         custom_table = CustomTableWidget(parent=self)
@@ -263,7 +263,7 @@ class Spokeduino(QMainWindow):
 
         # Tensiometer-related signals
         self.ui.comboBoxTensiometer.currentIndexChanged.connect(
-            self.spoke_module.load_spoke_measurements)
+           lambda: self.spoke_module.load_spoke_measurements(None, None))
         self.ui.lineEditNewTensiometer.textChanged.connect(
             self.toggle_new_tensiometer_button)
         self.ui.pushButtonNewTensiometer.clicked.connect(
@@ -279,7 +279,7 @@ class Spokeduino(QMainWindow):
         self.ui.pushButtonAddMeasurement.clicked.connect(
             lambda: self.ui.tabWidget.setCurrentIndex(
                 self.ui.tabWidget.indexOf(self.ui.measurementTab)))
-        self.ui.tableViewMeasurements.clicked.connect(
+        self.ui.tableWidgetMeasurementList.clicked.connect(
             self.select_measurement_row)
         self.ui.tableWidgetMeasurements.itemChanged.connect(
             self.measurement_module.update_measurement_button_states)
@@ -468,46 +468,52 @@ class Spokeduino(QMainWindow):
     def delete_measurement(self) -> None:
         """
         Delete the currently selected measurement from the measurements table.
-        Deletes only if there is one measurement or a measurement row is selected.
+        Deletes only if a valid measurement row is selected or if there's only one measurement.
         """
-        view: QTableView = self.ui.tableViewMeasurements
-        model: SpokeTableModel = cast(SpokeTableModel, view.model())
+        view: QTableWidget = self.ui.tableWidgetMeasurementList
 
-        if model is None or model.rowCount() == 0:
-            self.messagebox.err("No measurements available to delete.")
+        # No measurements in the table
+        if view.rowCount() < 1:
+            self.messagebox.info("No measurements to delete.")
             return
 
-        # If there is only one measurement, delete it directly
-        if model.rowCount() == 1:
-            # Use the first row's ID
-            measurement_id: int | None = model.get_id(0)
-            if measurement_id is None:
-                self.messagebox.err("No measurement found.")
-                return
-            measurement_id = int(measurement_id)
-        else:
-            # If a measurement row is selected, delete the selected measurement
-            selected_index: QModelIndex = view.currentIndex()
-            if not selected_index.isValid():
-                self.messagebox.err("No measurement row selected for deletion.")
-                return
+        # Determine the row to delete
+        selected_row: int = view.currentRow()
+        if view.rowCount() > 1 and selected_row < 0:
+            self.messagebox.err("No measurement row selected.")
+            return
 
-            # Use the selected row's ID
-            measurement_id = model.get_id(selected_index.row())
-            if measurement_id is None:
-                self.messagebox.err("No measurement found.")
-                return
-            measurement_id = int(measurement_id)
+        # Default to the only row if none are explicitly selected
+        if selected_row < 0:
+            selected_row = 0
+
+        # Get the ID of the measurement to delete
+        id_item: QTableWidgetItem | None = view.item(selected_row, 0)
+        if id_item is None:
+            self.messagebox.err("Unable to retrieve measurement ID.")
+            return
+
+        measurement_id = id_item.data(Qt.ItemDataRole.UserRole)
+        if measurement_id is None:
+            self.messagebox.err("Invalid measurement ID.")
+            return
+        measurement_id = int(measurement_id)
 
         # Execute the deletion query
-        self.db.execute_query(
-            query=SQLQueries.DELETE_MEASUREMENT,
-            params=(measurement_id,),
-        )
+        try:
+            self.db.execute_query(
+                query=SQLQueries.DELETE_MEASUREMENT,
+                params=(measurement_id,)
+            )
+        except Exception as e:
+            self.messagebox.err(f"Failed to delete measurement: {str(e)}")
+            return
 
-        # Clear selection and reload the measurements
+        # Clear selection, update the table, and inform the user
         view.clearSelection()
         self.spoke_module.load_spoke_measurements(None, None)
+        self.messagebox.info("Measurement deleted.")
+
 
     def select_measurement_row(self, index: QModelIndex) -> None:
         """
@@ -518,7 +524,7 @@ class Spokeduino(QMainWindow):
             return
 
         row: int = index.row()
-        self.ui.tableViewMeasurements.selectRow(row)
+        self.ui.tableWidgetMeasurementList.selectRow(row)
 
     def toggle_new_tensiometer_button(self) -> None:
         """
@@ -716,14 +722,8 @@ class Spokeduino(QMainWindow):
             return
 
         # Determine which measurement to use
-        selected_index: QModelIndex = self.ui.tableViewMeasurements.currentIndex()
-        selected_row: int = 0
-        if selected_index.isValid():
-            # Use the selected measurement
-            selected_row: int = selected_index.row()
+        selected_measurement: int | None = self.measurement_module.get_selected_measurement_id()
 
-        relevant_measurements: list[float] = measurements[selected_row][2:]
-        tensions: list[int] = list(range(300, 1700, 100))  # 300 N to 1600 N
         # formula: str = PiecewiseQuarticFit.generate_model(list(zip( tensions, relevant_measurements)))
         # Extract and format spoke details
         _, name, _, gauge, _, dimensions, comment, *_ = spoke[0]
@@ -925,7 +925,7 @@ class Spokeduino(QMainWindow):
                 return
 
         # Notify the user
-        self.messagebox.ok("Measurements saved successfully")
+        self.messagebox.info("Measurements saved successfully")
         for row in range(table.rowCount()):
             for col in range(table.columnCount()):
                 item: QTableWidgetItem | None = table.item(row, col)

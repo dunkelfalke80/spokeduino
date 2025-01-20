@@ -1,12 +1,14 @@
 import logging
 from typing import Any, LiteralString, cast
+from PySide6.QtCore import Qt
 from PySide6.QtCore import QTranslator
 from PySide6.QtWidgets import QAbstractItemView
 from PySide6.QtWidgets import QComboBox
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtCore import QModelIndex
-from PySide6.QtWidgets import QTableView
+from PySide6.QtWidgets import QTableWidget
+from PySide6.QtWidgets import QTableWidgetItem
 from database_module import DatabaseModule
 from sql_queries import SQLQueries
 from helpers import SpokeTableModel
@@ -216,9 +218,7 @@ class SpokeModule:
         self.current_spokes: list[tuple[Any, list[Any]]] = [
             (spoke[0], list(spoke[1:]))
             for spoke in spokes]
-        model = SpokeTableModel(self.current_spokes, self._spoke_headers)
-        view: QTableView = self.ui.tableViewSpokesDatabase
-        view.setModel(model)
+        view: QTableWidget = self.ui.tableViewSpokesDatabase
 
         # Populate comboBoxSpoke
         self.ui.comboBoxSpoke.clear()
@@ -280,11 +280,11 @@ class SpokeModule:
         Select the corresponding spoke in comboBoxSpoke
         when a table row is clicked.
         """
-        row = index.row()
+        row: int = index.row()
         model: SpokeTableModel = cast(
             SpokeTableModel,
             self.ui.tableViewSpokesDatabase.model())
-        spoke_id = model.get_id(row)
+        spoke_id: int | None = model.get_id(row)
 
         if spoke_id is not None:
             combo_index = self.ui.comboBoxSpoke.findData(spoke_id)
@@ -467,6 +467,7 @@ class SpokeModule:
         and subsequent columns displaying
         tension:deflection pairs with unit conversion.
         """
+
         list_only: bool = False
         if spoke_id is None:
             res, spoke_id = self.get_selected_spoke_id()
@@ -476,14 +477,12 @@ class SpokeModule:
 
         if tensiometer_id is None:
             tensiometer_id = self.ui.comboBoxTensiometer.currentData()
-        view: QTableView = self.ui.tableViewMeasurements
+        view: QTableWidget = self.ui.tableWidgetMeasurements
 
         if not res or tensiometer_id is None:
-            view.setModel(None)
+            view.clear()
             return None
         tensiometer_id = int(tensiometer_id)
-
-        print(f"Spoke id {spoke_id}, tensio id {tensiometer_id}")
 
         # Fetch measurement sets
         measurement_sets: list[Any] = self.db.execute_select(
@@ -492,19 +491,20 @@ class SpokeModule:
         )
 
         if not measurement_sets:
-            view.setModel(None)
+            view.clear()
             return None
 
         # Fetch all measurements linked to the retrieved measurement sets
         set_ids: list[Any] = [ms[0] for ms in measurement_sets]
         query_string: str = f"{SQLQueries.GET_MEASUREMENTS} " \
-            f"({', '.join('?' for _ in set_ids)})"
+            f"({', '.join('?' for _ in set_ids)}) ORDER BY tension ASC"
         measurements: list[Any] = self.db.execute_select(
             query=query_string,
             params=set_ids  # Pass the list directly
         )
+
         if not measurements:
-            view.setModel(None)
+            view.clear()
             return None
 
         if list_only:
@@ -513,42 +513,48 @@ class SpokeModule:
         # Prepare rows for the table
         unit: UnitEnum = self.unit_converter.get_unit()
 
-        # Map set_id to its info
-        set_info: dict[Any, Any] = {ms[0]: ms[1:] for ms in measurement_sets}
+        # Prepare set information and initialize the data structure
+        set_info: dict[Any, Any] = {ms[0]: ms[1:] for ms in measurement_sets}  # {set_id: (comment, timestamp)}
         data: list[tuple[Any, list[str]]] = []
 
-        # Organize measurements by set and build rows
+        # Organize measurements by set and sort by tension
         grouped_measurements = {}
         for set_id, tension, deflection in measurements:
             if set_id not in grouped_measurements:
                 grouped_measurements[set_id] = []
+            # Convert the tension to the selected unit
             converted_tensions = self.unit_converter.convert_units(
-                value=tension, source=UnitEnum.NEWTON)
+                value=tension, source=UnitEnum.NEWTON
+            )
             tension_converted = {
-                UnitEnum.NEWTON: f"{converted_tensions[0]:.2f} N",
-                UnitEnum.KGF: f"{converted_tensions[1]:.2f} kgF",
-                UnitEnum.LBF: f"{converted_tensions[2]:.2f} lbF"
+                UnitEnum.NEWTON: f"{converted_tensions[0]:.0f}N",
+                UnitEnum.KGF: f"{converted_tensions[1]:.1f}kgF",
+                UnitEnum.LBF: f"{converted_tensions[2]:.1f}lbF"
             }[unit]
-            grouped_measurements[set_id].append(f"{tension_converted}: {deflection:.2f} mm")
+            # Add the tension-deflection pair to the set's measurements
+            grouped_measurements[set_id].append((tension, f"{tension_converted}: {deflection:.2f}mm"))
 
+        # Build rows for each set, with measurements sorted by tension
         for set_id, measurements_list in grouped_measurements.items():
             comment, ts = set_info[set_id]
-            timestamp = ts.split(":")[0]  # Keep only up to minutes
-            data.append((comment, [timestamp] + measurements_list))
+            timestamp = ts.rsplit(":", 1)[0]  # Trunc to minutes
+            # Create the row: [comment, timestamp, sorted measurements]
+            row = (comment, [timestamp] + [m[1] for m in measurements_list])
+            data.append(row)
 
-        # Headers
-        headers: list[str] = ["Comment", "Timestamp"] + [f"Measurement {i+1}" for i in range(len(data[0][1]) - 2)]
+        view.setRowCount(len(data))  # Set the number of rows
 
-        # Create and set the model
-        model = SpokeTableModel(data, headers)
-        view.setModel(model)
-
-        view.horizontalHeader().setHighlightSections(True)
+        # Fill the table
+        for row_idx, (row_id, row_data) in enumerate(data):
+            for col_idx, cell_data in enumerate(row_data):
+                item = QTableWidgetItem(cell_data)
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Make it read-only
+                if col_idx == 0:  # Store the ID in the first visible column
+                    item.setData(Qt.ItemDataRole.UserRole, row_id)
+                view.setItem(row_idx, col_idx, item)
         resize_mode = view.horizontalHeader().setSectionResizeMode
         resize_mode(self.__rm_shrink)
-        resize_mode(0, self.__rm_stretch)  # Comment
         return None
-
 
     def sync_spoke_selection(self, sender: QComboBox) -> None:
         """

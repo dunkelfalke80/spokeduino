@@ -53,11 +53,14 @@ class SQLQueries:
                 FROM
                     measurement_sets
                 WHERE
-                    spoke_id = ? AND tensiometer_id = ?"""
+                    spoke_id = ? AND tensiometer_id = ?
+                ORDER BY
+                    id
+                ASC"""
 
     GET_MEASUREMENTS: str = """
                 SELECT
-                    tension, deflection
+                    set_id, tension, deflection
                 FROM
                     measurements
                 WHERE

@@ -1,16 +1,23 @@
 from typing import Any
-from PySide6.QtWidgets import QMainWindow, QTableWidgetItem
+from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QMainWindow
+from PySide6.QtWidgets import QTableWidget
+from PySide6.QtWidgets import QTableWidgetItem
 from setup_module import SetupModule
+from helpers import Messagebox
 from customtablewidget import CustomTableWidget
 
 class MeasurementModule:
 
     def __init__(self,
                  main_window: QMainWindow,
-                 ui: Any) -> None:
+                 ui: Any,
+                 messagebox: Messagebox
+                 ) -> None:
         self.ui = ui
         self.main_window: QMainWindow = main_window
         self.setup_module = SetupModule
+        self.messagebox: Messagebox = messagebox
 
     def toggle_calculate_button(self) -> None:
         """
@@ -49,3 +56,32 @@ class MeasurementModule:
         else:
             self.ui.pushButtonCalculateFormula.setEnabled(False)
             self.ui.pushButtonSaveMeasurement.setEnabled(False)
+
+    def get_selected_measurement_id(self) -> int | None:
+        # No measurements in the table
+        view: QTableWidget = self.ui.tableWidgetMeasurementList
+        if view.rowCount() < 1:
+            self.messagebox.info("No measurements to delete.")
+            return None
+
+        # Determine the row to delete
+        selected_row: int = view.currentRow()
+        if view.rowCount() > 1 and selected_row < 0:
+            self.messagebox.err("No measurement row selected.")
+            return  None
+
+        # Default to the only row if none are explicitly selected
+        if selected_row < 0:
+            selected_row = 0
+
+        # Get the ID of the measurement to delete
+        id_item: QTableWidgetItem | None = view.item(selected_row, 0)
+        if id_item is None:
+            self.messagebox.err("Unable to retrieve measurement ID.")
+            return  None
+
+        measurement_id = id_item.data(Qt.ItemDataRole.UserRole)
+        if measurement_id is None:
+            self.messagebox.err("Invalid measurement ID.")
+            return  None
+        return int(measurement_id)

@@ -55,7 +55,7 @@ class Messagebox:
     def __init__(self, main_window: QMainWindow) -> None:
         self.main_window = main_window
 
-    def ok(self, text: str) -> None:
+    def info(self, text: str) -> None:
         QMessageBox.information(self.main_window, "Info", text)
 
     def err(self, text: str) -> None:
