@@ -33,7 +33,7 @@
        <bool>true</bool>
       </property>
       <property name="currentIndex">
-       <number>3</number>
+       <number>0</number>
       </property>
       <widget class="QWidget" name="databaseTab">
        <attribute name="title">
@@ -43,7 +43,7 @@
         <item>
          <layout class="QHBoxLayout" name="horizontalLayoutDatabase" stretch="2,0,1">
           <item>
-           <layout class="QVBoxLayout" name="verticalLayoutDatabaseLeft" stretch="3,2">
+           <layout class="QVBoxLayout" name="verticalLayoutDatabaseLeft" stretch="3,0">
             <item>
              <widget class="QGroupBox" name="groupBoxListSpokesDatabase">
               <property name="title">
@@ -115,115 +115,144 @@
               <property name="title">
                <string>Measurements</string>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayoutMeasurementsDatabase" stretch="1,0">
+              <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,0">
                <item>
-                <layout class="QVBoxLayout" name="verticalLayoutMeasurements">
+                <layout class="QVBoxLayout" name="verticalLayout_4">
                  <item>
-                  <widget class="QTableView" name="tableViewMeasurements">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                  </widget>
+                  <layout class="QHBoxLayout" name="horizontalLayoutSpokeDefinitionsDatabase_4" stretch="0">
+                   <item>
+                    <widget class="QTableWidget" name="tableWidgetMeasurementList">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <layout class="QVBoxLayout" name="verticalLayout_6">
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayoutSpokeDefinitionsDatabase_6" stretch="0,0,0">
+                     <item>
+                      <widget class="QPushButton" name="pushButtonUseLeft">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="text">
+                        <string>Use on the left</string>
+                       </property>
+                       <property name="icon">
+                        <iconset theme="QIcon::ThemeIcon::GoPrevious"/>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pushButtonUseRight">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="text">
+                        <string>Use on the right</string>
+                       </property>
+                       <property name="icon">
+                        <iconset theme="QIcon::ThemeIcon::GoNext"/>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacerTypeDatabase_6">
+                       <property name="orientation">
+                        <enum>Qt::Orientation::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
                  </item>
                 </layout>
                </item>
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayoutMeasurementsButtonsDatabase">
+                <layout class="QVBoxLayout" name="verticalLayout_7">
                  <item>
-                  <widget class="QPushButton" name="pushButtonUseLeft">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string>Use on the left</string>
-                   </property>
-                   <property name="icon">
-                    <iconset theme="QIcon::ThemeIcon::GoPrevious"/>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="pushButtonUseRight">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string>Use on the right</string>
-                   </property>
-                   <property name="icon">
-                    <iconset theme="QIcon::ThemeIcon::GoNext"/>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <spacer name="horizontalSpacerMeasurementsBottom">
-                   <property name="orientation">
-                    <enum>Qt::Orientation::Horizontal</enum>
-                   </property>
-                   <property name="sizeHint" stdset="0">
-                    <size>
-                     <width>40</width>
-                     <height>20</height>
-                    </size>
-                   </property>
-                  </spacer>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="pushButtonAddMeasurement">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string>Add measurement</string>
-                   </property>
-                   <property name="icon">
-                    <iconset theme="QIcon::ThemeIcon::ListAdd"/>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="pushButtonDeleteMeasurement">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string>Delete measurement</string>
-                   </property>
-                   <property name="icon">
-                    <iconset theme="QIcon::ThemeIcon::ListRemove"/>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="pushButtonDeleteSpoke">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                   <property name="text">
-                    <string>Delete spoke</string>
-                   </property>
-                   <property name="icon">
-                    <iconset theme="QIcon::ThemeIcon::EditDelete"/>
-                   </property>
-                  </widget>
+                  <layout class="QVBoxLayout" name="verticalLayout_8" stretch="0,0,0,0">
+                   <item>
+                    <widget class="QPushButton" name="pushButtonEditMeasurement">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Edit measurement</string>
+                     </property>
+                     <property name="icon">
+                      <iconset theme="QIcon::ThemeIcon::EditPaste"/>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="pushButtonAddMeasurement">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Add measurement</string>
+                     </property>
+                     <property name="icon">
+                      <iconset theme="QIcon::ThemeIcon::ListAdd"/>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QPushButton" name="pushButtonDeleteMeasurement">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string>Delete measurement</string>
+                     </property>
+                     <property name="icon">
+                      <iconset theme="QIcon::ThemeIcon::ListRemove"/>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <spacer name="verticalSpacer_3">
+                     <property name="orientation">
+                      <enum>Qt::Orientation::Vertical</enum>
+                     </property>
+                     <property name="sizeHint" stdset="0">
+                      <size>
+                       <width>20</width>
+                       <height>40</height>
+                      </size>
+                     </property>
+                    </spacer>
+                   </item>
+                  </layout>
                  </item>
                 </layout>
                </item>
@@ -607,6 +636,22 @@
                  </property>
                  <property name="icon">
                   <iconset theme="QIcon::ThemeIcon::EditUndo"/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="pushButtonDeleteSpoke">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                 <property name="text">
+                  <string>Delete</string>
+                 </property>
+                 <property name="icon">
+                  <iconset theme="QIcon::ThemeIcon::EditDelete"/>
                  </property>
                 </widget>
                </item>
@@ -1210,7 +1255,7 @@
                  <number>6</number>
                 </property>
                 <item>
-                 <widget class="CustomTableWidget" name="tableViewTensionsLeft"/>
+                 <widget class="CustomTableWidget" name="tableViewTensioningLeft"/>
                 </item>
                </layout>
               </widget>
@@ -1334,7 +1379,7 @@
                  <number>6</number>
                 </property>
                 <item>
-                 <widget class="CustomTableWidget" name="tableViewTensionsRight"/>
+                 <widget class="CustomTableWidget" name="tableViewTensioningRight"/>
                 </item>
                </layout>
               </widget>
