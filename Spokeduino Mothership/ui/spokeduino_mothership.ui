@@ -115,7 +115,7 @@
               <property name="title">
                <string>Measurements</string>
               </property>
-              <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,0">
+              <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0">
                <item>
                 <layout class="QVBoxLayout" name="verticalLayout_4">
                  <item>
@@ -182,75 +182,6 @@
                       </spacer>
                      </item>
                     </layout>
-                   </item>
-                  </layout>
-                 </item>
-                </layout>
-               </item>
-               <item>
-                <layout class="QVBoxLayout" name="verticalLayout_7">
-                 <item>
-                  <layout class="QVBoxLayout" name="verticalLayout_8" stretch="0,0,0,0">
-                   <item>
-                    <widget class="QPushButton" name="pushButtonEditMeasurement">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="text">
-                      <string>Edit measurement</string>
-                     </property>
-                     <property name="icon">
-                      <iconset theme="QIcon::ThemeIcon::EditPaste"/>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="pushButtonAddMeasurement">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="text">
-                      <string>Add measurement</string>
-                     </property>
-                     <property name="icon">
-                      <iconset theme="QIcon::ThemeIcon::ListAdd"/>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="pushButtonDeleteMeasurement">
-                     <property name="sizePolicy">
-                      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                       <horstretch>0</horstretch>
-                       <verstretch>0</verstretch>
-                      </sizepolicy>
-                     </property>
-                     <property name="text">
-                      <string>Delete measurement</string>
-                     </property>
-                     <property name="icon">
-                      <iconset theme="QIcon::ThemeIcon::ListRemove"/>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <spacer name="verticalSpacer_3">
-                     <property name="orientation">
-                      <enum>Qt::Orientation::Vertical</enum>
-                     </property>
-                     <property name="sizeHint" stdset="0">
-                      <size>
-                       <width>20</width>
-                       <height>40</height>
-                      </size>
-                     </property>
-                    </spacer>
                    </item>
                   </layout>
                  </item>
@@ -670,7 +601,7 @@
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayoutMeasurementTop">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutMeasurement" stretch="2,0,1">
+         <layout class="QHBoxLayout" name="horizontalLayoutMeasurement" stretch="3,0,2">
           <item>
            <layout class="QHBoxLayout" name="horizontalLayoutMeasurementsLeft" stretch="0">
             <item>
@@ -678,48 +609,13 @@
               <property name="title">
                <string>Measurement</string>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayoutManufacturer" stretch="0,0,0,0">
+              <layout class="QVBoxLayout" name="verticalLayoutManufacturer" stretch="0,0,0">
                <item>
                 <layout class="QHBoxLayout" name="horizontalLayoutManufacturerLeft" stretch="5">
                  <item>
                   <widget class="CustomTableWidget" name="tableWidgetMeasurements"/>
                  </item>
                 </layout>
-               </item>
-               <item>
-                <widget class="QGroupBox" name="groupBoxFormula">
-                 <property name="title">
-                  <string>Formula</string>
-                 </property>
-                 <layout class="QHBoxLayout" name="horizontalLayoutFormula" stretch="1,0,0">
-                  <item>
-                   <widget class="QLineEdit" name="lineEditFormula"/>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacerMeasurementCenterLeft">
-                    <property name="orientation">
-                     <enum>Qt::Orientation::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pushButtonCalculateFormula">
-                    <property name="text">
-                     <string>Calculate</string>
-                    </property>
-                    <property name="icon">
-                     <iconset theme="QIcon::ThemeIcon::SyncSynchronizing"/>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
                </item>
                <item>
                 <widget class="QGroupBox" name="groupBoxMeasurementComment">
@@ -756,7 +652,17 @@
                   </widget>
                  </item>
                  <item>
-                  <spacer name="horizontalSpacerMeasurementBottomLeft">
+                  <widget class="QPushButton" name="pushButtonSaveMeasurement">
+                   <property name="text">
+                    <string>Save</string>
+                   </property>
+                   <property name="icon">
+                    <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <spacer name="horizontalSpacer_6">
                    <property name="orientation">
                     <enum>Qt::Orientation::Horizontal</enum>
                    </property>
@@ -769,12 +675,32 @@
                   </spacer>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButtonSaveMeasurement">
+                  <widget class="QPushButton" name="pushButtonAddMeasurement">
                    <property name="text">
-                    <string>Save</string>
+                    <string>Add</string>
                    </property>
                    <property name="icon">
-                    <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
+                    <iconset theme="QIcon::ThemeIcon::ListAdd"/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="pushButtonEditMeasurement">
+                   <property name="text">
+                    <string>Edit</string>
+                   </property>
+                   <property name="icon">
+                    <iconset theme="QIcon::ThemeIcon::DocumentSaveAs"/>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="pushButtonDeleteMeasurement">
+                   <property name="text">
+                    <string>Delete</string>
+                   </property>
+                   <property name="icon">
+                    <iconset theme="QIcon::ThemeIcon::ListRemove"/>
                    </property>
                   </widget>
                  </item>
@@ -801,254 +727,11 @@
           <item>
            <widget class="QGroupBox" name="groupBoxSpokeMeasurement">
             <property name="title">
-             <string>Select or create a spoke</string>
+             <string>Selected spoke</string>
             </property>
             <layout class="QVBoxLayout" name="verticalLayoutSpokeMeasurement">
              <item>
-              <widget class="QGroupBox" name="groupBoxManufacturer2">
-               <property name="title">
-                <string>Manufacturer</string>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayoutManufacturerMeasurement" stretch="0,0">
-                <item>
-                 <widget class="QComboBox" name="comboBoxManufacturer2">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <layout class="QHBoxLayout" name="horizontalLayoutManufacturer" stretch="3,0,1">
-                  <item>
-                   <widget class="QGroupBox" name="groupBoxNewManufacturer2">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="title">
-                     <string>New manufacturer</string>
-                    </property>
-                    <layout class="QVBoxLayout" name="verticalLayoutNewManufacturerMeasurement">
-                     <item>
-                      <widget class="QLineEdit" name="lineEditNewManufacturer2">
-                       <property name="sizePolicy">
-                        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                         <horstretch>0</horstretch>
-                         <verstretch>0</verstretch>
-                        </sizepolicy>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="horizontalSpacerManufacturer2">
-                    <property name="orientation">
-                     <enum>Qt::Orientation::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pushButtonNewManufacturer2">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="text">
-                     <string>Create</string>
-                    </property>
-                    <property name="icon">
-                     <iconset theme="QIcon::ThemeIcon::DocumentNew"/>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <spacer name="verticalSpacerMeasurementTop">
-               <property name="orientation">
-                <enum>Qt::Orientation::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <widget class="QGroupBox" name="groupBoxSpoke2">
-               <property name="title">
-                <string>Spoke</string>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayoutSelectSpokeMeasurement">
-                <item>
-                 <widget class="QComboBox" name="comboBoxSpoke2">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QGroupBox" name="groupBoxName2">
-               <property name="title">
-                <string>Name</string>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayoutSpokeNameMeasurement">
-                <item>
-                 <widget class="QLineEdit" name="lineEditName2">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayoutSpokeDefinitionsMeasurement" stretch="10,1,1,1">
-               <item>
-                <widget class="QGroupBox" name="groupBoxType2">
-                 <property name="title">
-                  <string>Type</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayoutTypeMeasurement">
-                  <item>
-                   <widget class="QComboBox" name="comboBoxType2">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                    <property name="minimumSize">
-                     <size>
-                      <width>150</width>
-                      <height>0</height>
-                     </size>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacerSpokeMeasurement">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QGroupBox" name="groupBoxGauge2">
-                 <property name="title">
-                  <string>Gauge</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayoutGaugeMeasurement">
-                  <item>
-                   <widget class="QLineEdit" name="lineEditGauge2">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <widget class="QGroupBox" name="groupBoxWeight2">
-                 <property name="title">
-                  <string>Weight</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayoutWeightMeasurement">
-                  <item>
-                   <widget class="QLineEdit" name="lineEditWeight2">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <widget class="QGroupBox" name="groupBoxDimension2">
-               <property name="title">
-                <string>Dimension</string>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayoutSpokeDimensionMeasurement">
-                <item>
-                 <widget class="QLineEdit" name="lineEditDimension2">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QGroupBox" name="groupBoxSpokeComment2">
-               <property name="title">
-                <string>Comment</string>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayoutSpokeCommentMeasurement">
-                <item>
-                 <widget class="QLineEdit" name="lineEditSpokeComment2">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
+              <widget class="QPlainTextEdit" name="plainTextEdit"/>
              </item>
              <item>
               <spacer name="verticalSpacerMeasurementBottom">
@@ -1066,22 +749,6 @@
              <item>
               <layout class="QHBoxLayout" name="horizontalLayoutSpokeButtonsMeasurement">
                <item>
-                <widget class="QPushButton" name="pushButtonCreateSpoke2">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Create</string>
-                 </property>
-                 <property name="icon">
-                  <iconset theme="QIcon::ThemeIcon::ListAdd"/>
-                 </property>
-                </widget>
-               </item>
-               <item>
                 <spacer name="horizontalSpacerMeasurementRight">
                  <property name="orientation">
                   <enum>Qt::Orientation::Horizontal</enum>
@@ -1093,22 +760,6 @@
                   </size>
                  </property>
                 </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pushButtonMeasureSpoke">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="text">
-                  <string>Measure</string>
-                 </property>
-                 <property name="icon">
-                  <iconset theme="QIcon::ThemeIcon::DocumentProperties"/>
-                 </property>
-                </widget>
                </item>
               </layout>
              </item>
