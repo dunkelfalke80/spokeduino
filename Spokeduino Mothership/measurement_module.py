@@ -51,10 +51,8 @@ class MeasurementModule:
                 table.item(row, selected_column).text().strip() # type: ignore
                 for row in range(table.rowCount())
             )
-            self.ui.pushButtonCalculateFormula.setEnabled(all_filled)
             self.ui.pushButtonSaveMeasurement.setEnabled(all_filled)
         else:
-            self.ui.pushButtonCalculateFormula.setEnabled(False)
             self.ui.pushButtonSaveMeasurement.setEnabled(False)
 
     def get_selected_measurement_id(self) -> int | None:

@@ -3,18 +3,16 @@ from typing import Any, cast
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QTranslator
 from PySide6.QtCore import QModelIndex
-from PySide6.QtWidgets import QAbstractItemView
 from PySide6.QtWidgets import QComboBox
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QTableWidget
-from PySide6.QtWidgets import QTableView
 from PySide6.QtWidgets import QTableWidgetItem
 from database_module import DatabaseModule
 from sql_queries import SQLQueries
-from helpers import SpokeTableModel
 from unit_converter import UnitConverter
 from unit_converter import UnitEnum
+
 
 class SpokeModule:
 
@@ -31,25 +29,13 @@ class SpokeModule:
         self.current_language = "en"
         self.db: DatabaseModule = db
         self.unit_converter: UnitConverter = unit_converter
-
-        # Reducing verbosity
-        self.__rm_stretch: QHeaderView.ResizeMode = \
-            QHeaderView.ResizeMode.Stretch
-        self.__rm_shrink: QHeaderView.ResizeMode =\
-            QHeaderView.ResizeMode.ResizeToContents
-        self.__select_rows: QAbstractItemView.SelectionBehavior = \
-            QAbstractItemView.SelectionBehavior.SelectRows
-        self.__select_single: QAbstractItemView.SelectionMode = \
-            QAbstractItemView.SelectionMode.SingleSelection
-
-        self._spoke_headers: list[str] = [
-            "Name",
-            "Type",
-            "Gauge",
-            "Weight",
-            "Dimensions",
-            "Comment"]
-
+        self.__spoke_headers: list[str] = [
+                "Name",
+                "Type",
+                "Gauge",
+                "Weight",
+                "Dimensions",
+                "Comment"]
 
     def get_selected_spoke_id(self) -> tuple[bool, int]:
         spoke_id: int | None = self.ui.comboBoxSpoke.currentData()
@@ -144,48 +130,65 @@ class SpokeModule:
     def load_spokes(self) -> None:
         """
         Load all spokes for the currently selected manufacturer and populate
-        the tableViewSpokesDatabase and comboBoxSpoke.
+        the tableWidgetSpokesDatabase and comboBoxSpoke.
         """
-        manufacturer_id: int | None = \
-            self.ui.comboBoxManufacturer.currentData()
+        manufacturer_id: int | None = self.ui.comboBoxManufacturer.currentData()
 
         if manufacturer_id is None:
             return
         manufacturer_id = int(manufacturer_id)
 
+        # Fetch spokes from the database
         spokes: list[Any] = self.db.execute_select(
             query=SQLQueries.GET_SPOKES_BY_MANUFACTURER,
-            params=(manufacturer_id,))
+            params=(manufacturer_id,)
+        )
         if not spokes:
             return
 
-        # Exclude ID
+        # Store current spokes with their IDs
         self.current_spokes: list[tuple[Any, list[Any]]] = [
             (spoke[0], list(spoke[1:]))
-            for spoke in spokes]
-        view = self.ui.tableViewSpokesDatabase
+            for spoke in spokes
+        ]
+        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
+        view.clearContents()  # Clear existing data
+        view.setRowCount(len(spokes))  # Set row count
+        view.setColumnCount(6)  # Set column count for your table structure
 
-        # Populate comboBoxSpoke
+        # Populate the table widget
+        for row_idx, (spoke_id, spoke_data) in enumerate(self.current_spokes):
+            for col_idx, cell_data in enumerate(spoke_data):
+                item = QTableWidgetItem(str(cell_data))
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Read-only
+                if col_idx == 0:  # Store the spoke ID in the first column
+                    item.setData(Qt.ItemDataRole.UserRole, spoke_id)
+                view.setItem(row_idx, col_idx, item)
+
+        # Populate the combo box
         self.ui.comboBoxSpoke.clear()
-        for spoke in spokes:
+        for spoke_id, spoke_data in self.current_spokes:
             # Name and ID
-            self.ui.comboBoxSpoke.addItem(
-                spoke[1], spoke[0])
-            broken here
+            self.ui.comboBoxSpoke.addItem(spoke_data[0], spoke_id)
 
-        # Adjust column widths
-        resize_mode = view.horizontalHeader().setSectionResizeMode
-        resize_mode(0, self.__rm_stretch)  # Name
-        resize_mode(1, self.__rm_stretch)  # Type
-        resize_mode(2, self.__rm_shrink)   # Gauge
-        resize_mode(3, self.__rm_shrink)   # Weight
-        resize_mode(4, self.__rm_stretch)  # Dimensions
-        resize_mode(5, self.__rm_stretch)  # Comment
+
+        # Adjust column widths (QHeaderView methods)
+        header: QHeaderView = view.horizontalHeader()
+        view.setHorizontalHeaderLabels(self.__spoke_headers)
+        rm = header.ResizeMode
+        header.setSectionResizeMode(0, rm.Stretch)  # Name
+        header.setSectionResizeMode(1, rm.Stretch)  # Type
+        header.setSectionResizeMode(2, rm.ResizeToContents)  # Gauge
+        header.setSectionResizeMode(3, rm.ResizeToContents)  # Weight
+        header.setSectionResizeMode(4, rm.Stretch)  # Dimensions
+        header.setSectionResizeMode(5, rm.Stretch)  # Comment
 
         # Configure table behavior
-        view.setSelectionBehavior(self.__select_rows)
-        view.setSelectionMode(self.__select_single)
+        view.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
+        view.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.populate_filter_type()
+        view.setCurrentCell(0, 0)
+        view.focusWidget()
 
     def populate_filter_type(self) -> None:
         """
@@ -213,65 +216,64 @@ class SpokeModule:
 
     def sort_by_column(self, column: int) -> None:
         """
-        Sort the tableViewSpokesDatabase by the specified column.
+        Sort the tableWidgetSpokesDatabase by the specified column.
         """
         self.current_spokes.sort(key=lambda x: x[1][column])
-        self.ui.tableViewSpokesDatabase.model().layoutChanged.emit()
+        self.ui.tableWidgetSpokesDatabase.model().layoutChanged.emit()
 
     def select_spoke_from_table(self, index: QModelIndex) -> None:
         """
         Select the corresponding spoke in comboBoxSpoke
         when a table row is clicked.
         """
-        row: int = index.row()
-        model: SpokeTableModel = cast(
-            SpokeTableModel,
-            self.ui.tableViewSpokesDatabase.model())
-        spoke_id: int | None = model.get_id(row)
+        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
+        selected_row = view.currentRow()
+        if selected_row < 0:
+            return
+
+        # Retrieve the spoke ID from the first column
+        id_item = view.item(selected_row, 0)
+        spoke_id = id_item.data(Qt.ItemDataRole.UserRole) if id_item else None
 
         if spoke_id is not None:
             combo_index = self.ui.comboBoxSpoke.findData(spoke_id)
             if combo_index != -1:
                 self.ui.comboBoxSpoke.setCurrentIndex(combo_index)
 
+
     def select_spoke_row(self) -> None:
         """
-        Select the corresponding row in tableViewSpokesDatabase
+        Select the corresponding row in tableWidgetSpokesDatabase
         based on the combobox.
         """
-        view: QTableView = self.ui.tableViewSpokesDatabase
-        model = SpokeTableModel(self.current_spokes, self._spoke_headers)
-        view.setModel(model)
+        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
         res, spoke_id = self.get_selected_spoke_id()
         if not res:
             view.clearSelection()
             return
 
-        model: SpokeTableModel = cast(
-            SpokeTableModel,
-            view.model())
-        if model is None:
-            return
-
-        for row in range(model.rowCount()):
-            if model.get_id(row) == spoke_id:
+        # Find the matching row by spoke ID
+        for row in range(view.rowCount()):
+            id_item = view.item(row, 0)
+            if id_item and id_item.data(Qt.ItemDataRole.UserRole) == spoke_id:
                 view.selectRow(row)
                 break
 
+
     def unselect_spoke(self) -> None:
         """
-        Unselect the row in tableViewSpokesDatabase
+        Unselect the row in tableWidgetSpokesDatabase
         when pushButtonEditSpoke is clicked.
         """
-        self.ui.tableViewSpokesDatabase.clearSelection()
+        self.ui.tableWidgetSpokesDatabase.clearSelection()
         self.clear_spoke_details()
 
     def clear_spoke_selection(self) -> None:
         """
-        Clear the row selection in tableViewSpokesDatabase
+        Clear the row selection in tableWidgetSpokesDatabase
         and clear all spoke detail fields.
         """
-        self.ui.tableViewSpokesDatabase.clearSelection()
+        self.ui.tableWidgetSpokesDatabase.clearSelection()
         self.ui.comboBoxSpoke.setCurrentIndex(-1)
         self.clear_spoke_details()
 
@@ -326,11 +328,11 @@ class SpokeModule:
         self.load_spokes()
         # Clear selection
         self.ui.comboBoxSpoke.setCurrentIndex(-1)
-        self.ui.tableViewSpokesDatabase.clearSelection()
+        self.ui.tableWidgetSpokesDatabase.clearSelection()
 
     def filter_spoke_table(self) -> None:
         """
-        Filter tableViewSpokesDatabase based on filter inputs.
+        Filter tableWidgetSpokesDatabase based on filter inputs.
         """
         name_filter: str = self.ui.lineEditFilterName.text().lower()
         type_filter: str = self.ui.comboBoxFilterType.currentText().lower()
@@ -345,29 +347,18 @@ class SpokeModule:
              if gauge_filter else True)  # Match Gauge
         ]
 
-        # Update the table model with filtered data
-        headers: list[str] = [
-            "Name",
-            "Type",
-            "Gauge",
-            "Weight",
-            "Dimensions",
-            "Comment"]
-        model = SpokeTableModel(filtered_data, headers)
-        self.ui.tableViewSpokesDatabase.setModel(model)
-
     def align_filters_with_table(self) -> None:
         """
-        Align filter fields with tableViewSpokesDatabase columns.
+        Align filter fields with tableWidgetSpokesDatabase columns.
         """
-        if not self.ui.tableViewSpokesDatabase.isVisible():
+        if not self.ui.tableWidgetSpokesDatabase.isVisible():
             return
 
         header: QHeaderView = \
-            self.ui.tableViewSpokesDatabase.horizontalHeader()
+            self.ui.tableWidgetSpokesDatabase.horizontalHeader()
 
         # Get column positions and sizes
-        offset_x: int = self.ui.tableViewSpokesDatabase.geometry().x() + \
+        offset_x: int = self.ui.tableWidgetSpokesDatabase.geometry().x() + \
             header.sectionPosition(0)
         name_pos: int = header.sectionPosition(0) + offset_x
         name_width: int = header.sectionSize(0)
@@ -399,7 +390,7 @@ class SpokeModule:
             tensiometer_id: int | None) -> list[Any] | None:
         """
         Load all measurements for the selected spoke and tensiometer
-        and populate tableViewMeasurements.
+        and populate tableWidgetMeasurements.
         Each row corresponds to a measurement set
         with the first column as a comment,
         the second as the timestamp (up to minutes),
@@ -492,5 +483,5 @@ class SpokeModule:
                     item.setData(Qt.ItemDataRole.UserRole, row_id)
                 view.setItem(row_idx, col_idx, item)
         resize_mode = view.horizontalHeader().setSectionResizeMode
-        resize_mode(self.__rm_shrink)
+        resize_mode(QHeaderView.ResizeMode.ResizeToContents)
         return None

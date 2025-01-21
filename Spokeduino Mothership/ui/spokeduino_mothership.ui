@@ -51,7 +51,7 @@
               </property>
               <layout class="QVBoxLayout" name="verticalLayoutFilterDatabase" stretch="0,1">
                <item>
-                <layout class="QHBoxLayout" name="horizontalLayoutFilterDatabase" stretch="10,0,0,1">
+                <layout class="QHBoxLayout" name="horizontalLayoutFilterDatabase" stretch="0,0,0,1">
                  <item>
                   <widget class="QLineEdit" name="lineEditFilterName">
                    <property name="sizePolicy">
@@ -98,7 +98,7 @@
                 </layout>
                </item>
                <item>
-                <widget class="QTableView" name="tableViewSpokesDatabase">
+                <widget class="QTableWidget" name="tableWidgetSpokesDatabase">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                    <horstretch>0</horstretch>

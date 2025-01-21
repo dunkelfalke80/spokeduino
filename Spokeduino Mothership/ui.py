@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'spokeduino_mothershipcbnbol.ui'
+## Form generated from reading UI file 'spokeduino_mothershipxiipCL.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.1
 ##
@@ -21,8 +21,7 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QGraphicsView
     QLayout, QLineEdit, QMainWindow, QMenu,
     QMenuBar, QPlainTextEdit, QPushButton, QRadioButton,
     QSizePolicy, QSpacerItem, QStatusBar, QTabWidget,
-    QTableView, QTableWidget, QTableWidgetItem, QVBoxLayout,
-    QWidget)
+    QTableWidget, QTableWidgetItem, QVBoxLayout, QWidget)
 
 from customtablewidget import CustomTableWidget
 
@@ -92,17 +91,16 @@ class Ui_mainWindow(object):
 
         self.horizontalLayoutFilterDatabase.addWidget(self.lineEditFilterGauge)
 
-        self.horizontalLayoutFilterDatabase.setStretch(0, 10)
         self.horizontalLayoutFilterDatabase.setStretch(3, 1)
 
         self.verticalLayoutFilterDatabase.addLayout(self.horizontalLayoutFilterDatabase)
 
-        self.tableViewSpokesDatabase = QTableView(self.groupBoxListSpokesDatabase)
-        self.tableViewSpokesDatabase.setObjectName(u"tableViewSpokesDatabase")
-        sizePolicy1.setHeightForWidth(self.tableViewSpokesDatabase.sizePolicy().hasHeightForWidth())
-        self.tableViewSpokesDatabase.setSizePolicy(sizePolicy1)
+        self.tableWidgetSpokesDatabase = QTableWidget(self.groupBoxListSpokesDatabase)
+        self.tableWidgetSpokesDatabase.setObjectName(u"tableWidgetSpokesDatabase")
+        sizePolicy1.setHeightForWidth(self.tableWidgetSpokesDatabase.sizePolicy().hasHeightForWidth())
+        self.tableWidgetSpokesDatabase.setSizePolicy(sizePolicy1)
 
-        self.verticalLayoutFilterDatabase.addWidget(self.tableViewSpokesDatabase)
+        self.verticalLayoutFilterDatabase.addWidget(self.tableWidgetSpokesDatabase)
 
         self.verticalLayoutFilterDatabase.setStretch(1, 1)
 
@@ -431,7 +429,7 @@ class Ui_mainWindow(object):
         self.verticalLayoutManufacturer.setObjectName(u"verticalLayoutManufacturer")
         self.horizontalLayoutManufacturerLeft = QHBoxLayout()
         self.horizontalLayoutManufacturerLeft.setObjectName(u"horizontalLayoutManufacturerLeft")
-        self.tableWidgetMeasurements = CustomTableWidget(self.groupBoxMeasurement)
+        self.tableWidgetMeasurements = CustomTableWidget(parent=self.groupBoxMeasurement)
         self.tableWidgetMeasurements.setObjectName(u"tableWidgetMeasurements")
 
         self.horizontalLayoutManufacturerLeft.addWidget(self.tableWidgetMeasurements)
@@ -616,10 +614,10 @@ class Ui_mainWindow(object):
         self.verticalLayoutSelectedTensionValuesLeft = QVBoxLayout(self.groupBoxTensionValuesLeft)
         self.verticalLayoutSelectedTensionValuesLeft.setSpacing(6)
         self.verticalLayoutSelectedTensionValuesLeft.setObjectName(u"verticalLayoutSelectedTensionValuesLeft")
-        self.tableViewTensioningLeft = CustomTableWidget(self.groupBoxTensionValuesLeft)
-        self.tableViewTensioningLeft.setObjectName(u"tableViewTensioningLeft")
+        self.tableWidgetTensioningLeft = CustomTableWidget(parent=self.groupBoxTensionValuesLeft)
+        self.tableWidgetTensioningLeft.setObjectName(u"tableWidgetTensioningLeft")
 
-        self.verticalLayoutSelectedTensionValuesLeft.addWidget(self.tableViewTensioningLeft)
+        self.verticalLayoutSelectedTensionValuesLeft.addWidget(self.tableWidgetTensioningLeft)
 
 
         self.verticalLayoutSideLeft.addWidget(self.groupBoxTensionValuesLeft)
@@ -695,10 +693,10 @@ class Ui_mainWindow(object):
         self.verticalLayoutSelectedTensionValuesRight = QVBoxLayout(self.groupBoxTensionValuesRight)
         self.verticalLayoutSelectedTensionValuesRight.setSpacing(6)
         self.verticalLayoutSelectedTensionValuesRight.setObjectName(u"verticalLayoutSelectedTensionValuesRight")
-        self.tableViewTensioningRight = CustomTableWidget(self.groupBoxTensionValuesRight)
-        self.tableViewTensioningRight.setObjectName(u"tableViewTensioningRight")
+        self.tableWidgetTensioningRight = CustomTableWidget(parent=self.groupBoxTensionValuesRight)
+        self.tableWidgetTensioningRight.setObjectName(u"tableWidgetTensioningRight")
 
-        self.verticalLayoutSelectedTensionValuesRight.addWidget(self.tableViewTensioningRight)
+        self.verticalLayoutSelectedTensionValuesRight.addWidget(self.tableWidgetTensioningRight)
 
 
         self.verticalLayoutSideRight.addWidget(self.groupBoxTensionValuesRight)
