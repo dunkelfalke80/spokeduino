@@ -906,7 +906,7 @@
                  <number>6</number>
                 </property>
                 <item>
-                 <widget class="CustomTableWidget" name="tableViewTensioningLeft"/>
+                 <widget class="CustomTableWidget" name="tableWidgetTensioningLeft"/>
                 </item>
                </layout>
               </widget>
@@ -1030,7 +1030,7 @@
                  <number>6</number>
                 </property>
                 <item>
-                 <widget class="CustomTableWidget" name="tableViewTensioningRight"/>
+                 <widget class="CustomTableWidget" name="tableWidgetTensioningRight"/>
                 </item>
                </layout>
               </widget>
