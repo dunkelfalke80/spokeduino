@@ -80,6 +80,7 @@ class Spokeduino(QMainWindow):
             main_window=self,
             ui=self.ui,
             unit_converter=self.unit_converter,
+            messagebox=self.messagebox,
             db=self.db,
             current_path=self.current_path)
 
@@ -166,12 +167,12 @@ class Spokeduino(QMainWindow):
         """
         Connect UI elements to their respective event handlers for both tabs.
         """
-        # Create and Edit Spoke Buttons
-        self.ui.pushButtonCreateSpoke.clicked.connect(self.create_new_spoke)
-        self.ui.pushButtonEditSpoke.clicked.connect(
-            self.spoke_module.modify_spoke)
+        # Clear and Edit Spoke Buttons
+        self.ui.pushButtonUpdateSpoke.clicked.connect(
+            self.spoke_module.update_spoke)
         self.ui.pushButtonDeleteSpoke.clicked.connect(
             self.spoke_module.delete_spoke)
+        self.ui.tabWidget.currentChanged.connect(self.tab_index_changed)
 
         # Synchronize fields and buttons
         self.ui.lineEditName.textChanged.connect(
@@ -189,10 +190,9 @@ class Spokeduino(QMainWindow):
         self.ui.lineEditDimension.textChanged.connect(
             self.toggle_spoke_buttons)
 
-        # Synchronize combobox and table for spokes
-        self.ui.comboBoxSpoke.currentIndexChanged.connect(
-            lambda: self.spoke_module.update_spoke_details(
-                self.ui.comboBoxSpoke))
+        # Spoke table-related signals
+        self.ui.tableWidgetSpokesDatabase.currentCellChanged.connect(
+            self.spoke_module.update_spoke_details)
 
         # Filters
         self.ui.tabWidget.currentChanged.connect(
@@ -210,11 +210,14 @@ class Spokeduino(QMainWindow):
             self.spoke_module.align_filters_with_table)
         header.sectionMoved.connect(
             self.spoke_module.align_filters_with_table)
+        header: QHeaderView = \
+            self.ui.tableWidgetSpokesDatabase.horizontalHeader()
+        header.sectionClicked.connect(self.spoke_module.sort_by_column)
 
         # Manufacturer-related buttons and combo boxes
         self.ui.lineEditNewManufacturer.textChanged.connect(
             self.toggle_new_manufacturer_button)
-        self.ui.pushButtonNewManufacturer.clicked.connect(
+        self.ui.pushButtonSaveAsManufacturer.clicked.connect(
             self.create_new_manufacturer)
         self.ui.comboBoxManufacturer.\
             currentIndexChanged.connect(
@@ -232,14 +235,13 @@ class Spokeduino(QMainWindow):
         self.ui.pushButtonMultipleTensiometers.setCheckable(True)
 
         # Measurement-related signals
-        self.ui.tabWidget.currentChanged.connect(self.tab_index_changed)
-        self.ui.pushButtonDeleteMeasurement.clicked.connect(
-            self.delete_measurement)
-        self.ui.pushButtonAddMeasurement.clicked.connect(
-            lambda: self.ui.tabWidget.setCurrentIndex(
-                self.ui.tabWidget.indexOf(self.ui.measurementTab)))
         self.ui.tableWidgetMeasurementList.clicked.connect(
             self.select_measurement_row)
+        self.ui.pushButtonDeleteMeasurement.clicked.connect(
+            self.delete_measurement)
+        self.ui.pushButtonNewMeasurement.clicked.connect(
+            lambda: self.ui.tabWidget.setCurrentIndex(
+                self.ui.tabWidget.indexOf(self.ui.measurementTab)))
         self.ui.tableWidgetMeasurements.itemChanged.connect(
             self.measurement_module.update_measurement_button_states)
         self.ui.tableWidgetMeasurements.currentCellChanged.connect(
@@ -350,11 +352,6 @@ class Spokeduino(QMainWindow):
             lambda: self.unit_converter.convert_units_realtime(UnitEnum.KGF))
         self.ui.lineEditConverterLbF.textChanged.connect(
             lambda: self.unit_converter.convert_units_realtime(UnitEnum.LBF))
-
-        # Table sorting
-        header: QHeaderView = \
-            self.ui.tableWidgetSpokesDatabase.horizontalHeader()
-        header.sectionClicked.connect(self.spoke_module.sort_by_column)
 
         # Tensioning related signals
         self.ui.pushButtonStartTensioning.clicked.connect(
@@ -493,7 +490,7 @@ class Spokeduino(QMainWindow):
         Enable or disable pushButtonNewManufacturer
         based on lineEditNewManufacturer.
         """
-        self.ui.pushButtonNewManufacturer.setEnabled(
+        self.ui.pushButtonSaveAsManufacturer.setEnabled(
             len(self.ui.lineEditNewManufacturer.text()) > 0)
 
     def toggle_spoke_buttons(self) -> None:
@@ -508,10 +505,8 @@ class Spokeduino(QMainWindow):
             self.ui.lineEditWeight.text(),
             self.ui.lineEditDimension.text()
         ])
-        self.ui.pushButtonCreateSpoke.setEnabled(required_fields_filled)
-        self.ui.pushButtonEditSpoke.setEnabled(
-            required_fields_filled and
-            self.ui.comboBoxSpoke.currentIndex() >= 0)
+        self.ui.pushButtonUpdateSpoke.setEnabled(required_fields_filled)
+        self.ui.pushButtonSaveAsSpoke.setEnabled(required_fields_filled)
 
     def toggle_multi_tensiometer_mode(self) -> None:
         """
@@ -597,35 +592,6 @@ class Spokeduino(QMainWindow):
         self.ui.comboBoxManufacturer.setCurrentIndex(
             self.ui.comboBoxManufacturer.findData(
                 new_manufacturer_id))
-
-    def create_new_spoke(self) -> None:
-        """
-        Insert a new spoke into the spokes table for the selected manufacturer.
-        """
-        from_database: bool = self.sender() == self.ui.pushButtonCreateSpoke
-        manufacturer_id: int | None = self.ui.comboBoxManufacturer.currentData()
-
-        if manufacturer_id is None:
-            return
-        manufacturer_id = int(manufacturer_id)
-
-        type_id, gauge, weight, \
-            spoke_name, dimension, comment = \
-            self.spoke_module.get_spoke_data(from_database)
-
-        new_spoke_id: int | None = self.db.execute_query(
-            query=SQLQueries.ADD_SPOKE,
-            params=(manufacturer_id, spoke_name,
-                    type_id, gauge, weight, dimension, comment),
-        )
-        if new_spoke_id is None:
-            return
-        new_spoke_id = int(new_spoke_id)
-
-        self.spoke_module.load_spokes()
-        self.ui.comboBoxSpoke.setCurrentIndex(
-            self.ui.comboBoxSpoke.findData(new_spoke_id)
-        )
 
     def use_spoke(self, is_left: bool) -> None:
         """

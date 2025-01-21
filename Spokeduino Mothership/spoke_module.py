@@ -12,6 +12,7 @@ from database_module import DatabaseModule
 from sql_queries import SQLQueries
 from unit_converter import UnitConverter
 from unit_converter import UnitEnum
+from helpers import Messagebox
 
 
 class SpokeModule:
@@ -20,6 +21,7 @@ class SpokeModule:
                  main_window: QMainWindow,
                  ui: Any,
                  unit_converter: UnitConverter,
+                 messagebox: Messagebox,
                  db: DatabaseModule,
                  current_path: str) -> None:
         self.ui = ui
@@ -29,6 +31,7 @@ class SpokeModule:
         self.current_language = "en"
         self.db: DatabaseModule = db
         self.unit_converter: UnitConverter = unit_converter
+        self.messagebox: Messagebox = messagebox
         self.__spoke_headers: list[str] = [
                 "Name",
                 "Type",
@@ -78,12 +81,17 @@ class SpokeModule:
         Update the spoke details fields when a spoke is
         selected in comboBoxSpoke.
         """
-        spoke_id: int | None = sender.currentData()
+        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
+        selected_row: int = view.currentRow()
+        if selected_row < 0:
+            return
+
+        # Retrieve the spoke ID from the first column
+        id_item: QTableWidgetItem | None = view.item(selected_row, 0)
+        spoke_id: Any | None = id_item.data(Qt.ItemDataRole.UserRole) if id_item else None
 
         if spoke_id is None:
-            self.clear_spoke_details()
             return
-        spoke_id = int(spoke_id)
 
         spokes: list[Any] = self.db.execute_select(
             query=SQLQueries.GET_SPOKES_BY_ID,
@@ -165,13 +173,6 @@ class SpokeModule:
                     item.setData(Qt.ItemDataRole.UserRole, spoke_id)
                 view.setItem(row_idx, col_idx, item)
 
-        # Populate the combo box
-        self.ui.comboBoxSpoke.clear()
-        for spoke_id, spoke_data in self.current_spokes:
-            # Name and ID
-            self.ui.comboBoxSpoke.addItem(spoke_data[0], spoke_id)
-
-
         # Adjust column widths (QHeaderView methods)
         header: QHeaderView = view.horizontalHeader()
         view.setHorizontalHeaderLabels(self.__spoke_headers)
@@ -188,7 +189,7 @@ class SpokeModule:
         view.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.populate_filter_type()
         view.setCurrentCell(0, 0)
-        view.focusWidget()
+        view.setFocus()
 
     def populate_filter_type(self) -> None:
         """
@@ -221,26 +222,6 @@ class SpokeModule:
         self.current_spokes.sort(key=lambda x: x[1][column])
         self.ui.tableWidgetSpokesDatabase.model().layoutChanged.emit()
 
-    def select_spoke_from_table(self, index: QModelIndex) -> None:
-        """
-        Select the corresponding spoke in comboBoxSpoke
-        when a table row is clicked.
-        """
-        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
-        selected_row = view.currentRow()
-        if selected_row < 0:
-            return
-
-        # Retrieve the spoke ID from the first column
-        id_item = view.item(selected_row, 0)
-        spoke_id = id_item.data(Qt.ItemDataRole.UserRole) if id_item else None
-
-        if spoke_id is not None:
-            combo_index = self.ui.comboBoxSpoke.findData(spoke_id)
-            if combo_index != -1:
-                self.ui.comboBoxSpoke.setCurrentIndex(combo_index)
-
-
     def select_spoke_row(self) -> None:
         """
         Select the corresponding row in tableWidgetSpokesDatabase
@@ -259,7 +240,6 @@ class SpokeModule:
                 view.selectRow(row)
                 break
 
-
     def unselect_spoke(self) -> None:
         """
         Unselect the row in tableWidgetSpokesDatabase
@@ -277,9 +257,7 @@ class SpokeModule:
         self.ui.comboBoxSpoke.setCurrentIndex(-1)
         self.clear_spoke_details()
 
-    def get_spoke_data(
-            self, from_database: bool
-            ) -> tuple[int, int, float, str, str, str]:
+    def get_spoke_data(self) -> tuple[int, int, float, str, str, str]:
         """
         DRY helper
         """
@@ -294,7 +272,7 @@ class SpokeModule:
             logging.error(f"Invalid data provided: {e}")
             raise
 
-    def modify_spoke(self) -> None:
+    def update_spoke(self) -> None:
         """
         Update the selected spoke with new values from the detail fields.
         """
@@ -304,7 +282,7 @@ class SpokeModule:
 
         type_id, gauge, weight, \
             spoke_name, dimension, comment = \
-            self.get_spoke_data(True)
+            self.get_spoke_data()
 
         _ = self.db.execute_query(
             query=SQLQueries.MODIFY_SPOKE,
@@ -485,3 +463,28 @@ class SpokeModule:
         resize_mode = view.horizontalHeader().setSectionResizeMode
         resize_mode(QHeaderView.ResizeMode.ResizeToContents)
         return None
+
+    def save_as_spoke(self) -> None:
+        """
+        Insert a new spoke into the spokes table for the selected manufacturer.
+        """
+        manufacturer_id: int | None = self.ui.comboBoxManufacturer.currentData()
+
+        if manufacturer_id is None:
+            return
+        manufacturer_id = int(manufacturer_id)
+
+        type_id, gauge, weight, \
+            spoke_name, dimension, comment = \
+            self.get_spoke_data()
+
+        new_spoke_id: int | None = self.db.execute_query(
+            query=SQLQueries.ADD_SPOKE,
+            params=(manufacturer_id, spoke_name,
+                    type_id, gauge, weight, dimension, comment),
+        )
+        if new_spoke_id is None:
+            return
+        new_spoke_id = int(new_spoke_id)
+
+        self.load_spokes()

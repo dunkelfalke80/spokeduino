@@ -135,7 +135,7 @@
                  <item>
                   <layout class="QVBoxLayout" name="verticalLayout_6">
                    <item>
-                    <layout class="QHBoxLayout" name="horizontalLayoutSpokeDefinitionsDatabase_6" stretch="0,0,0">
+                    <layout class="QHBoxLayout" name="horizontalLayoutSpokeDefinitionsDatabase_6" stretch="0,0,0,0,0">
                      <item>
                       <widget class="QPushButton" name="pushButtonUseLeft">
                        <property name="sizePolicy">
@@ -180,6 +180,38 @@
                         </size>
                        </property>
                       </spacer>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pushButtonNewMeasurement">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="text">
+                        <string>Add</string>
+                       </property>
+                       <property name="icon">
+                        <iconset theme="QIcon::ThemeIcon::ListAdd"/>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="pushButtonDeleteMeasurement">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                       <property name="text">
+                        <string>Remove</string>
+                       </property>
+                       <property name="icon">
+                        <iconset theme="QIcon::ThemeIcon::ListRemove"/>
+                       </property>
+                      </widget>
                      </item>
                     </layout>
                    </item>
@@ -228,7 +260,7 @@
                  </widget>
                 </item>
                 <item>
-                 <layout class="QHBoxLayout" name="horizontalLayoutDatabaseLeft" stretch="3,0,1">
+                 <layout class="QHBoxLayout" name="horizontalLayoutDatabaseLeft" stretch="3,1">
                   <property name="sizeConstraint">
                    <enum>QLayout::SizeConstraint::SetDefaultConstraint</enum>
                   </property>
@@ -258,20 +290,7 @@
                    </widget>
                   </item>
                   <item>
-                   <spacer name="horizontalSpacerManufacturer">
-                    <property name="orientation">
-                     <enum>Qt::Orientation::Horizontal</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>40</width>
-                      <height>20</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="pushButtonNewManufacturer">
+                   <widget class="QPushButton" name="pushButtonSaveAsManufacturer">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                       <horstretch>0</horstretch>
@@ -279,10 +298,10 @@
                      </sizepolicy>
                     </property>
                     <property name="text">
-                     <string>Create</string>
+                     <string>Save as new</string>
                     </property>
                     <property name="icon">
-                     <iconset theme="QIcon::ThemeIcon::DocumentNew"/>
+                     <iconset theme="QIcon::ThemeIcon::DocumentSaveAs"/>
                     </property>
                    </widget>
                   </item>
@@ -311,171 +330,161 @@
                </property>
                <layout class="QVBoxLayout" name="verticalLayoutSelectSpokeDatabase">
                 <item>
-                 <widget class="QComboBox" name="comboBoxSpoke">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
+                 <widget class="QGroupBox" name="groupBoxName">
+                  <property name="enabled">
+                   <bool>true</bool>
                   </property>
+                  <property name="title">
+                   <string>Name</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayoutEditNewSpokeName">
+                   <item>
+                    <widget class="QLineEdit" name="lineEditName">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
                  </widget>
                 </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QGroupBox" name="groupBoxName">
-               <property name="enabled">
-                <bool>true</bool>
-               </property>
-               <property name="title">
-                <string>Name</string>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayoutEditNewSpokeName">
                 <item>
-                 <widget class="QLineEdit" name="lineEditName">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayoutSpokeDefinitionsDatabase" stretch="0,0,0,0">
-               <item>
-                <widget class="QGroupBox" name="groupBoxType">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="minimumSize">
-                  <size>
-                   <width>150</width>
-                   <height>0</height>
-                  </size>
-                 </property>
-                 <property name="title">
-                  <string>Type</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayoutTypeDatabase">
+                 <layout class="QHBoxLayout" name="horizontalLayoutSpokeDefinitionsDatabase" stretch="0,0,0,0">
                   <item>
-                   <widget class="QComboBox" name="comboBoxType">
-                    <property name="sizePolicy">
-                     <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
-                      <horstretch>0</horstretch>
-                      <verstretch>0</verstretch>
-                     </sizepolicy>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacerTypeDatabase">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QGroupBox" name="groupBoxGauge">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="title">
-                  <string>Gauge</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayoutGaugeDatabase">
-                  <item>
-                   <widget class="QLineEdit" name="lineEditGauge">
+                   <widget class="QGroupBox" name="groupBoxType">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
+                    <property name="minimumSize">
+                     <size>
+                      <width>150</width>
+                      <height>0</height>
+                     </size>
+                    </property>
+                    <property name="title">
+                     <string>Type</string>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayoutTypeDatabase">
+                     <item>
+                      <widget class="QComboBox" name="comboBoxType">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
                    </widget>
                   </item>
-                 </layout>
-                </widget>
-               </item>
-               <item>
-                <widget class="QGroupBox" name="groupBoxWeight">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                 <property name="title">
-                  <string>Weight</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayoutWeightDatabase">
                   <item>
-                   <widget class="QLineEdit" name="lineEditWeight">
+                   <spacer name="horizontalSpacerTypeDatabase">
+                    <property name="orientation">
+                     <enum>Qt::Orientation::Horizontal</enum>
+                    </property>
+                    <property name="sizeHint" stdset="0">
+                     <size>
+                      <width>40</width>
+                      <height>20</height>
+                     </size>
+                    </property>
+                   </spacer>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="groupBoxGauge">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                       <horstretch>0</horstretch>
                       <verstretch>0</verstretch>
                      </sizepolicy>
                     </property>
+                    <property name="title">
+                     <string>Gauge</string>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayoutGaugeDatabase">
+                     <item>
+                      <widget class="QLineEdit" name="lineEditGauge">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QGroupBox" name="groupBoxWeight">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="title">
+                     <string>Weight</string>
+                    </property>
+                    <layout class="QVBoxLayout" name="verticalLayoutWeightDatabase">
+                     <item>
+                      <widget class="QLineEdit" name="lineEditWeight">
+                       <property name="sizePolicy">
+                        <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                         <horstretch>0</horstretch>
+                         <verstretch>0</verstretch>
+                        </sizepolicy>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
                    </widget>
                   </item>
                  </layout>
-                </widget>
-               </item>
-              </layout>
-             </item>
-             <item>
-              <widget class="QGroupBox" name="groupBoxDimension">
-               <property name="title">
-                <string>Dimension</string>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayoutDimension">
+                </item>
                 <item>
-                 <widget class="QLineEdit" name="lineEditDimension">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
+                 <widget class="QGroupBox" name="groupBoxDimension">
+                  <property name="title">
+                   <string>Dimension</string>
                   </property>
+                  <layout class="QVBoxLayout" name="verticalLayoutDimension">
+                   <item>
+                    <widget class="QLineEdit" name="lineEditDimension">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
                  </widget>
                 </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <widget class="QGroupBox" name="groupBoxSpokeComment">
-               <property name="title">
-                <string>Comment</string>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayoutCommentDatabase">
                 <item>
-                 <widget class="QLineEdit" name="lineEditSpokeComment">
-                  <property name="sizePolicy">
-                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                    <horstretch>0</horstretch>
-                    <verstretch>0</verstretch>
-                   </sizepolicy>
+                 <widget class="QGroupBox" name="groupBoxSpokeComment">
+                  <property name="title">
+                   <string>Comment</string>
                   </property>
+                  <layout class="QVBoxLayout" name="verticalLayoutCommentDatabase">
+                   <item>
+                    <widget class="QLineEdit" name="lineEditSpokeComment">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
                  </widget>
                 </item>
                </layout>
@@ -497,7 +506,7 @@
              <item>
               <layout class="QHBoxLayout" name="horizontalLayoutSpokeButtonsDatabase">
                <item>
-                <widget class="QPushButton" name="pushButtonCreateSpoke">
+                <widget class="QPushButton" name="pushButtonUpdateSpoke">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
                    <horstretch>0</horstretch>
@@ -505,28 +514,15 @@
                   </sizepolicy>
                  </property>
                  <property name="text">
-                  <string>Create</string>
+                  <string>Update</string>
                  </property>
                  <property name="icon">
-                  <iconset theme="QIcon::ThemeIcon::ListAdd"/>
+                  <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
                  </property>
                 </widget>
                </item>
                <item>
-                <spacer name="horizontalSpacerSpokeDatabaseLeft">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QPushButton" name="pushButtonEditSpoke">
+                <widget class="QPushButton" name="pushButtonSaveAsSpoke">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
                    <horstretch>0</horstretch>
@@ -534,25 +530,12 @@
                   </sizepolicy>
                  </property>
                  <property name="text">
-                  <string>Edit</string>
+                  <string>Save as new</string>
                  </property>
                  <property name="icon">
                   <iconset theme="QIcon::ThemeIcon::DocumentSaveAs"/>
                  </property>
                 </widget>
-               </item>
-               <item>
-                <spacer name="horizontalSpacerSpokeDatabaseRight">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Horizontal</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>40</width>
-                   <height>20</height>
-                  </size>
-                 </property>
-                </spacer>
                </item>
                <item>
                 <widget class="QPushButton" name="pushButtonClearSpoke">
@@ -566,7 +549,7 @@
                   <string>Clear</string>
                  </property>
                  <property name="icon">
-                  <iconset theme="QIcon::ThemeIcon::EditUndo"/>
+                  <iconset theme="QIcon::ThemeIcon::DocumentNew"/>
                  </property>
                 </widget>
                </item>
@@ -652,16 +635,6 @@
                   </widget>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButtonSaveMeasurement">
-                   <property name="text">
-                    <string>Save</string>
-                   </property>
-                   <property name="icon">
-                    <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
                   <spacer name="horizontalSpacer_6">
                    <property name="orientation">
                     <enum>Qt::Orientation::Horizontal</enum>
@@ -675,32 +648,12 @@
                   </spacer>
                  </item>
                  <item>
-                  <widget class="QPushButton" name="pushButtonAddMeasurement">
+                  <widget class="QPushButton" name="pushButtonSaveMeasurement">
                    <property name="text">
-                    <string>Add</string>
+                    <string>Save</string>
                    </property>
                    <property name="icon">
-                    <iconset theme="QIcon::ThemeIcon::ListAdd"/>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="pushButtonEditMeasurement">
-                   <property name="text">
-                    <string>Edit</string>
-                   </property>
-                   <property name="icon">
-                    <iconset theme="QIcon::ThemeIcon::DocumentSaveAs"/>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="pushButtonDeleteMeasurement">
-                   <property name="text">
-                    <string>Delete</string>
-                   </property>
-                   <property name="icon">
-                    <iconset theme="QIcon::ThemeIcon::ListRemove"/>
+                    <iconset theme="QIcon::ThemeIcon::DocumentSave"/>
                    </property>
                   </widget>
                  </item>
@@ -1395,6 +1348,86 @@
            </layout>
           </item>
           <item>
+           <widget class="QGroupBox" name="groupBoxMeasurementSetup">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="title">
+             <string>Spoke measuring</string>
+            </property>
+            <layout class="QVBoxLayout" name="verticalLayoutMeasurementSetup">
+             <item>
+              <widget class="QGroupBox" name="groupBoxSpokeMeasurementType">
+               <property name="title">
+                <string>Measurement type</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayoutMeasurementType">
+                <item>
+                 <widget class="QRadioButton" name="radioButtonMeasurementDefault">
+                  <property name="text">
+                   <string>Default values</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButtonMeasurementCustom">
+                  <property name="text">
+                   <string>Custom values</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGroupBox" name="groupBoxSpokeMeasurementDirection">
+               <property name="title">
+                <string>Spoke measurement direction</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayoutMeasurementDirectionDown">
+                <item>
+                 <widget class="QRadioButton" name="radioButtonMeasurementDown">
+                  <property name="text">
+                   <string>From high to low</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButtonMeasurementUp">
+                  <property name="text">
+                   <string>From low to high</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <spacer name="verticalSpacer">
+               <property name="orientation">
+                <enum>Qt::Orientation::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
+          </item>
+          <item>
            <spacer name="horizontalSpacer_2">
             <property name="orientation">
              <enum>Qt::Orientation::Horizontal</enum>
@@ -1418,35 +1451,9 @@
                </sizepolicy>
               </property>
               <property name="title">
-               <string>Directions</string>
+               <string>Wheel tensioning</string>
               </property>
               <layout class="QVBoxLayout" name="verticalLayoutMeasurementDirection">
-               <item>
-                <widget class="QGroupBox" name="groupBoxSpokeMeasurementDirection">
-                 <property name="title">
-                  <string>Spoke measurement direction</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayoutMeasurementDirectionDown">
-                  <item>
-                   <widget class="QRadioButton" name="radioButtonMeasurementDown">
-                    <property name="text">
-                     <string>From high to low</string>
-                    </property>
-                    <property name="checked">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QRadioButton" name="radioButtonMeasurementUp">
-                    <property name="text">
-                     <string>From low to high</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </item>
                <item>
                 <widget class="QGroupBox" name="groupBoxWheelRotationDirection">
                  <property name="title">
@@ -1545,60 +1552,6 @@
              </size>
             </property>
            </spacer>
-          </item>
-          <item>
-           <widget class="QGroupBox" name="groupBoxDirectionsSetup_2">
-            <property name="sizePolicy">
-             <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-              <horstretch>0</horstretch>
-              <verstretch>0</verstretch>
-             </sizepolicy>
-            </property>
-            <property name="title">
-             <string>Directions</string>
-            </property>
-            <layout class="QVBoxLayout" name="verticalLayoutMeasurementDirection_2">
-             <item>
-              <widget class="QGroupBox" name="groupBoxSpokeMeasurementType">
-               <property name="title">
-                <string>Measurement type</string>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayoutMeasurementType">
-                <item>
-                 <widget class="QRadioButton" name="radioButtonMeasurementDefault">
-                  <property name="text">
-                   <string>Default values</string>
-                  </property>
-                  <property name="checked">
-                   <bool>true</bool>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QRadioButton" name="radioButtonMeasurementCustom">
-                  <property name="text">
-                   <string>Custom values</string>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </widget>
-             </item>
-             <item>
-              <spacer name="verticalSpacer">
-               <property name="orientation">
-                <enum>Qt::Orientation::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-            </layout>
-           </widget>
           </item>
           <item>
            <spacer name="horizontalSpacer_4">
