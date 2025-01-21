@@ -16,11 +16,11 @@ INSERT INTO tensiometers (id, name) VALUES
 (2, 'ZTTO TC-02');
 
 INSERT INTO types (id, type) VALUES
-(0, 'Straight'),
-(1, 'Butted'),
-(2, 'Double butted'),
-(3, 'Triple butted'),
-(4, 'Quadruple butted'),
+(0, 'Straight gauge'),
+(1, 'Single-butted'),
+(2, 'Double-butted'),
+(3, 'Triple-butted'),
+(4, 'Quadruple-butted'),
 (5, 'Aero'),
 (6, 'Titanium'),
 (7, 'Carbon'),
@@ -30,15 +30,15 @@ INSERT INTO types (id, type) VALUES
 INSERT INTO spokes (manufacturer_id, type_id, gauge, weight, name, dimensions) VALUES
 
 -- Generic --------------------------------------------
---  Straight
-(0, 0, 13, 8.5, 'Generic straight 13G', '2.3'),
-(0, 0, 14, 6.7, 'Generic straight 14G', '2.0'),
-(0, 0, 15, 5.5, 'Generic straight 15G', '1.8'),
+--  Straight gauge
+(0, 0, 13, 8.5, 'Generic straight gauge 13G', '2.3'),
+(0, 0, 14, 6.7, 'Generic straight gauge 14G', '2.0'),
+(0, 0, 15, 5.5, 'Generic straight gauge 15G', '1.8'),
 --  Double butted
 (0, 2, 14, 5.7, 'Generic double butted', '2.0/1.8/2.0'),
 
 -- Sapim ----------------------------------------------
---  Straight
+--  Straight gauge
 (1, 0, 12, 10.8, 'Zinc', '2.6'),
 (1, 0, 13, 8.5, 'Zinc', '2.3'),
 (1, 0, 14, 6.7, 'Zinc', '2.0'),
@@ -76,7 +76,7 @@ INSERT INTO spokes (manufacturer_id, type_id, gauge, weight, name, dimensions) V
 (1, 5, 14, 3.6, 'CX-Super', '1.8/2.0-0.8/1.8'),
 
 -- DT Swiss -------------------------------------------
---  Straight
+--  Straight gauge
 (2, 0, 14, 6.9, 'Champion', '2.0'),
 (2, 0, 15, 5.6, 'Champion', '1.8'),
 --  Butted
@@ -97,7 +97,7 @@ INSERT INTO spokes (manufacturer_id, type_id, gauge, weight, name, dimensions) V
 (2, 5, 15, 5.5, 'Aero Speed', '1.8/2.3-1.2/1.8'),
 
 -- Pillar ---------------------------------------------
---  Straight
+--  Straight gauge
 (3, 0, 12, 10.9, 'P12', '2.6'),
 (3, 0, 13, 8.5, 'P13', '2.3'),
 (3, 0, 14, 6.5, 'P14', '2.0'),
@@ -145,7 +145,7 @@ INSERT INTO spokes (manufacturer_id, type_id, gauge, weight, name, dimensions) V
 (3, 5, 14, 5.7, 'PSR WING 23', '2.2/2.3-1.45/2.0'),
 
 -- cnSpoke --------------------------------------------
---  Straight
+--  Straight gauge
 (4, 0, 12, 10.7, 'STD 12', '2.6'),
 (4, 0, 13, 8.6, 'STD 13', '2.3'),
 (4, 0, 14, 6.5, 'STD 14C', '2.0'),
@@ -207,7 +207,7 @@ INSERT INTO spokes (manufacturer_id, type_id, gauge, weight, name, dimensions) V
 (4, 6, 14, 2.8, 'Ti-Duo', '2.0/1.7/2.0'),
 
 -- Alpina ---------------------------------------------
---  Straight
+--  Straight gauge
 (5, 0, 13, 8.5, 'One XL', '2.33'),
 (5, 0, 13, 8.5, 'One XXL', '2.33'),
 (5, 0, 14, 6.5, 'One', '2.0'),
@@ -235,7 +235,7 @@ INSERT INTO spokes (manufacturer_id, type_id, gauge, weight, name, dimensions) V
 (5, 5, 14, 3.3, 'Hyperlite Aero', '2.0/1.5/1.3/1.5/2.0'),
 
 -- Wheelsmith -----------------------------------------
---  Straight
+--  Straight gauge
 (6, 0, 14, 6.8, '2.0', '2.0'),
 (6, 0, 14, 6.7, 'SS14', '2.0'),
 (6, 0, 15, 5.3, 'SS15', '1.8'),

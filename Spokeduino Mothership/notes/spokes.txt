@@ -1,0 +1,34 @@
+dt:
+supercomp
+champion
+revolution
+competition
+aerolite
+aero speed
+aero comp
+alpine
+alpine 3
+
+sapim:
+race
+superspoke
+cx-ray
+cx-sprint
+
+pillar:
+pdb 1415
+pdb 1417
+psr tb 2016
+psr tb 2018
+pba 1420
+psr 1432
+psr x-tra 1422
+phd aero 1345
+
+cn:
+mac Aero 424
+std 14c
+
+generic:
+13g straight gauge
+12g straight gauge
