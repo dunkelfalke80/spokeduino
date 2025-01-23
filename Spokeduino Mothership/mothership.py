@@ -218,7 +218,7 @@ class Spokeduino(QMainWindow):
         self.ui.lineEditNewManufacturer.textChanged.connect(
             self.toggle_new_manufacturer_button)
         self.ui.pushButtonSaveAsManufacturer.clicked.connect(
-            self.create_new_manufacturer)
+            self.spoke_module.create_new_manufacturer)
         self.ui.comboBoxManufacturer.\
             currentIndexChanged.connect(
                 self.spoke_module.load_spokes)
@@ -568,30 +568,6 @@ class Spokeduino(QMainWindow):
         index: int = self.ui.comboBoxTensiometer.findText(tensiometer_name)
         if index != -1:
             self.ui.comboBoxTensiometer.setCurrentIndex(index)
-
-    def create_new_manufacturer(self) -> None:
-        """
-        Insert a new manufacturer into the manufacturers table and select it.
-        """
-        manufacturer_name: str = self.ui.lineEditNewManufacturer.text()
-        if not manufacturer_name:
-            return
-
-        new_manufacturer_id: int | None = self.db.execute_query(
-            query=SQLQueries.ADD_MANUFACTURER,
-            params=(manufacturer_name,),
-        )
-
-        self.ui.lineEditNewManufacturer.clear()
-        self.spoke_module.load_manufacturers()
-
-        if new_manufacturer_id is None:
-            return
-        new_manufacturer_id = int(new_manufacturer_id)
-
-        self.ui.comboBoxManufacturer.setCurrentIndex(
-            self.ui.comboBoxManufacturer.findData(
-                new_manufacturer_id))
 
     def use_spoke(self, is_left: bool) -> None:
         """

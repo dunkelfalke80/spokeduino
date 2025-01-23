@@ -76,10 +76,9 @@ class SpokeModule:
 
         self.ui.comboBoxType.setCurrentIndex(-1)
 
-    def update_spoke_details(self, sender: QComboBox) -> None:
+    def update_spoke_details(self) -> None:
         """
-        Update the spoke details fields when a spoke is
-        selected in comboBoxSpoke.
+        Update the spoke details fields when a spoke is selected.
         """
         view: QTableWidget = self.ui.tableWidgetSpokesDatabase
         selected_row: int = view.currentRow()
@@ -88,7 +87,8 @@ class SpokeModule:
 
         # Retrieve the spoke ID from the first column
         id_item: QTableWidgetItem | None = view.item(selected_row, 0)
-        spoke_id: Any | None = id_item.data(Qt.ItemDataRole.UserRole) if id_item else None
+        spoke_id: Any | None = (id_item.data(Qt.ItemDataRole.UserRole)
+                                if id_item else None)
 
         if spoke_id is None:
             return
@@ -131,8 +131,7 @@ class SpokeModule:
 
         # Automatically load spokes for the first manufacturer
         if manufacturers:
-            self.ui.comboBoxManufacturer.\
-                setCurrentIndex(0)
+            self.ui.comboBoxManufacturer.setCurrentIndex(0)
             self.load_spokes()
 
     def load_spokes(self) -> None:
@@ -151,7 +150,12 @@ class SpokeModule:
             query=SQLQueries.GET_SPOKES_BY_MANUFACTURER,
             params=(manufacturer_id,)
         )
+        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
+        view.clearContents()  # Clear existing data
+        view.setColumnCount(6)  # Set column count for your table structure
+
         if not spokes:
+            view.setRowCount(0)  # Set row count
             return
 
         # Store current spokes with their IDs
@@ -159,10 +163,7 @@ class SpokeModule:
             (spoke[0], list(spoke[1:]))
             for spoke in spokes
         ]
-        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
-        view.clearContents()  # Clear existing data
         view.setRowCount(len(spokes))  # Set row count
-        view.setColumnCount(6)  # Set column count for your table structure
 
         # Populate the table widget
         for row_idx, (spoke_id, spoke_data) in enumerate(self.current_spokes):
@@ -188,8 +189,9 @@ class SpokeModule:
         view.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         view.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.populate_filter_type()
-        view.setCurrentCell(0, 0)
+        view.selectRow(0)
         view.setFocus()
+        self.update_spoke_details()
 
     def populate_filter_type(self) -> None:
         """
@@ -221,24 +223,6 @@ class SpokeModule:
         """
         self.current_spokes.sort(key=lambda x: x[1][column])
         self.ui.tableWidgetSpokesDatabase.model().layoutChanged.emit()
-
-    def select_spoke_row(self) -> None:
-        """
-        Select the corresponding row in tableWidgetSpokesDatabase
-        based on the combobox.
-        """
-        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
-        res, spoke_id = self.get_selected_spoke_id()
-        if not res:
-            view.clearSelection()
-            return
-
-        # Find the matching row by spoke ID
-        for row in range(view.rowCount()):
-            id_item = view.item(row, 0)
-            if id_item and id_item.data(Qt.ItemDataRole.UserRole) == spoke_id:
-                view.selectRow(row)
-                break
 
     def unselect_spoke(self) -> None:
         """
@@ -488,3 +472,27 @@ class SpokeModule:
         new_spoke_id = int(new_spoke_id)
 
         self.load_spokes()
+
+    def create_new_manufacturer(self) -> None:
+        """
+        Insert a new manufacturer into the manufacturers table and select it.
+        """
+        manufacturer_name: str = self.ui.lineEditNewManufacturer.text()
+        if not manufacturer_name:
+            return
+
+        new_manufacturer_id: int | None = self.db.execute_query(
+            query=SQLQueries.ADD_MANUFACTURER,
+            params=(manufacturer_name,),
+        )
+
+        self.ui.lineEditNewManufacturer.clear()
+        self.load_manufacturers()
+
+        if new_manufacturer_id is None:
+            return
+        new_manufacturer_id = int(new_manufacturer_id)
+
+        self.ui.comboBoxManufacturer.setCurrentIndex(
+            self.ui.comboBoxManufacturer.findData(
+                new_manufacturer_id))
