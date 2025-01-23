@@ -31,6 +31,10 @@ class MeasurementModule:
         self.messagebox: Messagebox = messagebox
         self.tensiometer_module: TensiometerModule = tensiometer_module
         self.db: DatabaseModule = db
+        self.__edit_mode: bool = False
+
+    def set_edit_mode(self, mode: bool) -> None:
+        self.__edit_mode = mode
 
     def update_measurement_button_states(self) -> None:
         """

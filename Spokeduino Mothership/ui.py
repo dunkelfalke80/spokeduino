@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'spokeduino_mothershipDMitml.ui'
+## Form generated from reading UI file 'spokeduino_mothershipZNoylk.ui'
 ##
 ## Created by: Qt User Interface Compiler version 6.8.1
 ##
@@ -162,12 +162,21 @@ class Ui_mainWindow(object):
 
         self.horizontalLayoutSpokeDefinitionsDatabase_6.addWidget(self.pushButtonNewMeasurement)
 
+        self.pushButtonEditMeasurement = QPushButton(self.groupBoxListMeasurementsDatabase)
+        self.pushButtonEditMeasurement.setObjectName(u"pushButtonEditMeasurement")
+        sizePolicy2.setHeightForWidth(self.pushButtonEditMeasurement.sizePolicy().hasHeightForWidth())
+        self.pushButtonEditMeasurement.setSizePolicy(sizePolicy2)
+        icon3 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentProperties))
+        self.pushButtonEditMeasurement.setIcon(icon3)
+
+        self.horizontalLayoutSpokeDefinitionsDatabase_6.addWidget(self.pushButtonEditMeasurement)
+
         self.pushButtonDeleteMeasurement = QPushButton(self.groupBoxListMeasurementsDatabase)
         self.pushButtonDeleteMeasurement.setObjectName(u"pushButtonDeleteMeasurement")
         sizePolicy2.setHeightForWidth(self.pushButtonDeleteMeasurement.sizePolicy().hasHeightForWidth())
         self.pushButtonDeleteMeasurement.setSizePolicy(sizePolicy2)
-        icon3 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.ListRemove))
-        self.pushButtonDeleteMeasurement.setIcon(icon3)
+        icon4 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.ListRemove))
+        self.pushButtonDeleteMeasurement.setIcon(icon4)
 
         self.horizontalLayoutSpokeDefinitionsDatabase_6.addWidget(self.pushButtonDeleteMeasurement)
 
@@ -232,8 +241,8 @@ class Ui_mainWindow(object):
         sizePolicy3.setVerticalStretch(0)
         sizePolicy3.setHeightForWidth(self.pushButtonSaveAsManufacturer.sizePolicy().hasHeightForWidth())
         self.pushButtonSaveAsManufacturer.setSizePolicy(sizePolicy3)
-        icon4 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentSaveAs))
-        self.pushButtonSaveAsManufacturer.setIcon(icon4)
+        icon5 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentSaveAs))
+        self.pushButtonSaveAsManufacturer.setIcon(icon5)
 
         self.horizontalLayoutDatabaseLeft.addWidget(self.pushButtonSaveAsManufacturer)
 
@@ -370,8 +379,8 @@ class Ui_mainWindow(object):
         self.pushButtonUpdateSpoke.setObjectName(u"pushButtonUpdateSpoke")
         sizePolicy2.setHeightForWidth(self.pushButtonUpdateSpoke.sizePolicy().hasHeightForWidth())
         self.pushButtonUpdateSpoke.setSizePolicy(sizePolicy2)
-        icon5 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentSave))
-        self.pushButtonUpdateSpoke.setIcon(icon5)
+        icon6 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentSave))
+        self.pushButtonUpdateSpoke.setIcon(icon6)
 
         self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonUpdateSpoke)
 
@@ -379,7 +388,7 @@ class Ui_mainWindow(object):
         self.pushButtonSaveAsSpoke.setObjectName(u"pushButtonSaveAsSpoke")
         sizePolicy2.setHeightForWidth(self.pushButtonSaveAsSpoke.sizePolicy().hasHeightForWidth())
         self.pushButtonSaveAsSpoke.setSizePolicy(sizePolicy2)
-        self.pushButtonSaveAsSpoke.setIcon(icon4)
+        self.pushButtonSaveAsSpoke.setIcon(icon5)
 
         self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonSaveAsSpoke)
 
@@ -387,8 +396,8 @@ class Ui_mainWindow(object):
         self.pushButtonClearSpoke.setObjectName(u"pushButtonClearSpoke")
         sizePolicy2.setHeightForWidth(self.pushButtonClearSpoke.sizePolicy().hasHeightForWidth())
         self.pushButtonClearSpoke.setSizePolicy(sizePolicy2)
-        icon6 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentNew))
-        self.pushButtonClearSpoke.setIcon(icon6)
+        icon7 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentNew))
+        self.pushButtonClearSpoke.setIcon(icon7)
 
         self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonClearSpoke)
 
@@ -396,8 +405,8 @@ class Ui_mainWindow(object):
         self.pushButtonDeleteSpoke.setObjectName(u"pushButtonDeleteSpoke")
         sizePolicy2.setHeightForWidth(self.pushButtonDeleteSpoke.sizePolicy().hasHeightForWidth())
         self.pushButtonDeleteSpoke.setSizePolicy(sizePolicy2)
-        icon7 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditDelete))
-        self.pushButtonDeleteSpoke.setIcon(icon7)
+        icon8 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditDelete))
+        self.pushButtonDeleteSpoke.setIcon(icon8)
 
         self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonDeleteSpoke)
 
@@ -468,7 +477,7 @@ class Ui_mainWindow(object):
 
         self.pushButtonSaveMeasurement = QPushButton(self.groupBoxMeasurement)
         self.pushButtonSaveMeasurement.setObjectName(u"pushButtonSaveMeasurement")
-        self.pushButtonSaveMeasurement.setIcon(icon5)
+        self.pushButtonSaveMeasurement.setIcon(icon6)
 
         self.horizontalLayoutMeasurementsButtons.addWidget(self.pushButtonSaveMeasurement)
 
@@ -711,8 +720,8 @@ class Ui_mainWindow(object):
         sizePolicy5.setVerticalStretch(0)
         sizePolicy5.setHeightForWidth(self.pushButtonStartTensioning.sizePolicy().hasHeightForWidth())
         self.pushButtonStartTensioning.setSizePolicy(sizePolicy5)
-        icon8 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoUp))
-        self.pushButtonStartTensioning.setIcon(icon8)
+        icon9 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.GoUp))
+        self.pushButtonStartTensioning.setIcon(icon9)
 
         self.gridLayoutTensionButtons.addWidget(self.pushButtonStartTensioning, 0, 0, 1, 1)
 
@@ -724,8 +733,8 @@ class Ui_mainWindow(object):
         self.pushButtonSwitchView.setObjectName(u"pushButtonSwitchView")
         sizePolicy5.setHeightForWidth(self.pushButtonSwitchView.sizePolicy().hasHeightForWidth())
         self.pushButtonSwitchView.setSizePolicy(sizePolicy5)
-        icon9 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaylistRepeat))
-        self.pushButtonSwitchView.setIcon(icon9)
+        icon10 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.MediaPlaylistRepeat))
+        self.pushButtonSwitchView.setIcon(icon10)
 
         self.gridLayoutTensionButtons.addWidget(self.pushButtonSwitchView, 0, 5, 1, 1)
 
@@ -837,8 +846,8 @@ class Ui_mainWindow(object):
         self.pushButtonMultipleTensiometers.setObjectName(u"pushButtonMultipleTensiometers")
         sizePolicy2.setHeightForWidth(self.pushButtonMultipleTensiometers.sizePolicy().hasHeightForWidth())
         self.pushButtonMultipleTensiometers.setSizePolicy(sizePolicy2)
-        icon10 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditSelectAll))
-        self.pushButtonMultipleTensiometers.setIcon(icon10)
+        icon11 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditSelectAll))
+        self.pushButtonMultipleTensiometers.setIcon(icon11)
 
         self.horizontalLayout_3.addWidget(self.pushButtonMultipleTensiometers)
 
@@ -1164,6 +1173,7 @@ class Ui_mainWindow(object):
         self.pushButtonUseLeft.setText(QCoreApplication.translate("mainWindow", u"Use on the left", None))
         self.pushButtonUseRight.setText(QCoreApplication.translate("mainWindow", u"Use on the right", None))
         self.pushButtonNewMeasurement.setText(QCoreApplication.translate("mainWindow", u"Add", None))
+        self.pushButtonEditMeasurement.setText(QCoreApplication.translate("mainWindow", u"Edit", None))
         self.pushButtonDeleteMeasurement.setText(QCoreApplication.translate("mainWindow", u"Remove", None))
         self.groupBoxSpokeDatabase.setTitle(QCoreApplication.translate("mainWindow", u"Select or create a spoke", None))
         self.groupBoxManufacturer.setTitle(QCoreApplication.translate("mainWindow", u"Manufacturer", None))

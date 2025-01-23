@@ -10,7 +10,6 @@ from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtWidgets import QComboBox
 from database_module import DatabaseModule
 from measurement_module import MeasurementModule
-from tensiometer_module import TensiometerModule
 from sql_queries import SQLQueries
 from helpers import Messagebox, Generics
 
@@ -412,4 +411,8 @@ class SpokeModule:
         self.ui.pushButtonSaveAsSpoke.setEnabled(required_fields_save_spoke)
         self.ui.pushButtonUseLeft.setEnabled(current_measurement_row >= 0)
         self.ui.pushButtonUseRight.setEnabled(current_measurement_row >= 0)
-        self.ui.pushButtonDeleteMeasurement.setEnabled(current_measurement_row >= 0)
+        self.ui.pushButtonDeleteMeasurement.setEnabled(
+            current_measurement_row >= 0)
+        self.ui.measurementTab.setEnabled(current_spoke_row >= 0)
+        self.ui.pushButtonNewMeasurement.setEnabled(current_spoke_row >= 0)
+        self.ui.pushButtonEditMeasurement.setEnabled(current_measurement_row >= 0)

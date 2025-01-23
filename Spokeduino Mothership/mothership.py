@@ -246,6 +246,13 @@ class Spokeduino(QMainWindow):
         self.ui.pushButtonDeleteMeasurement.clicked.connect(
             self.measurement_module.delete_measurement)
         self.ui.pushButtonNewMeasurement.clicked.connect(
+            lambda: self.measurement_module.set_edit_mode(False))
+        self.ui.pushButtonNewMeasurement.clicked.connect(
+            lambda: self.ui.tabWidget.setCurrentIndex(
+                self.ui.tabWidget.indexOf(self.ui.measurementTab)))
+        self.ui.pushButtonEditMeasurement.clicked.connect(
+            lambda: self.measurement_module.set_edit_mode(True))
+        self.ui.pushButtonEditMeasurement.clicked.connect(
             lambda: self.ui.tabWidget.setCurrentIndex(
                 self.ui.tabWidget.indexOf(self.ui.measurementTab)))
         self.ui.tableWidgetMeasurements.itemChanged.connect(
@@ -401,12 +408,16 @@ class Spokeduino(QMainWindow):
             case self.ui.measurementTab:
                 self.measurement_module.setup_measurements_table()
             case self.ui.tensioningTab:
+                self.measurement_module.set_edit_mode(False)
                 self.tensioning_module.setup_table(True)
                 self.tensioning_module.setup_table(False)
             case self.ui.databaseTab:
+                self.measurement_module.set_edit_mode(False)
                 QTimer.singleShot(
                     50,
                     self.spoke_module.align_filters_with_table)
+            case self.ui.setupTab:
+                self.measurement_module.set_edit_mode(False)
 
 
 def main() -> None:
