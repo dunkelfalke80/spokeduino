@@ -1,14 +1,17 @@
+from typing import Any
 from PySide6.QtCore import Qt
-from PySide6.QtCore import QAbstractTableModel
 from PySide6.QtCore import QLocale
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QMessageBox
+from PySide6.QtWidgets import QTableWidget
+from PySide6.QtWidgets import QTableWidgetItem
 
 
 class Messagebox:
 
-    def __init__(self, main_window: QMainWindow) -> None:
-        self.main_window = main_window
+    def __init__(self, main_window: QMainWindow, ui: Any) -> None:
+        self.main_window: QMainWindow = main_window
+        self.ui: Any = ui
 
     def info(self, text: str) -> None:
         QMessageBox.information(self.main_window, "Info", text)
@@ -60,3 +63,35 @@ class TextChecker:
         if full_string and fixed_input.endswith(QLocale().decimalPoint()):
             fixed_input = fixed_input[:-1]
         return fixed_input
+
+
+class Generics:
+
+    @staticmethod
+    def get_selected_row_id(view: QTableWidget) -> int:
+        """
+        Returns the id of the currently selected row.
+        If no row is selected, returns -1
+        """
+        # No data in the table
+        if view.rowCount() < 1:
+            return -1
+
+        # Determine the row
+        selected_row: int = view.currentRow()
+        if view.rowCount() > 1 and selected_row < 0:
+            return -1
+
+        # Default to the only row if none are explicitly selected
+        if selected_row < 0:
+            selected_row = 0
+
+        # Get the ID of the selected row
+        id_item: QTableWidgetItem | None = view.item(selected_row, 0)
+        if id_item is None:
+            return -1
+
+        measurement_id = id_item.data(Qt.ItemDataRole.UserRole)
+        if measurement_id is None:
+            return -1
+        return int(measurement_id)

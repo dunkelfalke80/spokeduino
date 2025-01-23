@@ -27,7 +27,7 @@ from measurement_module import MeasurementModule
 from unit_converter import UnitConverter
 from unit_converter import UnitEnum
 from customtablewidget import CustomTableWidget
-from helpers import Messagebox
+from helpers import Messagebox, Generics
 
 class Spokeduino(QMainWindow):
     """
@@ -66,11 +66,13 @@ class Spokeduino(QMainWindow):
             ui=self.ui,
             current_path=self.current_path,
             db=self.db)
-        self.messagebox = Messagebox(self)
+        self.messagebox = Messagebox(self, self.ui)
         self.measurement_module = MeasurementModule(
             main_window=self,
             ui=self.ui,
-            messagebox=self.messagebox)
+            unit_converter=self.unit_converter,
+            messagebox=self.messagebox,
+            db=self.db)
         self.spokeduino_module = SpokeduinoModule(
             ui=self.ui,
             db=self.db,
@@ -79,7 +81,6 @@ class Spokeduino(QMainWindow):
         self.spoke_module = SpokeModule(
             main_window=self,
             ui=self.ui,
-            unit_converter=self.unit_converter,
             messagebox=self.messagebox,
             db=self.db,
             current_path=self.current_path)
@@ -150,16 +151,12 @@ class Spokeduino(QMainWindow):
         self.setup_module.load_tensiometers()
         self.setup_module.load_settings()
         self.spoke_module.load_manufacturers()
-        self.toggle_new_manufacturer_button()
-        # Delay to ensure Qt's focus/selection state is updated
-        QTimer.singleShot(100,
-            self.spoke_module.align_filters_with_table)
 
         # Tensioning related entries
         self.spoke_tensions_left: list[tuple[float, float]] = []
         self.spoke_tensions_right: list[tuple[float, float]] = []
-        self.left_spoke_formula: str = ""
-        self.right_spoke_formula: str = ""
+        self.left_spoke_measurement_id: int = -1
+        self.right_spoke_measurement_id: int = -1
         self.unit: UnitEnum = self.unit_converter.get_unit()
         self.setup_signals_and_slots()
 
@@ -167,38 +164,36 @@ class Spokeduino(QMainWindow):
         """
         Connect UI elements to their respective event handlers for both tabs.
         """
-        # Clear and Edit Spoke Buttons
+        # Application wide elements
+        self.ui.tabWidget.currentChanged.connect(self.tab_index_changed)
+
+        # Spoke buttons
         self.ui.pushButtonUpdateSpoke.clicked.connect(
             self.spoke_module.update_spoke)
         self.ui.pushButtonDeleteSpoke.clicked.connect(
             self.spoke_module.delete_spoke)
-        self.ui.tabWidget.currentChanged.connect(self.tab_index_changed)
+        self.ui.pushButtonClearSpoke.clicked.connect(
+            self.spoke_module.clear_spoke_details)
+        self.ui.pushButtonSaveAsSpoke.clicked.connect(
+            self.spoke_module.save_as_spoke)
 
-        # Synchronize fields and buttons
+        # Synchronize spoke fields and spoke buttons
         self.ui.lineEditName.textChanged.connect(
-            self.toggle_spoke_buttons)
-
+            self.spoke_module.toggle_spoke_related_buttons)
         self.ui.comboBoxType.currentIndexChanged.connect(
-            self.toggle_spoke_buttons)
-
+            self.spoke_module.toggle_spoke_related_buttons)
         self.ui.lineEditGauge.textChanged.connect(
-            self.toggle_spoke_buttons)
-
+            self.spoke_module.toggle_spoke_related_buttons)
         self.ui.lineEditWeight.textChanged.connect(
-            self.toggle_spoke_buttons)
-
+            self.spoke_module.toggle_spoke_related_buttons)
         self.ui.lineEditDimension.textChanged.connect(
-            self.toggle_spoke_buttons)
+            self.spoke_module.toggle_spoke_related_buttons)
 
         # Spoke table-related signals
         self.ui.tableWidgetSpokesDatabase.currentCellChanged.connect(
             self.spoke_module.update_spoke_details)
 
-        # Filters
-        self.ui.tabWidget.currentChanged.connect(
-        # Delay to ensure Qt's focus/selection state is updated
-        QTimer.singleShot(100,
-            self.spoke_module.align_filters_with_table))
+        # Spoke table filters
         self.ui.lineEditFilterName.textChanged.connect(
             self.spoke_module.filter_spoke_table)
         self.ui.comboBoxFilterType.currentTextChanged.connect(
@@ -216,7 +211,7 @@ class Spokeduino(QMainWindow):
 
         # Manufacturer-related buttons and combo boxes
         self.ui.lineEditNewManufacturer.textChanged.connect(
-            self.toggle_new_manufacturer_button)
+            self.spoke_module.toggle_spoke_related_buttons)
         self.ui.pushButtonSaveAsManufacturer.clicked.connect(
             self.spoke_module.create_new_manufacturer)
         self.ui.comboBoxManufacturer.\
@@ -225,7 +220,8 @@ class Spokeduino(QMainWindow):
 
         # Tensiometer-related signals
         self.ui.comboBoxTensiometer.currentIndexChanged.connect(
-           lambda: self.spoke_module.load_measurements(None, None))
+           lambda: self.measurement_module.load_measurements(
+               None, None))
         self.ui.lineEditNewTensiometer.textChanged.connect(
             self.toggle_new_tensiometer_button)
         self.ui.pushButtonNewTensiometer.clicked.connect(
@@ -233,6 +229,8 @@ class Spokeduino(QMainWindow):
         self.ui.pushButtonMultipleTensiometers.clicked.connect(
             self.toggle_multi_tensiometer_mode)
         self.ui.pushButtonMultipleTensiometers.setCheckable(True)
+        self.ui.comboBoxTensiometer.currentIndexChanged.connect(
+            self.save_tensiometer)
 
         # Measurement-related signals
         self.ui.tableWidgetMeasurementList.clicked.connect(
@@ -273,8 +271,8 @@ class Spokeduino(QMainWindow):
         self.ui.checkBoxSpokeduinoEnabled.checkStateChanged.connect(
             self.spokeduino_module.restart_spokeduino_port)
 
-        # Tensiometer selection
-        self.ui.comboBoxTensiometer.currentIndexChanged.connect(self.save_tensiometer)
+        # Spokeduino
+        self.spokeduino_state: SpokeduinoState = SpokeduinoState.WAITING
 
         # Measurement units
         self.ui.radioButtonNewton.toggled.connect(
@@ -385,9 +383,6 @@ class Spokeduino(QMainWindow):
             lambda row, column, value: self.on_tensioning_cell_changing(
                 is_left=True, row=row, column=column, value=value))
 
-        # Spokeduino
-        self.spokeduino_state: SpokeduinoState = SpokeduinoState.WAITING
-
     @override
     def resizeEvent(self, event) -> None:
         """
@@ -415,6 +410,11 @@ class Spokeduino(QMainWindow):
             case self.ui.tensioningTab:
                 self.setup_tensioning_table(True)
                 self.setup_tensioning_table(False)
+            case self.ui.databaseTab:
+                QTimer.singleShot(
+                    50,
+                    self.spoke_module.align_filters_with_table)
+
 
     def delete_measurement(self) -> None:
         """
@@ -438,18 +438,9 @@ class Spokeduino(QMainWindow):
         if selected_row < 0:
             selected_row = 0
 
-        # Get the ID of the measurement to delete
-        id_item: QTableWidgetItem | None = view.item(selected_row, 0)
-        if id_item is None:
-            self.messagebox.err("Unable to retrieve measurement ID.")
+        measurement_id: int = Generics.get_selected_row_id(view)
+        if (measurement_id < 0):
             return
-
-        measurement_id = id_item.data(Qt.ItemDataRole.UserRole)
-        if measurement_id is None:
-            self.messagebox.err("Invalid measurement ID.")
-            return
-        measurement_id = int(measurement_id)
-
         # Execute the deletion query
         try:
             self.db.execute_query(
@@ -462,7 +453,7 @@ class Spokeduino(QMainWindow):
 
         # Clear selection, update the table, and inform the user
         view.clearSelection()
-        self.spoke_module.load_measurements(None, None)
+        self.measurement_module.load_measurements(None, None)
         self.messagebox.info("Measurement deleted.")
 
 
@@ -484,29 +475,6 @@ class Spokeduino(QMainWindow):
         """
         is_filled = bool(self.ui.lineEditNewTensiometer.text())
         self.ui.pushButtonNewTensiometer.setEnabled(is_filled)
-
-    def toggle_new_manufacturer_button(self) -> None:
-        """
-        Enable or disable pushButtonNewManufacturer
-        based on lineEditNewManufacturer.
-        """
-        self.ui.pushButtonSaveAsManufacturer.setEnabled(
-            len(self.ui.lineEditNewManufacturer.text()) > 0)
-
-    def toggle_spoke_buttons(self) -> None:
-        """
-        Enable or disable pushButtonCreateSpoke
-        and pushButtonEditSpoke based on spoke detail fields.
-        """
-        required_fields_filled: bool = all([
-            self.ui.lineEditName.text(),
-            self.ui.comboBoxType.currentIndex() >= 0,
-            self.ui.lineEditGauge.text(),
-            self.ui.lineEditWeight.text(),
-            self.ui.lineEditDimension.text()
-        ])
-        self.ui.pushButtonUpdateSpoke.setEnabled(required_fields_filled)
-        self.ui.pushButtonSaveAsSpoke.setEnabled(required_fields_filled)
 
     def toggle_multi_tensiometer_mode(self) -> None:
         """
@@ -574,54 +542,25 @@ class Spokeduino(QMainWindow):
         Write the selected spoke details to plainTextEditSelectedSpoke
         and save the formula for the spoke based on the selected or first measurement.
         """
-        res, spoke_id = self.spoke_module.get_selected_spoke_id()
-        if not res:
+        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
+        spoke_id: int = Generics.get_selected_row_id(view)
+        if spoke_id < 0:
             return
 
-        # Fetch spoke details from the database
-        spoke: list[Any] = self.db.execute_select(
-            SQLQueries.GET_SPOKES_BY_ID,
-            params=(spoke_id,)
-        )
-        if not spoke:
-            self.messagebox.err("Spoke not found in the database.")
-            return
-
-        # Fetch the current tensiometer ID
-        tensiometer_id: int | None = self.ui.comboBoxTensiometer.currentData()
-        if tensiometer_id is None:
-            self.messagebox.err("A single tensiometer must be selected first.")
-            return
-        tensiometer_id = int(tensiometer_id)
-
-        # Fetch measurements for the selected spoke and tensiometer
-        measurements: list[Any] | None = (
-            self.spoke_module.load_measurements(
-                spoke_id=spoke_id,
-                tensiometer_id=tensiometer_id))
-        if measurements is None:
-            self.messagebox.err("No measurements found for the selected spoke.")
-            return
-
-        # Determine which measurement to use
-        selected_measurement: int | None = self.measurement_module.get_selected_measurement_id()
-
-        # formula: str = PiecewiseQuarticFit.generate_model(list(zip( tensions, relevant_measurements)))
-        # Extract and format spoke details
-        _, name, _, gauge, _, dimensions, comment, *_ = spoke[0]
         spoke_details: str = (
-            f"{name} {gauge}G\n"
-            f"{dimensions}\n"
-            f"{comment}"
+            f"{self.ui.lineEditName.text()} {self.ui.lineEditGauge.text()}G\n"
+            f"{self.ui.lineEditDimension.text()}\n"
+            f"{self.ui.lineEditSpokeComment.text()}"
         )
 
-        # Set the details and save the formula
+        measurement_id: int = Generics.get_selected_row_id(self.ui.tableWidgetMeasurementList)
+
         if is_left:
             self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
-            # self.left_spoke_formula = formula
+            self.left_spoke_measurement_id = measurement_id
         else:
             self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
-            # self.right_spoke_formula = formula
+            self.right_spoke_measurement_id = measurement_id
 
     def set_unit(self, unit: UnitEnum) -> None:
         self.unit = unit
@@ -744,12 +683,11 @@ class Spokeduino(QMainWindow):
         """
         Save measurement data for all columns in tableWidgetMeasurements.
         """
-        table: CustomTableWidget = self.ui.tableWidgetMeasurements
-        db: DatabaseModule = self.db  # Reference to the database module
+        view: CustomTableWidget = self.ui.tableWidgetMeasurements
 
         # Ensure a valid spoke ID is selected
-        res, spoke_id = self.spoke_module.get_selected_spoke_id()
-        if not res:
+        spoke_id: int = Generics.get_selected_row_id(self.ui.tableWidgetSpokesDatabase)
+        if spoke_id < 0:
             self.messagebox.err("No spoke selected")
             return
 
@@ -757,23 +695,14 @@ class Spokeduino(QMainWindow):
         comment: str = self.ui.lineEditMeasurementComment.text().strip()
 
         # Iterate over each column in the table
-        for column in range(table.columnCount()):
-            try:
-                # Get measurements and formula for the column
-                #measurements, formula = \
-                #    self.measurement_module.calculate_formula(column)
-                pass
-            except ValueError as ex:
-                self.messagebox.err(f"Column {column + 1}: {str(ex)}")
-                return
-
+        for column in range(view.columnCount()):
             # Fetch the tensiometer ID for the column
-            current_column: QTableWidgetItem | None = table.horizontalHeaderItem(column)
+            current_column: QTableWidgetItem | None = view.horizontalHeaderItem(column)
             if current_column is None:
                 self.messagebox.err(f"Column {column + 1}: No current column")
                 return
 
-            header_item: QTableWidgetItem | None = table.horizontalHeaderItem(column)
+            header_item: QTableWidgetItem | None = view.horizontalHeaderItem(column)
             if header_item is None:
                 self.messagebox.err(f"Column {column + 1}: No header item")
                 return
@@ -808,12 +737,12 @@ class Spokeduino(QMainWindow):
 
         # Notify the user
         self.messagebox.info("Measurements saved successfully")
-        for row in range(table.rowCount()):
-            for col in range(table.columnCount()):
-                item: QTableWidgetItem | None = table.item(row, col)
+        for row in range(view.rowCount()):
+            for col in range(view.columnCount()):
+                item: QTableWidgetItem | None = view.item(row, col)
                 if item:
                     item.setText("")
-        self.spoke_module.load_measurements(None, None)
+        self.measurement_module.load_measurements(None, None)
 
     def setup_tensioning_table(self, is_left: bool) -> None:
         """
@@ -960,7 +889,6 @@ class Spokeduino(QMainWindow):
         value = value.replace(",", ".")
         deflection: float = float(value)
         tension: float = 0.0
-        formula: str = self.left_spoke_formula if is_left else self.right_spoke_formula
         try:
             # tension = PiecewiseQuarticFit.evaluate(formula, deflection)
             pass
