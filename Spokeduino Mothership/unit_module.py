@@ -8,7 +8,7 @@ class UnitEnum(Enum):
     LBF = "lbF"
 
 
-class UnitConverter:
+class UnitModule:
 
     def __init__(self,
                  ui: Any

@@ -71,20 +71,6 @@ class SetupModule:
         else:
             logging.error(f"Failed to loopenad translation file: {i18n_path}")
 
-    def load_tensiometers(self) -> None:
-        """
-        Load all tensiometers from the database
-        and populate comboBoxTensiometer.
-        """
-        tensiometers: list[Any] = self.db.execute_select(
-            query=SQLQueries.GET_TENSIOMETERS, params=None)
-        if not tensiometers:
-            return
-
-        self.ui.comboBoxTensiometer.clear()
-        for tensiometer in tensiometers:
-            self.ui.comboBoxTensiometer.addItem(tensiometer[1], tensiometer[0])
-
     def load_available_com_ports(self) -> None:
         """
         Detect available COM ports and populate comboBoxSpokeduinoPort.
