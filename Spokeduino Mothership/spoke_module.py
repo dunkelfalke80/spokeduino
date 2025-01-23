@@ -9,6 +9,8 @@ from PySide6.QtWidgets import QTableWidget
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtWidgets import QComboBox
 from database_module import DatabaseModule
+from measurement_module import MeasurementModule
+from tensiometer_module import TensiometerModule
 from sql_queries import SQLQueries
 from helpers import Messagebox, Generics
 
@@ -18,6 +20,7 @@ class SpokeModule:
     def __init__(self,
                  main_window: QMainWindow,
                  ui: Any,
+                 measurement_module: MeasurementModule,
                  messagebox: Messagebox,
                  db: DatabaseModule,
                  current_path: str) -> None:
@@ -27,6 +30,7 @@ class SpokeModule:
         self.translator = QTranslator()
         self.current_language = "en"
         self.db: DatabaseModule = db
+        self.measurement_module: MeasurementModule = measurement_module
         self.messagebox: Messagebox = messagebox
         self.__spoke_headers: list[str] = [
                 "Name",
@@ -66,7 +70,7 @@ class SpokeModule:
 
         self.ui.comboBoxType.setCurrentIndex(-1)
 
-    def update_spoke_details(self) -> None:
+    def load_spoke_details(self) -> None:
         """
         Update the spoke details fields when a spoke is selected.
         """
@@ -83,6 +87,7 @@ class SpokeModule:
             return
 
         self.update_fields(spokes[0][1:])
+        self.measurement_module.load_measurements(spoke_id, None, False)
 
     def load_manufacturers(self) -> None:
         """
@@ -175,7 +180,7 @@ class SpokeModule:
         view.setSelectionMode(QTableWidget.SelectionMode.SingleSelection)
         self.populate_filter_type()
         self.filter_spoke_table()
-        self.update_spoke_details()
+        self.load_spoke_details()
         self.toggle_spoke_related_buttons()
         # Delay to ensure Qt's focus/selection state is updated
         QTimer.singleShot(50,
@@ -208,7 +213,6 @@ class SpokeModule:
         self.ui.lineEditFilterName.clear()
         self.ui.lineEditFilterGauge.clear()
         combo.setCurrentIndex(0)
-
 
     def filter_spoke_table(self) -> None:
         """

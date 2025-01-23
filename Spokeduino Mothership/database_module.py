@@ -10,7 +10,7 @@ class DatabaseModule:
     Handles all database interactions for the Spokeduino application.
     """
     def __init__(self, db_path: str) -> None:
-        self.db_path = db_path
+        self.db_path: str = db_path
 
     def _get_line_info(self) -> str:
         return f"{inspect.stack()[1][2]}:{inspect.stack()[1][3]}"
@@ -57,7 +57,7 @@ class DatabaseModule:
         try:
             with sqlite3.connect(self.db_path) as connection:
                 cursor = connection.cursor()
-
+                connection.execute("PRAGMA foreign_keys = ON;")
                 # Load schema
                 with open(schema_file, "r") as f:
                     cursor.executescript(f.read())
@@ -78,6 +78,7 @@ class DatabaseModule:
         """
         try:
             with sqlite3.connect(self.db_path) as connection:
+                connection.execute("PRAGMA foreign_keys = ON;")
                 cursor: sqlite3.Cursor = connection.cursor()
                 if params is None:
                     cursor.execute(query)
@@ -95,6 +96,7 @@ class DatabaseModule:
         """
         try:
             with sqlite3.connect(self.db_path) as connection:
+                connection.execute("PRAGMA foreign_keys = ON;")
                 cursor: sqlite3.Cursor = connection.cursor()
                 cursor.execute(query, params)
                 connection.commit()

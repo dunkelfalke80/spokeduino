@@ -14,6 +14,7 @@ from database_module import DatabaseModule
 from unit_module import UnitModule
 from tensiometer_module import TensiometerModule
 
+
 class MeasurementModule:
 
     def __init__(self,
@@ -52,31 +53,28 @@ class MeasurementModule:
     def load_measurements(
             self,
             spoke_id: int | None,
-            tensiometer_id: int | None) -> list[Any] | None:
+            tensiometer_id: int | None,
+            list_only: bool) -> list[Any] | None:
         """
         Load all measurements for the selected spoke and tensiometer
-        and populate tableWidgetMeasurements.
-        Each row corresponds to a measurement set
-        with the first column as a comment,
-        the second as the timestamp (up to minutes),
-        and subsequent columns displaying
-        tension:deflection pairs with unit conversion.
+        and populate the measurement list.
+        Each row corresponds to a measurement set with:
+        - The first column as a comment
+        - The second as the timestamp (up to minutes)
+        - Subsequent columns displaying tension:deflection pairs with unit conversion.
         """
-        list_only: bool = False
         if spoke_id is None:
             view: QTableWidget = self.ui.tableWidgetSpokesDatabase
             spoke_id = Generics.get_selected_row_id(view)
-        else:
-            list_only = True
 
         if tensiometer_id is None:
-            tensiometer_id = self.ui.comboBoxTensiometer.currentData()
-        view: QTableWidget = self.ui.tableWidgetMeasurements
+            tensiometer_id = self.tensiometer_module.get_primary_tensiometer()
+        view: QTableWidget = self.ui.tableWidgetMeasurementList
 
-        if spoke_id is None or tensiometer_id is None:
-            view.clear()
+        if spoke_id < 0 or tensiometer_id < 0:
+            view.clearContents()
+            view.setRowCount(0)
             return None
-        tensiometer_id = int(tensiometer_id)
 
         # Fetch measurement sets
         measurement_sets: list[Any] = self.db.execute_select(
@@ -85,20 +83,22 @@ class MeasurementModule:
         )
 
         if not measurement_sets:
-            view.clear()
+            view.clearContents()
+            view.setRowCount(0)
             return None
 
         # Fetch all measurements linked to the retrieved measurement sets
         set_ids: list[Any] = [ms[0] for ms in measurement_sets]
         query_string: str = f"{SQLQueries.GET_MEASUREMENTS} " \
-            f"({', '.join('?' for _ in set_ids)}) ORDER BY tension ASC"
+                            f"({', '.join('?' for _ in set_ids)}) ORDER BY tension ASC"
         measurements: list[Any] = self.db.execute_select(
             query=query_string,
-            params=set_ids  # Pass the list directly
+            params=set_ids
         )
 
         if not measurements:
-            view.clear()
+            view.clearContents()
+            view.setRowCount(0)
             return None
 
         if list_only:
@@ -118,8 +118,7 @@ class MeasurementModule:
                 grouped_measurements[set_id] = []
             # Convert the tension to the selected unit
             converted_tensions: tuple[float, float, float] = \
-                self.unit_module.convert_units(
-                value=tension, source=UnitEnum.NEWTON)
+                self.unit_module.convert_units(value=tension, source=UnitEnum.NEWTON)
             tension_converted: str = {
                 UnitEnum.NEWTON: f"{converted_tensions[0]:.0f}N",
                 UnitEnum.KGF: f"{converted_tensions[1]:.1f}kgF",
@@ -131,55 +130,45 @@ class MeasurementModule:
         # Build rows for each set, with measurements sorted by tension
         for set_id, measurements_list in grouped_measurements.items():
             comment, ts = set_info[set_id]
-            timestamp = ts.rsplit(":", 1)[0]  # Trunc to minutes
-            # Create the row: [comment, timestamp, sorted measurements]
-            row = (comment, [timestamp] + [m[1] for m in measurements_list])
-            data.append(row)
+            timestamp = ts.rsplit(":", 1)[0]  # Truncate to minutes
+            row_data = [comment, timestamp] + [m[1] for m in measurements_list]
+            data.append((set_id, row_data))
 
-        view.setRowCount(len(data))  # Set the number of rows
+        # Update the table
+        view.clearContents()
+        view.setRowCount(len(data))
+        view.setColumnCount(max(len(row[1]) for row in data))  # Ensure enough columns
 
-        # Fill the table
         for row_idx, (row_id, row_data) in enumerate(data):
             for col_idx, cell_data in enumerate(row_data):
                 item = QTableWidgetItem(cell_data)
-                # Make it read-only
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 if col_idx == 0:  # Store the ID in the first visible column
                     item.setData(Qt.ItemDataRole.UserRole, row_id)
                 view.setItem(row_idx, col_idx, item)
-        resize_mode = view.horizontalHeader().setSectionResizeMode
-        resize_mode(QHeaderView.ResizeMode.ResizeToContents)
+
+        # Adjust column sizes
+        header = view.horizontalHeader()
+        header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+
+        # Hide headers
+        view.verticalHeader().setVisible(False)
+        view.horizontalHeader().setVisible(False)
         return None
 
     def delete_measurement(self) -> None:
         """
-        Delete the currently selected measurement from the measurements table.
+        Delete the currently selected measurement from the measurements list.
         Deletes only if a valid measurement row is selected or if there's only one measurement.
         """
         view: QTableWidget = self.ui.tableWidgetMeasurementList
-
-        # No measurements in the table
-        if view.rowCount() < 1:
-            self.messagebox.info("No measurements to delete.")
-            return
-
-        # Determine the row to delete
-        selected_row: int = view.currentRow()
-        if view.rowCount() > 1 and selected_row < 0:
-            self.messagebox.err("No measurement row selected.")
-            return
-
-        # Default to the only row if none are explicitly selected
-        if selected_row < 0:
-            selected_row = 0
-
         measurement_id: int = Generics.get_selected_row_id(view)
         if (measurement_id < 0):
             return
         # Execute the deletion query
         try:
             self.db.execute_query(
-                query=SQLQueries.DELETE_MEASUREMENT,
+                query=SQLQueries.DELETE_MEASUREMENT_SET,
                 params=(measurement_id,)
             )
         except Exception as e:
@@ -188,12 +177,12 @@ class MeasurementModule:
 
         # Clear selection, update the table, and inform the user
         view.clearSelection()
-        self.load_measurements(None, None)
+        self.load_measurements(None, None, False)
         self.messagebox.info("Measurement deleted.")
 
     def select_measurement_row(self, index: QModelIndex) -> None:
         """
-        Handle row selection in tableWidgetMeasurements
+        Handle row selection in the measurement list
         This function ensures that the correct measurement row is highlighted.
         """
         if not index.isValid():
@@ -326,4 +315,4 @@ class MeasurementModule:
                 item: QTableWidgetItem | None = view.item(row, col)
                 if item:
                     item.setText("")
-        self.load_measurements(None, None)
+        self.load_measurements(None, None, False)

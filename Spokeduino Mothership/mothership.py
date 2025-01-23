@@ -4,12 +4,11 @@ import threading
 from typing import cast, Any, override
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QApplication, QTableWidget
+from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QLayout
 from PySide6.QtWidgets import QGroupBox
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QHeaderView
-from PySide6.QtWidgets import QTableWidgetItem
 from ui import Ui_mainWindow
 from spokeduino_module import SpokeduinoState
 from spokeduino_module import SpokeduinoModule
@@ -22,7 +21,7 @@ from measurement_module import MeasurementModule
 from unit_module import UnitModule
 from unit_module import UnitEnum
 from customtablewidget import CustomTableWidget
-from helpers import Messagebox, Generics
+from helpers import Messagebox
 
 class Spokeduino(QMainWindow):
     """
@@ -80,6 +79,7 @@ class Spokeduino(QMainWindow):
         self.spoke_module = SpokeModule(
             main_window=self,
             ui=self.ui,
+            measurement_module=self.measurement_module,
             messagebox=self.messagebox,
             db=self.db,
             current_path=self.current_path)
@@ -195,7 +195,7 @@ class Spokeduino(QMainWindow):
 
         # Spoke table-related signals
         self.ui.tableWidgetSpokesDatabase.currentCellChanged.connect(
-            self.spoke_module.update_spoke_details)
+            self.spoke_module.load_spoke_details)
 
         # Spoke table filters
         self.ui.lineEditFilterName.textChanged.connect(
@@ -225,7 +225,7 @@ class Spokeduino(QMainWindow):
         # Tensiometer-related signals
         self.ui.comboBoxTensiometer.currentIndexChanged.connect(
            lambda: self.measurement_module.load_measurements(
-               None, None))
+               None, None, False))
         self.ui.lineEditNewTensiometer.textChanged.connect(
             self.tensiometer_module.toggle_new_tensiometer_button)
         self.ui.pushButtonNewTensiometer.clicked.connect(

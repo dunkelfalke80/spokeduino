@@ -111,6 +111,12 @@ class SQLQueries:
                 WHERE
                     id = ?"""
 
+    DELETE_MEASUREMENT_SET: str = """
+                DELETE FROM
+                    measurement_sets
+                WHERE
+                    id = ?"""
+
     UPSERT_SETTING: str = """
                 INSERT INTO
                     settings (key, value)
