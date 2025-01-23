@@ -196,6 +196,8 @@ class Spokeduino(QMainWindow):
         # Spoke table-related signals
         self.ui.tableWidgetSpokesDatabase.currentCellChanged.connect(
             self.spoke_module.load_spoke_details)
+        self.ui.tableWidgetSpokesDatabase.currentCellChanged.connect(
+            self.spoke_module.toggle_spoke_related_buttons)
 
         # Spoke table filters
         self.ui.lineEditFilterName.textChanged.connect(
@@ -239,6 +241,8 @@ class Spokeduino(QMainWindow):
         # Measurement-related signals
         self.ui.tableWidgetMeasurementList.clicked.connect(
             self.measurement_module.select_measurement_row)
+        self.ui.tableWidgetMeasurementList.clicked.connect(
+            self.spoke_module.toggle_spoke_related_buttons)
         self.ui.pushButtonDeleteMeasurement.clicked.connect(
             self.measurement_module.delete_measurement)
         self.ui.pushButtonNewMeasurement.clicked.connect(

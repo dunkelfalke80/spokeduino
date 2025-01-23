@@ -400,10 +400,16 @@ class SpokeModule:
             self.ui.comboBoxType.currentIndex() >= 0,
             self.ui.lineEditGauge.text(),
             self.ui.lineEditWeight.text(),
-            self.ui.lineEditDimension.text()
-        ])
-        current_row: int = self.ui.tableWidgetSpokesDatabase.currentRow()
+            self.ui.lineEditDimension.text()])
+        current_spoke_row: int = \
+            Generics.get_selected_row_id(self.ui.tableWidgetSpokesDatabase)
+        current_measurement_row: int = \
+            Generics.get_selected_row_id(self.ui.tableWidgetMeasurementList)
+        self.ui.tableWidgetSpokesDatabase.currentRow()
         self.ui.pushButtonUpdateSpoke.setEnabled(required_fields_save_spoke
-                                                 and current_row >= 0)
-        self.ui.pushButtonDeleteSpoke.setEnabled(current_row >= 0)
+                                                 and current_spoke_row >= 0)
+        self.ui.pushButtonDeleteSpoke.setEnabled(current_spoke_row >= 0)
         self.ui.pushButtonSaveAsSpoke.setEnabled(required_fields_save_spoke)
+        self.ui.pushButtonUseLeft.setEnabled(current_measurement_row >= 0)
+        self.ui.pushButtonUseRight.setEnabled(current_measurement_row >= 0)
+        self.ui.pushButtonDeleteMeasurement.setEnabled(current_measurement_row >= 0)
