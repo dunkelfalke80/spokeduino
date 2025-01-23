@@ -158,8 +158,8 @@ class Spokeduino(QMainWindow):
         self.setup_module.setup_language()
         self.setup_module.populate_language_combobox()
         self.setup_module.load_available_com_ports()
-        self.setup_module.load_settings()
         self.tensiometer_module.load_tensiometers()
+        self.setup_module.load_settings()
         self.spoke_module.load_manufacturers()
 
         self.setup_signals_and_slots()
