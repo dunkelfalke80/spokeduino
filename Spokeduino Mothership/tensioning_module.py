@@ -32,11 +32,10 @@ class TensioningModule:
         self.messagebox: Messagebox = messagebox
         self.tensiometer_module: TensiometerModule = tensiometer_module
         self.db: DatabaseModule = db
-        self.__spoke_tensions_left: list[tuple[float, float]] = []
-        self.__spoke_tensions_right: list[tuple[float, float]] = []
-        self.__left_spoke_measurement_id: int = -1
-        self.__right_spoke_measurement_id: int = -1
-
+        self.__tensions_left: list[tuple[float, float]] = []
+        self.__tensions_right: list[tuple[float, float]] = []
+        self.__measurement_left: int = -1
+        self.__measurement_right: int = -1
 
     def setup_table(self, is_left: bool) -> None:
         """
@@ -59,9 +58,9 @@ class TensioningModule:
             spoke_amount = 0
 
         if is_left:
-            self.spoke_tensions_left = [(0.0, 0.0)] * spoke_amount
+            self.__tensions_left = [(0.0, 0.0)] * spoke_amount
         else:
-            self.spoke_tensions_right = [(0.0, 0.0)] * spoke_amount
+            self.__tensions_right = [(0.0, 0.0)] * spoke_amount
         # Define headers
         headers: list[str] = ["mm", self.unit_module.get_unit().value]
 
@@ -254,7 +253,7 @@ class TensioningModule:
 
         if is_left:
             self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
-            self.left_spoke_measurement_id = measurement_id
+            self.__measurement_left = measurement_id
         else:
             self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
-            self.right_spoke_measurement_id = measurement_id
+            self.__measurement_right = measurement_id
