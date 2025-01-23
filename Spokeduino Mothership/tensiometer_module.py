@@ -126,7 +126,6 @@ class TensiometerModule:
 
         else:
             # Disable multi-selection mode
-            self.__multi_tensiometer_enabled = False
             self.ui.pushButtonMultipleTensiometers.setChecked(False)
 
             # Restore single-selection mode
@@ -134,12 +133,14 @@ class TensiometerModule:
             self.load_tensiometers()
 
             # Restore the original tensiometer selection
-            selected_tensiometers: list[tuple[int, str]] = self.get_selected_tensiometers()
-            if selected_tensiometers:
-                tensiometer_id, _ = selected_tensiometers[0]
-                index = self.ui.comboBoxTensiometer.findData(tensiometer_id)
-                if index != -1:
-                    self.ui.comboBoxTensiometer.setCurrentIndex(index)
+            primary_tensiometer: int = self.get_primary_tensiometer()
+            print(f"restoring primary tensio {primary_tensiometer}")
+            if primary_tensiometer < 0:
+                return
+            index = self.ui.comboBoxTensiometer.findData(primary_tensiometer)
+            if index != -1:
+                self.ui.comboBoxTensiometer.setCurrentIndex(index)
+            self.__multi_tensiometer_enabled = False
 
     def create_new_tensiometer(self) -> None:
         """
@@ -161,12 +162,17 @@ class TensiometerModule:
             self.ui.comboBoxTensiometer.setCurrentIndex(index)
 
     def save_tensiometer(self) -> None:
+        print("saving tensiometer")
         if self.__multi_tensiometer_enabled: # Runtime only
+            print("multi tensio runtime only")
             return
 
         current_index: int = self.ui.comboBoxTensiometer.currentIndex()
-        if current_index != -1:
-            tensiometer_id = self.ui.comboBoxTensiometer.itemData(current_index)
-            self.setup_module.save_setting(
-                key="tensiometer_id",
-                value=str(tensiometer_id))
+        if current_index < 0:
+            return
+
+        tensiometer_id = self.ui.comboBoxTensiometer.itemData(current_index)
+        self.setup_module.save_setting(
+            key="tensiometer_id",
+            value=str(tensiometer_id))
+        print(f"tensio saved: {tensiometer_id}")

@@ -172,11 +172,11 @@ class CustomTableWidget(QTableWidget):
         row: int = self.currentRow()
         column: int = self.currentColumn()
 
-        if row < self.rowCount() - 1:
-            row += 1
-        elif column < self.columnCount() - 1:
-            row = 0
+        if column < self.columnCount() - 1:
             column += 1
+        elif row < self.rowCount() - 1:
+            column = 0
+            row += 1
         else:
             return  # Already at the last cell
 
@@ -197,11 +197,11 @@ class CustomTableWidget(QTableWidget):
         row: int = self.currentRow()
         column: int = self.currentColumn()
 
-        if row > 0:
-            row -= 1
-        elif column > 0:
+        if column > 0:
             column -= 1
-            row = self.rowCount() - 1
+        elif row > 0:
+            row -= 1
+            column = self.columnCount() - 1
         else:
             return  # Already at the first cell
 
