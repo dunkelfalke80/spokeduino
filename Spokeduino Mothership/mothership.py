@@ -346,7 +346,7 @@ class Spokeduino(QMainWindow):
 
         # Left tensioning table
         self.ui.pushButtonUseLeft.clicked.connect(
-            lambda: self.use_spoke(True))
+            lambda: self.tensioning_module.use_spoke(True))
         self.ui.lineEditSpokeAmountLeft.textChanged.connect(
             lambda: self.tensioning_module.setup_table(is_left=True))
         self.ui.lineEditTargetTensionLeft.textChanged.connect(
@@ -360,7 +360,7 @@ class Spokeduino(QMainWindow):
 
         # Right tensioning table
         self.ui.pushButtonUseRight.clicked.connect(
-            lambda: self.use_spoke(False))
+            lambda: self.tensioning_module.use_spoke(False))
         self.ui.lineEditSpokeAmountRight.textChanged.connect(
             lambda: self.tensioning_module.setup_table(is_left=False))
         self.ui.lineEditTargetTensionRight.textChanged.connect(
@@ -403,31 +403,6 @@ class Spokeduino(QMainWindow):
                 QTimer.singleShot(
                     50,
                     self.spoke_module.align_filters_with_table)
-
-    def use_spoke(self, is_left: bool) -> None:
-        """
-        Write the selected spoke details to plainTextEditSelectedSpoke
-        and save the formula for the spoke based on the selected or first measurement.
-        """
-        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
-        spoke_id: int = Generics.get_selected_row_id(view)
-        if spoke_id < 0:
-            return
-
-        spoke_details: str = (
-            f"{self.ui.lineEditName.text()} {self.ui.lineEditGauge.text()}G\n"
-            f"{self.ui.lineEditDimension.text()}\n"
-            f"{self.ui.lineEditSpokeComment.text()}"
-        )
-
-        measurement_id: int = Generics.get_selected_row_id(self.ui.tableWidgetMeasurementList)
-
-        if is_left:
-            self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
-            self.left_spoke_measurement_id = measurement_id
-        else:
-            self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
-            self.right_spoke_measurement_id = measurement_id
 
 
 def main() -> None:

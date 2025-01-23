@@ -14,7 +14,7 @@ from unit_module import UnitEnum, UnitModule
 from database_module import DatabaseModule
 from unit_module import UnitModule
 from tensiometer_module import TensiometerModule
-from helpers import TextChecker
+from helpers import TextChecker, Generics
 
 class TensioningModule:
 
@@ -233,3 +233,28 @@ class TensioningModule:
         if value == "":
             return
         self.on_cell_changed(is_left=is_left, row=row, column=column)
+
+    def use_spoke(self, is_left: bool) -> None:
+        """
+        Write the selected spoke details to plainTextEditSelectedSpoke
+        and save the formula for the spoke based on the selected or first measurement.
+        """
+        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
+        spoke_id: int = Generics.get_selected_row_id(view)
+        if spoke_id < 0:
+            return
+
+        spoke_details: str = (
+            f"{self.ui.lineEditName.text()} {self.ui.lineEditGauge.text()}G\n"
+            f"{self.ui.lineEditDimension.text()}\n"
+            f"{self.ui.lineEditSpokeComment.text()}"
+        )
+
+        measurement_id: int = Generics.get_selected_row_id(self.ui.tableWidgetMeasurementList)
+
+        if is_left:
+            self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
+            self.left_spoke_measurement_id = measurement_id
+        else:
+            self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
+            self.right_spoke_measurement_id = measurement_id
