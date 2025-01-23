@@ -223,9 +223,6 @@ class Spokeduino(QMainWindow):
                 self.spoke_module.load_spokes)
 
         # Tensiometer-related signals
-        self.ui.comboBoxTensiometer.currentIndexChanged.connect(
-           lambda: self.measurement_module.load_measurements(
-               None, None, False))
         self.ui.lineEditNewTensiometer.textChanged.connect(
             self.tensiometer_module.toggle_new_tensiometer_button)
         self.ui.pushButtonNewTensiometer.clicked.connect(
@@ -235,6 +232,9 @@ class Spokeduino(QMainWindow):
         self.ui.pushButtonMultipleTensiometers.setCheckable(True)
         self.ui.comboBoxTensiometer.currentIndexChanged.connect(
             self.tensiometer_module.save_tensiometer)
+        self.ui.comboBoxTensiometer.currentIndexChanged.connect(
+           lambda: self.measurement_module.load_measurements(
+               None, None, False))
 
         # Measurement-related signals
         self.ui.tableWidgetMeasurementList.clicked.connect(
