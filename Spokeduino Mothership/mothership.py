@@ -18,7 +18,7 @@ from setup_module import SetupModule
 from spoke_module import SpokeModule
 from tensiometer_module import TensiometerModule
 from tensioning_module import TensioningModule
-from measurement_module import MeasurementModule
+from measurement_module import MeasurementModule, MeasurementModeEnum
 from unit_module import UnitModule
 from unit_module import UnitEnum
 from customtablewidget import CustomTableWidget
@@ -268,12 +268,14 @@ class Spokeduino(QMainWindow):
         self.ui.pushButtonDeleteMeasurement.clicked.connect(
             self.measurement_module.delete_measurement)
         self.ui.pushButtonNewMeasurement.clicked.connect(
-            lambda: self.measurement_module.set_edit_mode(False))
+            lambda: self.measurement_module.set_mode(
+                MeasurementModeEnum.DEFAULT))
         self.ui.pushButtonNewMeasurement.clicked.connect(
             lambda: self.ui.tabWidget.setCurrentIndex(
                 self.ui.tabWidget.indexOf(self.ui.measurementTab)))
         self.ui.pushButtonEditMeasurement.clicked.connect(
-            lambda: self.measurement_module.set_edit_mode(True))
+            lambda: self.measurement_module.set_mode(
+                MeasurementModeEnum.EDIT))
         self.ui.pushButtonEditMeasurement.clicked.connect(
             lambda: self.ui.tabWidget.setCurrentIndex(
                 self.ui.tabWidget.indexOf(self.ui.measurementTab)))
@@ -439,17 +441,18 @@ class Spokeduino(QMainWindow):
             case self.ui.measurementTab:
                 self.measurement_module.setup_measurements_table()
             case self.ui.tensioningTab:
-                self.measurement_module.set_edit_mode(False)
                 self.tensioning_module.setup_table(True)
                 self.tensioning_module.setup_table(False)
             case self.ui.databaseTab:
                 self.spoke_module.load_spoke_details()
-                self.measurement_module.set_edit_mode(False)
+                self.measurement_module.set_mode(
+                    MeasurementModeEnum.DEFAULT)
                 QTimer.singleShot(
                     50,
                     self.spoke_module.align_filters_with_table)
             case self.ui.setupTab:
-                self.measurement_module.set_edit_mode(False)
+                self.measurement_module.set_mode(
+                    MeasurementModeEnum.DEFAULT)
 
     def update_statusbar_unit(self) -> None:
         self.status_label_unit.setText(

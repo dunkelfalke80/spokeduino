@@ -244,14 +244,21 @@ class TensioningModule:
         if spoke_id < 0:
             return
 
+        view: QTableWidget = self.ui.tableWidgetMeasurementList
+        measurement_id: int = Generics.get_selected_row_id(view)
+        if measurement_id == -1:
+            return
+        item: QTableWidgetItem | None = view.item(view.currentRow(), 0)
+        if item is None:
+            return
+
         spoke_details: str = (
-            f"{self.ui.comboBoxManufacturer.currentText} "
+            f"{self.ui.comboBoxManufacturer.currentText()} "
             f"{self.ui.lineEditName.text()} {self.ui.lineEditGauge.text()}G\n"
             f"{self.ui.lineEditDimension.text()}\n"
-            f"{self.ui.lineEditSpokeComment.text()}"
+            f"{self.ui.lineEditSpokeComment.text()}\n"
+            f"{item.text()}\n"
         )
-
-        measurement_id: int = Generics.get_selected_row_id(self.ui.tableWidgetMeasurementList)
 
         if is_left:
             self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)

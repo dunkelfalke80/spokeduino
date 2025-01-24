@@ -14,6 +14,14 @@ from database_module import DatabaseModule
 from unit_module import UnitModule
 from tensiometer_module import TensiometerModule
 from ui import Ui_mainWindow
+from enum import Enum
+
+
+class MeasurementModeEnum(Enum):
+    DEFAULT = 0
+    EDIT = 1
+    CUSTOM = 2
+
 
 class MeasurementModule:
 
@@ -31,12 +39,14 @@ class MeasurementModule:
         self.messagebox: Messagebox = messagebox
         self.tensiometer_module: TensiometerModule = tensiometer_module
         self.db: DatabaseModule = db
-        self.__edit_mode: bool = False
-        self.__custom_mode: bool = False
+        self.__mode: MeasurementModeEnum = MeasurementModeEnum.DEFAULT
         self.__add_row_signal_connected = False
 
-    def set_edit_mode(self, mode: bool) -> None:
-        self.__edit_mode = mode
+    def set_mode(self, mode: MeasurementModeEnum) -> None:
+        if mode == MeasurementModeEnum.DEFAULT:
+            if self.ui.radioButtonMeasurementCustom.isChecked:
+                mode = MeasurementModeEnum.CUSTOM
+        self.__mode = mode
 
     def update_measurement_button_states(self) -> None:
         """
@@ -212,12 +222,13 @@ class MeasurementModule:
         view.setRowCount(0)
         view.setColumnCount(0)
 
-        if not self.__edit_mode and not self.__custom_mode:
-            self.populate_measurements_table_default(view)
-        elif self.__edit_mode:
-            self.populate_measurements_table_edit_mode(view, False)
-        elif self.__custom_mode:
-            self.populate_measurements_table_edit_mode(view, True)
+        match self.__mode:
+            case MeasurementModeEnum.DEFAULT:
+                self.populate_measurements_table_default(view)
+            case MeasurementModeEnum.EDIT:
+                self.populate_measurements_table_edit_mode(view, False)
+            case MeasurementModeEnum.CUSTOM:
+                self.populate_measurements_table_edit_mode(view, True)
 
     def populate_measurements_table_default(
             self,
