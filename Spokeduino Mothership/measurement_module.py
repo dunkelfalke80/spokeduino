@@ -290,8 +290,10 @@ class MeasurementModule:
         for the selected measurement.
         """
         # Set the headers
+        unit: UnitEnum = self.unit_module.get_unit()
         view.setColumnCount(2)
-        view.setHorizontalHeaderLabels(["Tension", "Deflection"])
+        view.setHorizontalHeaderLabels([
+            f"Tension ({unit.value})", "Deflection"])
         view.setVerticalHeaderLabels(["+"])
 
         if custom_mode:
@@ -328,7 +330,6 @@ class MeasurementModule:
             view.setVerticalHeaderLabels(["+"] * len(filtered_measurements))
 
             # Populate the table
-            unit: UnitEnum = self.unit_module.get_unit()
             unit_index_map: dict[UnitEnum, int] = {
                 UnitEnum.NEWTON: 0,
                 UnitEnum.KGF: 1,

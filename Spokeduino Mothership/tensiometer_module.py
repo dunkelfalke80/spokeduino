@@ -46,8 +46,6 @@ class TensiometerModule:
             self.ui.comboBoxTensiometer.addItem(tensiometer[1], tensiometer[0])
 
     def get_primary_tensiometer(self) -> int:
-        selected_tensiometers: list[Any] = []
-
         # Fetch the primary tensiometer ID from settings
         primary_tensiometer: list[Any] = self.db.execute_select(
             query=SQLQueries.GET_SINGLE_SETTING,
@@ -135,7 +133,6 @@ class TensiometerModule:
 
             # Restore the original tensiometer selection
             primary_tensiometer: int = self.get_primary_tensiometer()
-            print(f"restoring primary tensio {primary_tensiometer}")
             if primary_tensiometer < 0:
                 return
             index = self.ui.comboBoxTensiometer.findData(primary_tensiometer)
@@ -163,9 +160,7 @@ class TensiometerModule:
             self.ui.comboBoxTensiometer.setCurrentIndex(index)
 
     def save_tensiometer(self) -> None:
-        print("saving tensiometer")
         if self.__multi_tensiometer_enabled: # Runtime only
-            print("multi tensio runtime only")
             return
 
         current_index: int = self.ui.comboBoxTensiometer.currentIndex()
@@ -176,4 +171,4 @@ class TensiometerModule:
         self.setup_module.save_setting(
             key="tensiometer_id",
             value=str(tensiometer_id))
-        print(f"tensio saved: {tensiometer_id}")
+

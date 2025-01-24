@@ -24,6 +24,7 @@ from unit_module import UnitEnum
 from customtablewidget import CustomTableWidget
 from helpers import Messagebox
 
+
 class Spokeduino(QMainWindow):
     """
     Main application class for Spokeduino Mothership.
@@ -179,6 +180,9 @@ class Spokeduino(QMainWindow):
         self.setup_module.load_settings()
         self.spoke_module.load_manufacturers()
         self.setup_signals_and_slots()
+        self.update_statusbar_unit()
+        self.update_statusbar_tensiometer()
+        self.update_statusbar_spokeduino()
 
     def setup_signals_and_slots(self) -> None:
         """
@@ -253,6 +257,8 @@ class Spokeduino(QMainWindow):
         self.ui.comboBoxTensiometer.currentIndexChanged.connect(
            lambda: self.measurement_module.load_measurements(
                None, None, False))
+        self.ui.comboBoxTensiometer.currentIndexChanged.connect(
+            self.update_statusbar_tensiometer)
 
         # Measurement-related signals
         self.ui.tableWidgetMeasurementList.clicked.connect(
@@ -301,6 +307,8 @@ class Spokeduino(QMainWindow):
             self.spokeduino_module.restart_spokeduino_port)
         self.ui.checkBoxSpokeduinoEnabled.checkStateChanged.connect(
             self.spokeduino_module.restart_spokeduino_port)
+        self.ui.checkBoxSpokeduinoEnabled.checkStateChanged.connect(
+            self.update_statusbar_spokeduino)
 
         # Spokeduino
         self.spokeduino_state: SpokeduinoState = SpokeduinoState.WAITING
@@ -435,6 +443,7 @@ class Spokeduino(QMainWindow):
                 self.tensioning_module.setup_table(True)
                 self.tensioning_module.setup_table(False)
             case self.ui.databaseTab:
+                self.spoke_module.load_spoke_details()
                 self.measurement_module.set_edit_mode(False)
                 QTimer.singleShot(
                     50,
@@ -446,6 +455,17 @@ class Spokeduino(QMainWindow):
         self.status_label_unit.setText(
             f"Unit: {self.unit_module.get_unit().value}")
 
+    def update_statusbar_tensiometer(self) -> None:
+        self.status_label_tensiometer.setText(
+            f"Tensiometer: {self.ui.comboBoxTensiometer.currentText()}")
+
+    def update_statusbar_spokeduino(self) -> None:
+        spokeduino_status: str = (
+            self.ui.comboBoxSpokeduinoPort.currentText()
+            if self.ui.checkBoxSpokeduinoEnabled.isChecked()
+            else "Not connected")
+        self.status_label_port.setText(
+            f"Spokeduino: {spokeduino_status}")
 
 def main() -> None:
     """
