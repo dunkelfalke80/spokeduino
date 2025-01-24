@@ -4,11 +4,12 @@ import threading
 from typing import cast, Any, override
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QStatusBar
 from PySide6.QtWidgets import QLayout
 from PySide6.QtWidgets import QGroupBox
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QHeaderView
+from PySide6.QtWidgets import QLabel
 from ui import Ui_mainWindow
 from spokeduino_module import SpokeduinoState
 from spokeduino_module import SpokeduinoModule
@@ -155,13 +156,28 @@ class Spokeduino(QMainWindow):
         self.ui.tableWidgetTensioningRight.deleteLater()
         self.ui.tableWidgetTensioningRight = custom_tension_table_right
 
+        # Set up the status bar
+        self.status_bar: QStatusBar = self.statusBar()
+
+        # Create labels for different information
+        self.status_label_spoke_name = QLabel("Spoke: None")
+        self.status_label_spoke_dimensions = QLabel("-")
+        self.status_label_unit = QLabel("Unit: Newton")
+        self.status_label_tensiometer = QLabel("Tensiometer: None")
+        self.status_label_port = QLabel("Spokeduino: Not Connected")
+
+        # Add the labels to the status bar
+        self.status_bar.addWidget(self.status_label_spoke_name)
+        self.status_bar.addPermanentWidget(self.status_label_unit)
+        self.status_bar.addPermanentWidget(self.status_label_tensiometer)
+        self.status_bar.addPermanentWidget(self.status_label_port)
+
         self.setup_module.setup_language()
         self.setup_module.populate_language_combobox()
         self.setup_module.load_available_com_ports()
         self.tensiometer_module.load_tensiometers()
         self.setup_module.load_settings()
         self.spoke_module.load_manufacturers()
-
         self.setup_signals_and_slots()
 
     def setup_signals_and_slots(self) -> None:
@@ -306,6 +322,13 @@ class Spokeduino(QMainWindow):
                     "unit", "lbF")
                 if checked else None)
 
+        self.ui.radioButtonNewton.toggled.connect(
+                self.update_statusbar_unit)
+        self.ui.radioButtonKgF.toggled.connect(
+                self.update_statusbar_unit)
+        self.ui.radioButtonLbF.toggled.connect(
+                self.update_statusbar_unit)
+
         # Directional settings
         self.ui.radioButtonMeasurementDown.toggled.connect(
             lambda checked:
@@ -418,6 +441,10 @@ class Spokeduino(QMainWindow):
                     self.spoke_module.align_filters_with_table)
             case self.ui.setupTab:
                 self.measurement_module.set_edit_mode(False)
+
+    def update_statusbar_unit(self) -> None:
+        self.status_label_unit.setText(
+            f"Unit: {self.unit_module.get_unit().value}")
 
 
 def main() -> None:

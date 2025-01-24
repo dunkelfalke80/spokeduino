@@ -13,18 +13,18 @@ from unit_module import UnitEnum, UnitModule
 from database_module import DatabaseModule
 from unit_module import UnitModule
 from tensiometer_module import TensiometerModule
-
+from ui import Ui_mainWindow
 
 class MeasurementModule:
 
     def __init__(self,
                  main_window: QMainWindow,
-                 ui: Any,
+                 ui: Ui_mainWindow,
                  unit_module: UnitModule,
                  tensiometer_module: TensiometerModule,
                  messagebox: Messagebox,
                  db: DatabaseModule) -> None:
-        self.ui = ui
+        self.ui: Ui_mainWindow = ui
         self.unit_module: UnitModule = unit_module
         self.main_window: QMainWindow = main_window
         self.setup_module = SetupModule
@@ -32,6 +32,8 @@ class MeasurementModule:
         self.tensiometer_module: TensiometerModule = tensiometer_module
         self.db: DatabaseModule = db
         self.__edit_mode: bool = False
+        self.__custom_mode: bool = False
+        self.__add_row_signal_connected = False
 
     def set_edit_mode(self, mode: bool) -> None:
         self.__edit_mode = mode
@@ -197,64 +199,180 @@ class MeasurementModule:
 
     def setup_measurements_table(self) -> None:
         """
-        Set up the tableWidgetMeasurements with
-        editable fields for tension values
-        and selected tensiometers.
+        Set up the tableWidgetMeasurements based on the current mode.
+        - If self.__edit_mode is False and self.__custom_mode is False:
+            Populate with editable tension values and tensiometers.
+        - If self.__edit_mode is True:
+            Populate with tension:deflection pairs for the selected measurement.
+        - If self.__edit_mode is False and self.__custom_mode is True:
+            Prepare an empty table with one editable row for custom entries.
         """
-        # Clear all cells, rows, and columns
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
         view.clearContents()
         view.setRowCount(0)
         view.setColumnCount(0)
 
+        if not self.__edit_mode and not self.__custom_mode:
+            self.populate_measurements_table_default(view)
+        elif self.__edit_mode:
+            self.populate_measurements_table_edit_mode(view, False)
+        elif self.__custom_mode:
+            self.populate_measurements_table_edit_mode(view, True)
+
+    def populate_measurements_table_default(
+            self,
+            view: CustomTableWidget) -> None:
+        """
+        Populate the table with editable tension values and tensiometers.
+        """
+        if self.__add_row_signal_connected:
+            view.verticalHeader().sectionClicked.disconnect(
+                self.insert_empty_row_below)
         # Handle the measurement direction
         if self.ui.radioButtonMeasurementDown.isChecked():
             tensions_newton = list(range(1600, 200, -100))
         else:
             tensions_newton = list(range(300, 1700, 100))
 
-        # Handle the measurement units
+        # Convert tensions to the selected unit
         unit_index_map: dict[UnitEnum, int] = {
             UnitEnum.NEWTON: 0,
             UnitEnum.KGF: 1,
             UnitEnum.LBF: 2,
         }
         unit_index: int = unit_index_map[self.unit_module.get_unit()]
-
         tensions_converted: list[float] = [
             self.unit_module.convert_units(
                 value=value,
                 source=UnitEnum.NEWTON)[unit_index]
-            for value in tensions_newton]
+            for value in tensions_newton
+        ]
 
-        # Populate row headers with converted force values
+        # Set row headers
         view.setRowCount(len(tensions_converted))
         unit: UnitEnum = self.unit_module.get_unit()
-        if unit == UnitEnum.NEWTON:
-            view.setVerticalHeaderLabels(
-                [f"{value} {unit.value}" for value in tensions_converted]
-            )
-        else:
-            view.setVerticalHeaderLabels(
-                [f"{value:.1f} {unit.value}" for value in tensions_converted]
-            )
+        row_headers: list[str] = [
+            f"{value} {unit.value}"
+            if unit == UnitEnum.NEWTON
+            else f"{value:.1f} {unit.value}"
+            for value in tensions_converted
+        ]
+        view.setVerticalHeaderLabels(row_headers)
 
-        # Get selected tensiometers and populate column headers
-        tensiometers: list[tuple[int, str]] = self.tensiometer_module.get_selected_tensiometers()
+        # Populate column headers with selected tensiometers
+        tensiometers: list[tuple[int, str]] = \
+            self.tensiometer_module.get_selected_tensiometers()
         view.setColumnCount(len(tensiometers))
-        for column, (tensiometer_id, tensiometer_name) in enumerate(tensiometers):
+        for column, (
+            tensiometer_id,
+            tensiometer_name) in enumerate(tensiometers):
+
             item = QTableWidgetItem(tensiometer_name)
             item.setData(Qt.ItemDataRole.UserRole, tensiometer_id)
             view.setHorizontalHeaderItem(column, item)
 
-        # Make all cells editable
+        # Populate cells
         for row in range(len(tensions_converted)):
             for column in range(len(tensiometers)):
                 item = QTableWidgetItem()
-                item.setFlags(Qt.ItemFlag.ItemIsEditable |
-                              Qt.ItemFlag.ItemIsEnabled)
+                item.setFlags(
+                    Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
                 view.setItem(row, column, item)
+
+        # Move focus to the first cell
         view.move_to_specific_cell(0, 0)
+
+    def populate_measurements_table_edit_mode(
+            self,
+            view: CustomTableWidget, custom_mode: bool) -> None:
+        """
+        Populate the table with tension:deflection pairs
+        for the selected measurement.
+        """
+        # Set the headers
+        view.setColumnCount(2)
+        view.setHorizontalHeaderLabels(["Tension", "Deflection"])
+        view.setVerticalHeaderLabels(["+"])
+
+        if custom_mode:
+            # Add one empty editable row
+            view.setRowCount(1)
+            for column in range(2):
+                item = QTableWidgetItem()
+                item.setFlags(
+                    Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
+                view.setItem(0, column, item)
+        else:
+            # Load measurements as a list
+            measurements = self.load_measurements(
+                spoke_id=None,
+                tensiometer_id=None,
+                list_only=True)
+            measurement_id: int = Generics.get_selected_row_id(
+                self.ui.tableWidgetMeasurementList)
+            if measurement_id < 0 or not measurements:
+                return
+
+            # Filter measurements for the selected ID
+            filtered_measurements = [
+                (mid, tension, deflection)
+                for mid, tension, deflection in measurements
+                if mid == measurement_id
+            ]
+
+            if not filtered_measurements:
+                return
+
+            # Prepare table headers
+            view.setRowCount(len(filtered_measurements))
+            view.setVerticalHeaderLabels(["+"] * len(filtered_measurements))
+
+            # Populate the table
+            unit: UnitEnum = self.unit_module.get_unit()
+            unit_index_map: dict[UnitEnum, int] = {
+                UnitEnum.NEWTON: 0,
+                UnitEnum.KGF: 1,
+                UnitEnum.LBF: 2,
+            }
+            unit_index: int = unit_index_map[unit]
+
+            for row_idx, (_, tension, deflection) in enumerate(
+                filtered_measurements):
+                # Convert tension to the selected unit
+                converted_tension = self.unit_module.convert_units(
+                    tension,
+                    UnitEnum.NEWTON)[unit_index]
+
+                # Create editable items
+                tension_item = QTableWidgetItem(f"{converted_tension:.1f}")
+                tension_item.setFlags(
+                    Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
+                deflection_item = QTableWidgetItem(f"{deflection:.2f}")
+                deflection_item.setFlags(
+                    Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
+
+                view.setItem(row_idx, 0, tension_item)
+                view.setItem(row_idx, 1, deflection_item)
+
+        # Enable sorting by columns and sort by tension
+        view.setSortingEnabled(True)
+        view.sortItems(0, Qt.SortOrder.AscendingOrder)
+
+        # Connect the row header click signal
+        if not self.__add_row_signal_connected:
+            self.__add_row_signal_connected = True
+            view.verticalHeader().sectionClicked.connect(
+                self.insert_empty_row_below)
+
+    def insert_empty_row_below(self, row: int) -> None:
+        """
+        Insert an empty row below the clicked row header.
+        """
+        view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        view.insertRow(row + 1)
+        row_headers: list[str] = ["+" for _ in range(view.rowCount())]
+        view.setVerticalHeaderLabels(row_headers)
+        view.move_to_specific_cell(row + 1, 0)
 
     def save_measurements(self) -> None:
         """

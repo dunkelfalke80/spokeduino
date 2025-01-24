@@ -15,17 +15,18 @@ from database_module import DatabaseModule
 from unit_module import UnitModule
 from tensiometer_module import TensiometerModule
 from helpers import TextChecker, Generics
+from ui import Ui_mainWindow
 
 class TensioningModule:
 
     def __init__(self,
                  main_window: QMainWindow,
-                 ui: Any,
+                 ui: Ui_mainWindow,
                  unit_module: UnitModule,
                  tensiometer_module: TensiometerModule,
                  messagebox: Messagebox,
                  db: DatabaseModule) -> None:
-        self.ui = ui
+        self.ui: Ui_mainWindow = ui
         self.unit_module: UnitModule = unit_module
         self.main_window: QMainWindow = main_window
         self.setup_module = SetupModule
@@ -244,6 +245,7 @@ class TensioningModule:
             return
 
         spoke_details: str = (
+            f"{self.ui.comboBoxManufacturer.currentText} "
             f"{self.ui.lineEditName.text()} {self.ui.lineEditGauge.text()}G\n"
             f"{self.ui.lineEditDimension.text()}\n"
             f"{self.ui.lineEditSpokeComment.text()}"

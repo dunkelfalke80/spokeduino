@@ -8,16 +8,17 @@ from setup_module import SetupModule
 from sql_queries import SQLQueries
 from helpers import Messagebox
 from database_module import DatabaseModule
+from ui import Ui_mainWindow
 
 class TensiometerModule:
 
     def __init__(self,
                  main_window: QMainWindow,
-                 ui: Any,
+                 ui: Ui_mainWindow,
                  setup_module: SetupModule,
                  messagebox: Messagebox,
                  db: DatabaseModule) -> None:
-        self.ui = ui
+        self.ui: Ui_mainWindow = ui
         self.main_window: QMainWindow = main_window
         self.setup_module: SetupModule = setup_module
         self.messagebox: Messagebox = messagebox

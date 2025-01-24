@@ -9,7 +9,7 @@ from database_module import DatabaseModule
 from setup_module import SetupModule
 from helpers import Messagebox
 from sql_queries import SQLQueries
-
+from ui import Ui_mainWindow
 
 class SpokeduinoState(Enum):
     WAITING  = 1
@@ -20,7 +20,7 @@ class SpokeduinoState(Enum):
 class SpokeduinoModule:
     def __init__(
             self,
-            ui: Any,
+            ui: Ui_mainWindow,
             db: DatabaseModule,
             setup_module: SetupModule,
             messagebox: Messagebox) -> None:
@@ -33,7 +33,7 @@ class SpokeduinoModule:
         :param messagebox: MessageBox module
         for displaying error/info messages.
         """
-        self.ui = ui
+        self.ui: Ui_mainWindow = ui
         self.db: DatabaseModule = db
         self.setup_module: SetupModule = setup_module
         self.messagebox: Messagebox = messagebox

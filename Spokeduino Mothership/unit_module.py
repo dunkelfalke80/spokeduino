@@ -1,6 +1,6 @@
 from typing import Any
 from enum import Enum
-
+from ui import Ui_mainWindow
 
 class UnitEnum(Enum):
     NEWTON  = "Newton"
@@ -11,9 +11,9 @@ class UnitEnum(Enum):
 class UnitModule:
 
     def __init__(self,
-                 ui: Any
+                 ui: Ui_mainWindow
                  ) -> None:
-        self.ui = ui
+        self.ui: Ui_mainWindow = ui
 
     @staticmethod
     def convert_units(value: float, source: UnitEnum) -> tuple[float, float, float]:

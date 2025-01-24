@@ -9,16 +9,16 @@ from PySide6.QtCore import QTranslator
 from PySide6.QtWidgets import QMainWindow
 from database_module import DatabaseModule
 from sql_queries import SQLQueries
-
+from ui import Ui_mainWindow
 
 class SetupModule:
 
     def __init__(self,
                  main_window: QMainWindow,
-                 ui: Any,
+                 ui: Ui_mainWindow,
                  current_path: str,
                  db: DatabaseModule) -> None:
-        self.ui = ui
+        self.ui: Ui_mainWindow = ui
         self.main_window: QMainWindow = main_window
         self.current_path: str = current_path
         self.translator = QTranslator()

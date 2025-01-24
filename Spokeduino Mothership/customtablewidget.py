@@ -65,14 +65,18 @@ class CustomTableWidget(QTableWidget):
         if move_to_next_cell_callback is None:
             self.move_to_next_cell: Callable[[bool], None] = \
                 self.__move_to_next_cell_default
+            self.__stop_sorting_enabled: bool = True
         else:
             self.move_to_next_cell = move_to_next_cell_callback
+            self.__stop_sorting_enabled = False
 
         if move_to_previous_cell_callback is None:
             self.move_to_previous_cell: Callable[[], None] = \
                 self.__move_to_previous_cell_default
         else:
             self.move_to_previous_cell = move_to_previous_cell_callback
+        self.__old_sorting_enabled: bool = False
+        self.__sorting_stopped: bool = False
 
     def emit_on_cell_data_changing(self, value: str) -> None:
         """
@@ -93,10 +97,23 @@ class CustomTableWidget(QTableWidget):
         if event.matches(QKeySequence.StandardKey.Paste):
             self.paste_row()
         elif event.matches(QKeySequence.StandardKey.InsertParagraphSeparator):
+            if self.__stop_sorting_enabled:
+                self.__check_sorting()
             super().keyPressEvent(event)
             self.move_to_next_cell(False)
         else:
             super().keyPressEvent(event)
+
+    def __check_sorting(self) -> None:
+        if not self.__sorting_stopped:
+            if not self.isSortingEnabled():
+                return
+            self.__old_sorting_enabled = self.isSortingEnabled()
+            self.__sorting_stopped = True
+            self.setSortingEnabled(False)
+        if self.currentColumn() == self.columnCount() - 1:
+            self.__sorting_stopped = False
+            self.setSortingEnabled(self.__old_sorting_enabled)
 
     def get_row_header_text(self, row: int | None) -> str | None:
         """

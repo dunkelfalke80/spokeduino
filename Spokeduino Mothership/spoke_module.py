@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QTranslator
 from PySide6.QtCore import QTimer
@@ -12,19 +12,23 @@ from database_module import DatabaseModule
 from measurement_module import MeasurementModule
 from sql_queries import SQLQueries
 from helpers import Messagebox, Generics
+from ui import Ui_mainWindow
+
+if TYPE_CHECKING:
+    from mothership import Spokeduino
 
 
 class SpokeModule:
 
     def __init__(self,
-                 main_window: QMainWindow,
-                 ui: Any,
+                 ui: Ui_mainWindow,
+                 main_window: "Spokeduino",
                  measurement_module: MeasurementModule,
                  messagebox: Messagebox,
                  db: DatabaseModule,
                  current_path: str) -> None:
-        self.ui = ui
-        self.main_window: QMainWindow = main_window
+        self.ui: Ui_mainWindow = ui
+        self.main_window: Spokeduino = main_window
         self.current_path: str = current_path
         self.translator = QTranslator()
         self.current_language = "en"
@@ -51,6 +55,10 @@ class SpokeModule:
             self.ui.lineEditWeight.setText(str(spoke[3]))
             self.ui.lineEditDimension.setText(str(spoke[4]))
             self.ui.lineEditSpokeComment.setText(str(spoke[5]))
+            self.main_window.status_label_spoke_name.setText(
+                f"{self.ui.comboBoxManufacturer.currentText()} "
+                f"{self.ui.lineEditName.text()} {self.ui.lineEditGauge.text()}G "
+                f"{self.ui.lineEditDimension.text()} {self.ui.lineEditSpokeComment.text()}")
         else:
             self.clear_spoke_details()
 
@@ -68,6 +76,7 @@ class SpokeModule:
             widget.clear()
 
         self.ui.comboBoxType.setCurrentIndex(-1)
+        self.main_window.status_label_spoke_name.setText("")
 
     def load_spoke_details(self) -> None:
         """
