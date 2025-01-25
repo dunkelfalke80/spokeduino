@@ -31,11 +31,11 @@ INSERT INTO spokes (manufacturer_id, type_id, gauge, weight, name, dimensions) V
 
 -- Generic --------------------------------------------
 --  Straight gauge
-(0, 0, 13, 8.5, 'Generic straight gauge 13G', '2.3'),
-(0, 0, 14, 6.7, 'Generic straight gauge 14G', '2.0'),
-(0, 0, 15, 5.5, 'Generic straight gauge 15G', '1.8'),
+(0, 0, 13, 8.5, 'Generic straight', '2.3'),
+(0, 0, 14, 6.7, 'Generic straight', '2.0'),
+(0, 0, 15, 5.5, 'Generic straight', '1.8'),
 --  Double butted
-(0, 2, 14, 5.7, 'Generic double butted', '2.0/1.8/2.0'),
+(0, 2, 14, 5.7, 'Generic', '2.0/1.8/2.0'),
 
 -- Sapim ----------------------------------------------
 --  Straight gauge

@@ -1,7 +1,7 @@
-from typing import Any
+from typing import Any, TYPE_CHECKING
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QMainWindow
+from PySide6.QtWidgets import QMainWindow, QPlainTextEdit
 from PySide6.QtWidgets import QTableWidget
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtWidgets import QHeaderView
@@ -17,10 +17,14 @@ from tensiometer_module import TensiometerModule
 from helpers import TextChecker, Generics
 from ui import Ui_mainWindow
 
+if TYPE_CHECKING:
+    from mothership import Spokeduino
+
+
 class TensioningModule:
 
     def __init__(self,
-                 main_window: QMainWindow,
+                 main_window: "Spokeduino",
                  ui: Ui_mainWindow,
                  unit_module: UnitModule,
                  tensiometer_module: TensiometerModule,
@@ -28,7 +32,7 @@ class TensioningModule:
                  db: DatabaseModule) -> None:
         self.ui: Ui_mainWindow = ui
         self.unit_module: UnitModule = unit_module
-        self.main_window: QMainWindow = main_window
+        self.main_window: Spokeduino = main_window
         self.setup_module = SetupModule
         self.messagebox: Messagebox = messagebox
         self.tensiometer_module: TensiometerModule = tensiometer_module
@@ -119,16 +123,12 @@ class TensioningModule:
 
         if self.ui.radioButtonLeftRight.isChecked() \
             or self.ui.radioButtonRightLeft.isChecked():
-            print(f"This row: {this_row}")
-            print(f"Other row: {other_row}")
             if other_row == other_count -1:
                 this_row = 0
             else:
                 this_row = other_row + 1
             this_view = other_view
         elif self.ui.radioButtonSideBySide.isChecked():
-            print(f"This row: {this_row}")
-            print(f"Other row: {other_row}")
             if this_row == this_count - 1:
                 this_view = other_view
                 this_row = 0
@@ -252,17 +252,21 @@ class TensioningModule:
         if item is None:
             return
 
-        spoke_details: str = (
+        spoke_name: str = (
             f"{self.ui.comboBoxManufacturer.currentText()} "
-            f"{self.ui.lineEditName.text()} {self.ui.lineEditGauge.text()}G\n"
-            f"{self.ui.lineEditDimension.text()}\n"
+            f"{self.ui.lineEditName.text()}"
+        )
+        spoke_details: str = (
+            f"{spoke_name}\n"
             f"{self.ui.lineEditSpokeComment.text()}\n"
-            f"{item.text()}\n"
+            f"{item.text()}"
         )
 
         if is_left:
             self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
+            self.main_window.status_label_spoke_left.setText(f"L: {spoke_name} {self.ui.lineEditDimension.text()}")
             self.__measurement_left = measurement_id
         else:
             self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
+            self.main_window.status_label_spoke_right.setText(f"R: {spoke_name} {self.ui.lineEditDimension.text()}")
             self.__measurement_right = measurement_id

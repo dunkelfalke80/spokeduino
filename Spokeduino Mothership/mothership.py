@@ -161,14 +161,17 @@ class Spokeduino(QMainWindow):
         self.status_bar: QStatusBar = self.statusBar()
 
         # Create labels for different information
-        self.status_label_spoke_name = QLabel("Spoke: None")
-        self.status_label_spoke_dimensions = QLabel("-")
+        self.status_label_spoke = QLabel("Spoke: None")
+        self.status_label_spoke_left = QLabel("")
+        self.status_label_spoke_right = QLabel("")
         self.status_label_unit = QLabel("Unit: Newton")
         self.status_label_tensiometer = QLabel("Tensiometer: None")
         self.status_label_port = QLabel("Spokeduino: Not Connected")
 
         # Add the labels to the status bar
-        self.status_bar.addWidget(self.status_label_spoke_name)
+        self.status_bar.addWidget(self.status_label_spoke_left)
+        self.status_bar.addWidget(self.status_label_spoke_right)
+        self.status_bar.addWidget(self.status_label_spoke)
         self.status_bar.addPermanentWidget(self.status_label_unit)
         self.status_bar.addPermanentWidget(self.status_label_tensiometer)
         self.status_bar.addPermanentWidget(self.status_label_port)

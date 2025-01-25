@@ -55,10 +55,9 @@ class SpokeModule:
             self.ui.lineEditWeight.setText(str(spoke[3]))
             self.ui.lineEditDimension.setText(str(spoke[4]))
             self.ui.lineEditSpokeComment.setText(str(spoke[5]))
-            self.main_window.status_label_spoke_name.setText(
-                f"{self.ui.comboBoxManufacturer.currentText()} "
-                f"{self.ui.lineEditName.text()} {self.ui.lineEditGauge.text()}G "
-                f"{self.ui.lineEditDimension.text()} {self.ui.lineEditSpokeComment.text()}")
+            self.main_window.status_label_spoke.setText(
+                f"-> {self.ui.comboBoxManufacturer.currentText()} "
+                f"{self.ui.lineEditName.text()} {self.ui.lineEditDimension.text()}")
         else:
             self.clear_spoke_details()
 
@@ -76,7 +75,7 @@ class SpokeModule:
             widget.clear()
 
         self.ui.comboBoxType.setCurrentIndex(-1)
-        self.main_window.status_label_spoke_name.setText("")
+        self.main_window.status_label_spoke.setText("")
 
     def load_spoke_details(self) -> None:
         """
