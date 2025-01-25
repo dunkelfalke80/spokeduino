@@ -22,7 +22,8 @@ from unit_module import UnitModule
 from unit_module import UnitEnum
 from customtablewidget import CustomTableWidget
 from helpers import Messagebox
-
+from calculation_module import TensionDeflectionFitter
+from visualisation_module import MatplotlibCanvas
 
 class Spokeduino(QMainWindow):
     """
@@ -45,13 +46,23 @@ class Spokeduino(QMainWindow):
         data_file: str = os.path.join(self.current_path, "sql", "spoke_data.sql")
         self.db = DatabaseModule(self.db_path)
         self.db.initialize_database(schema_file, data_file)
-        self.serial_port = None
-        self.waiting_event = threading.Event()
 
         # For vacuuming on exit
         self.db_changed: bool = False
+
+        self.serial_port = None
+        self.waiting_event = threading.Event()
+        self.fitter = TensionDeflectionFitter()
+
+
         self.ui = Ui_mainWindow()
         self.ui.setupUi(mainWindow=self)
+        # Visualisation
+        self.measurement_canvas = MatplotlibCanvas()
+        self.tensioning_canvas = MatplotlibCanvas()
+        self.ui.verticalLayoutMeasurementRight.addWidget(self.measurement_canvas)
+        self.ui.verticalLayoutWheelDiagram.addWidget(self.tensioning_canvas)
+
         self.unit_module = UnitModule(self.ui)
         self.setup_module = SetupModule(
             main_window=self,
@@ -71,7 +82,9 @@ class Spokeduino(QMainWindow):
             unit_module=self.unit_module,
             tensiometer_module=self.tensiometer_module,
             messagebox=self.messagebox,
-            db=self.db)
+            db=self.db,
+            fitter=self.fitter,
+            canvas=self.measurement_canvas)
         self.spokeduino_module = SpokeduinoModule(
             ui=self.ui,
             db=self.db,
@@ -90,7 +103,9 @@ class Spokeduino(QMainWindow):
             unit_module=self.unit_module,
             tensiometer_module=self.tensiometer_module,
             messagebox=self.messagebox,
-            db=self.db)
+            db=self.db,
+            fitter=self.fitter,
+            canvas=self.tensioning_canvas)
 
         # Replace the tableWidgetMeasurements with the custom widget
         custom_table = CustomTableWidget(
@@ -168,11 +183,13 @@ class Spokeduino(QMainWindow):
         self.status_label_unit = QLabel("Unit: Newton")
         self.status_label_tensiometer = QLabel("Tensiometer: None")
         self.status_label_port = QLabel("Spokeduino: Not Connected")
+        self.status_label_fit = QLabel("Fit: linear")
 
         # Add the labels to the status bar
         self.status_bar.addWidget(self.status_label_spoke_left)
         self.status_bar.addWidget(self.status_label_spoke_right)
         self.status_bar.addWidget(self.status_label_spoke)
+        self.status_bar.addPermanentWidget(self.status_label_fit)
         self.status_bar.addPermanentWidget(self.status_label_unit)
         self.status_bar.addPermanentWidget(self.status_label_tensiometer)
         self.status_bar.addPermanentWidget(self.status_label_port)
@@ -322,27 +339,29 @@ class Spokeduino(QMainWindow):
 
         # Measurement units
         self.ui.radioButtonNewton.toggled.connect(
-            lambda checked:
-                self.setup_module.save_setting(
-                    "unit", "Newton")
-                if checked else None)
+                self.update_statusbar_unit)
         self.ui.radioButtonKgF.toggled.connect(
-            lambda checked:
-                self.setup_module.save_setting(
-                    "unit", "kgF")
-                if checked else None)
+                self.update_statusbar_unit)
         self.ui.radioButtonLbF.toggled.connect(
-            lambda checked:
-                self.setup_module.save_setting(
-                    "unit", "lbF")
-                if checked else None)
+                self.update_statusbar_unit)
 
-        self.ui.radioButtonNewton.toggled.connect(
-                self.update_statusbar_unit)
-        self.ui.radioButtonKgF.toggled.connect(
-                self.update_statusbar_unit)
-        self.ui.radioButtonLbF.toggled.connect(
-                self.update_statusbar_unit)
+        # Fit settings
+        self.ui.radioButtonFitLinear.toggled.connect(
+                self.update_statusbar_fit)
+        self.ui.radioButtonFitQuadratic.toggled.connect(
+                self.update_statusbar_fit)
+        self.ui.radioButtonFitCubic.toggled.connect(
+                self.update_statusbar_fit)
+        self.ui.radioButtonFitQuartic.toggled.connect(
+                self.update_statusbar_fit)
+        self.ui.radioButtonFitSpline.toggled.connect(
+                self.update_statusbar_fit)
+        self.ui.radioButtonFitExponential.toggled.connect(
+                self.update_statusbar_fit)
+        self.ui.radioButtonFitLogarithmic.toggled.connect(
+                self.update_statusbar_fit)
+        self.ui.radioButtonFitPowerLaw.toggled.connect(
+                self.update_statusbar_fit)
 
         # Directional settings
         self.ui.radioButtonMeasurementDown.toggled.connect(
@@ -462,6 +481,13 @@ class Spokeduino(QMainWindow):
     def update_statusbar_unit(self) -> None:
         self.status_label_unit.setText(
             f"Unit: {self.unit_module.get_unit().value}")
+        self.setup_module.save_setting("unit", self.unit_module.get_unit().value)
+
+    def update_statusbar_fit(self) -> None:
+        _, description = self.measurement_module.get_fit()
+        self.status_label_fit.setText(
+            f"Fit: {description}")
+        self.setup_module.save_setting("fit", description)
 
     def update_statusbar_tensiometer(self) -> None:
         self.status_label_tensiometer.setText(

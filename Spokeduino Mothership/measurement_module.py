@@ -7,6 +7,8 @@ from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QTableWidget
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtWidgets import QHeaderView
+from ui import Ui_mainWindow
+from enum import Enum
 from setup_module import SetupModule
 from helpers import Messagebox, Generics
 from customtablewidget import CustomTableWidget
@@ -14,8 +16,8 @@ from sql_queries import SQLQueries
 from unit_module import UnitEnum, UnitModule
 from database_module import DatabaseModule
 from tensiometer_module import TensiometerModule
-from ui import Ui_mainWindow
-from enum import Enum
+from visualisation_module import MatplotlibCanvas, VisualisationModule
+from calculation_module import TensionDeflectionFitter, FitType
 
 
 class MeasurementModeEnum(Enum):
@@ -32,7 +34,9 @@ class MeasurementModule:
                  unit_module: UnitModule,
                  tensiometer_module: TensiometerModule,
                  messagebox: Messagebox,
-                 db: DatabaseModule) -> None:
+                 db: DatabaseModule,
+                 fitter: TensionDeflectionFitter,
+                 canvas: MatplotlibCanvas) -> None:
         self.ui: Ui_mainWindow = ui
         self.unit_module: UnitModule = unit_module
         self.main_window: QMainWindow = main_window
@@ -40,6 +44,9 @@ class MeasurementModule:
         self.messagebox: Messagebox = messagebox
         self.tensiometer_module: TensiometerModule = tensiometer_module
         self.db: DatabaseModule = db
+        self.fitter: TensionDeflectionFitter = fitter
+        self.canvas = canvas
+        self.__chart = VisualisationModule(fitter=self.fitter)
         self.__mode: MeasurementModeEnum = MeasurementModeEnum.DEFAULT
         self.__add_row_signal_connected = False
 
@@ -376,6 +383,7 @@ class MeasurementModule:
             self.__add_row_signal_connected = True
             view.verticalHeader().sectionClicked.connect(
                 self.insert_empty_row_below)
+        self.plot_measurements()
 
     def insert_empty_row_below(self, row: int) -> None:
         """
@@ -569,3 +577,76 @@ class MeasurementModule:
                 )
             except Exception as ex:
                 self.messagebox.err(f"Failed to save measurement: {str(ex)}")
+
+    def plot_measurements(self) -> None:
+        """
+        Gathers tension/deflection data from a QTableWidget,
+        fits it, and plots inside the verticalLayoutMeasurementRight.
+        """
+        # 1) Gather data from tableWidgetMeasurements
+        data = []
+        row_count = self.ui.tableWidgetMeasurements.rowCount()
+        for row in range(row_count):
+            tension_item = self.ui.tableWidgetMeasurements.item(row, 0)
+            deflection_item = self.ui.tableWidgetMeasurements.item(row, 1)
+
+            # Check that both cells exist and are not empty
+            if tension_item and deflection_item:
+                tension_text = tension_item.text().strip()
+                deflection_text = deflection_item.text().strip()
+                if tension_text and deflection_text:
+                    # Attempt to parse floats
+                    try:
+                        tension_val = float(tension_text)
+                        deflection_val = float(deflection_text)
+                        data.append((tension_val, deflection_val))
+                    except ValueError:
+                        # Non-numeric in that row => skip it
+                        pass
+
+        if not data:
+            print("No valid tension/deflection data found.")
+            return
+
+        # 2) Fit the data. Pick whichever FitType you want:
+        fit_type, header = self.get_fit()
+        fit_model = self.fitter.fit_data(data, fit_type)
+
+        # 3) Create (or reuse) a MatplotlibCanvas and place it in the layout
+        # Optionally clear out the layout first if you don't want multiple canvases
+        # while self.verticalLayoutMeasurementRight.count():
+        #     item = self.verticalLayoutMeasurementRight.takeAt(0)
+        #     widget = item.widget()
+        #     if widget:
+        #         widget.deleteLater()
+
+        # 4) Draw the plot on our new canvas
+        self.canvas.clear_figure()
+        ax = self.canvas.figure.add_subplot(111)
+        self.__chart.plot_fit_with_deviation(
+            ax=ax,
+            fit_model=fit_model,
+            data=data,
+            step=10.0,
+            deviation_range=(-20, 20),
+            header=f"{header} fit"
+        )
+        self.canvas.draw_figure()
+
+    def get_fit(self) -> tuple[FitType, str]:
+        if self.ui.radioButtonFitQuadratic.isChecked():
+            return FitType.QUADRATIC, "Quadratic"
+        if self.ui.radioButtonFitCubic.isChecked():
+            return FitType.CUBIC, "Cubic"
+        if self.ui.radioButtonFitQuartic.isChecked():
+            return FitType.QUARTIC, "Quartic"
+        if self.ui.radioButtonFitSpline.isChecked():
+            return FitType.SPLINE, "Spline"
+        if self.ui.radioButtonFitExponential.isChecked():
+            return FitType.EXPONENTIAL, "Exponential"
+        if self.ui.radioButtonFitLogarithmic.isChecked():
+            return FitType.LOGARITHMIC, "Logarithmic"
+        if self.ui.radioButtonFitPowerLaw.isChecked():
+            return FitType.POWER_LAW, "Power law"
+        return FitType.LINEAR, "Linear"
+

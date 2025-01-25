@@ -1,4 +1,4 @@
-from typing import Any, cast
+from typing import Any
 import numpy as np
 from matplotlib.projections.polar import PolarAxes
 from matplotlib.figure import Figure
@@ -58,6 +58,7 @@ class VisualisationModule:
         data: list[tuple[float, float]],
         step: float = 100.0,
         deviation_range: tuple[float, float] = (-50, 50),
+        header: str = ""
     ) -> None:
         """
         Generates a chart showing the fitted deflection curve and deviation of
@@ -118,11 +119,13 @@ class VisualisationModule:
                     label="Deviation (Measured vs Calculated)",
                     color="orange", marker="x")
         ax2.set_ylabel("Deviation in Tension (N)", color="orange")
+        ax2.yaxis.set_label_position("right")
+        ax2.yaxis.set_ticks_position("right")
         ax2.tick_params(axis="y", labelcolor="orange")
         ax2.set_ylim(deviation_range)
         ax2.axhline(0, color="gray", linestyle="--", linewidth=1)
 
-        ax.set_title("Fitted Curve Visualization with Tension Deviations")
+        ax.set_title(header)
 
     def plot_spoke_tensions(
         self,

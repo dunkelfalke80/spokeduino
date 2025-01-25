@@ -600,7 +600,7 @@
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayoutMeasurementTop">
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayoutMeasurement" stretch="3,2">
+         <layout class="QHBoxLayout" name="horizontalLayoutMeasurement" stretch="1,2">
           <item>
            <layout class="QHBoxLayout" name="horizontalLayoutMeasurementsLeft" stretch="0">
             <item>
@@ -685,23 +685,9 @@
             <item>
              <widget class="QGroupBox" name="groupBoxMeasurementRight">
               <property name="title">
-               <string/>
+               <string>Trendline chart</string>
               </property>
-              <layout class="QVBoxLayout" name="verticalLayoutMeasurementRight" stretch="0">
-               <item>
-                <spacer name="verticalSpacer_3">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-              </layout>
+              <layout class="QVBoxLayout" name="verticalLayoutMeasurementRight"/>
              </widget>
             </item>
            </layout>
@@ -995,9 +981,6 @@
                <property name="spacing">
                 <number>6</number>
                </property>
-               <item>
-                <widget class="QGraphicsView" name="graphicsViewDiagram"/>
-               </item>
               </layout>
              </item>
              <item>
@@ -1373,7 +1356,7 @@
               </widget>
              </item>
              <item>
-              <widget class="QGroupBox" name="groupBoxSpokeMeasurementDirection">
+              <widget class="QGroupBox" name="groupBoxMeasurementDirection">
                <property name="title">
                 <string>Spoke measurement direction</string>
                </property>
@@ -1392,6 +1375,95 @@
                  <widget class="QRadioButton" name="radioButtonMeasurementUp">
                   <property name="text">
                    <string>From low to high</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QGroupBox" name="groupBoxFitType">
+               <property name="title">
+                <string>Fit type</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayoutMeasurementDirectionDown_2">
+                <item>
+                 <widget class="QRadioButton" name="radioButtonFitLinear">
+                  <property name="text">
+                   <string>Linear</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButtonFitQuadratic">
+                  <property name="text">
+                   <string>Quadratic</string>
+                  </property>
+                  <property name="checked">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButtonFitCubic">
+                  <property name="text">
+                   <string>Cubic</string>
+                  </property>
+                  <property name="checked">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButtonFitQuartic">
+                  <property name="text">
+                   <string>Quartic</string>
+                  </property>
+                  <property name="checked">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButtonFitSpline">
+                  <property name="text">
+                   <string>Spline</string>
+                  </property>
+                  <property name="checked">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButtonFitExponential">
+                  <property name="text">
+                   <string>Exponential</string>
+                  </property>
+                  <property name="checked">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButtonFitLogarithmic">
+                  <property name="text">
+                   <string>Logarithmic</string>
+                  </property>
+                  <property name="checked">
+                   <bool>false</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QRadioButton" name="radioButtonFitPowerLaw">
+                  <property name="text">
+                   <string>Power law</string>
+                  </property>
+                  <property name="checked">
+                   <bool>false</bool>
                   </property>
                  </widget>
                 </item>
@@ -1767,7 +1839,7 @@
      <x>0</x>
      <y>0</y>
      <width>1100</width>
-     <height>22</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
