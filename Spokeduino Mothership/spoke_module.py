@@ -4,7 +4,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtCore import QTranslator
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QHeaderView
-from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QTableWidget
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtWidgets import QComboBox
@@ -56,7 +55,7 @@ class SpokeModule:
             self.ui.lineEditDimension.setText(str(spoke[4]))
             self.ui.lineEditSpokeComment.setText(str(spoke[5]))
             self.main_window.status_label_spoke.setText(
-                f"-> {self.ui.comboBoxManufacturer.currentText()} "
+                f"{self.ui.comboBoxManufacturer.currentText()} "
                 f"{self.ui.lineEditName.text()} {self.ui.lineEditDimension.text()}")
         else:
             self.clear_spoke_details()

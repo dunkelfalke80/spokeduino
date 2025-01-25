@@ -264,9 +264,9 @@ class TensioningModule:
 
         if is_left:
             self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
-            self.main_window.status_label_spoke_left.setText(f"L: {spoke_name} {self.ui.lineEditDimension.text()}")
+            self.main_window.status_label_spoke_left.setText(f"<- {spoke_name} {self.ui.lineEditDimension.text()}")
             self.__measurement_left = measurement_id
         else:
             self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
-            self.main_window.status_label_spoke_right.setText(f"R: {spoke_name} {self.ui.lineEditDimension.text()}")
+            self.main_window.status_label_spoke_right.setText(f"{spoke_name} {self.ui.lineEditDimension.text()} ->")
             self.__measurement_right = measurement_id

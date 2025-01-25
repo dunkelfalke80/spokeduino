@@ -72,6 +72,12 @@ class SQLQueries:
                 VALUES
                     (?, ?, ?)"""
 
+    ADD_MEASUREMENT_SET: str = """
+                INSERT INTO
+                    measurement_sets (spoke_id, tensiometer_id, comment)
+                VALUES
+                    (?, ?, ?)"""
+
     ADD_TENSIOMETER: str = """
                 INSERT INTO
                     tensiometers (name)

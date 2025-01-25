@@ -1,8 +1,7 @@
 import os
 import sys
 import threading
-from typing import cast, Any, override
-from PySide6.QtCore import Qt
+from typing import cast, override
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QApplication, QStatusBar
 from PySide6.QtWidgets import QLayout
@@ -94,7 +93,9 @@ class Spokeduino(QMainWindow):
             db=self.db)
 
         # Replace the tableWidgetMeasurements with the custom widget
-        custom_table = CustomTableWidget(parent=self)
+        custom_table = CustomTableWidget(
+            parent=self,
+            move_to_next_cell_callback=self.measurement_module.move_to_next_cell)
 
         # Set the same object name so the rest of the code works seamlessly
         custom_table.setObjectName("tableWidgetMeasurements")
@@ -175,6 +176,7 @@ class Spokeduino(QMainWindow):
         self.status_bar.addPermanentWidget(self.status_label_unit)
         self.status_bar.addPermanentWidget(self.status_label_tensiometer)
         self.status_bar.addPermanentWidget(self.status_label_port)
+        self.status_label_spoke.setStyleSheet("font-weight: bold;")
 
         self.setup_module.setup_language()
         self.setup_module.populate_language_combobox()

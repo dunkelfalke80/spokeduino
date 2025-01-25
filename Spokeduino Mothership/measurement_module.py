@@ -1,6 +1,8 @@
+import time
 from typing import Any
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QModelIndex
+from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QTableWidget
 from PySide6.QtWidgets import QTableWidgetItem
@@ -11,7 +13,6 @@ from customtablewidget import CustomTableWidget
 from sql_queries import SQLQueries
 from unit_module import UnitEnum, UnitModule
 from database_module import DatabaseModule
-from unit_module import UnitModule
 from tensiometer_module import TensiometerModule
 from ui import Ui_mainWindow
 from enum import Enum
@@ -386,9 +387,45 @@ class MeasurementModule:
         view.setVerticalHeaderLabels(row_headers)
         view.move_to_specific_cell(row + 1, 0)
 
+    def move_to_next_cell(self, no_delay: bool) -> None:
+        """
+        Callback for moving to the next cell in the table.
+        Moves to the cell below if possible, otherwise to the first cell
+        of the next column if possible. If in edit/custom mode and the cell is
+        the last one, adds an empty row below and goes to the first cell of it.
+
+        :param no_delay: If True, immediately move to the next cell.
+                        Otherwise, introduce a slight delay.
+        """
+        view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        row: int = view.currentRow()
+        column: int = view.currentColumn()
+
+        if column < view.columnCount() - 1:
+            column += 1
+        elif row < view.rowCount() - 1:
+            column = 0
+            row += 1
+        else:
+            if self.__mode == MeasurementModeEnum.DEFAULT:
+                return  # Already at the last cell
+            time.sleep(0.05)
+            self.insert_empty_row_below(row)
+            column = 0
+            row += 1
+
+        # Delay to ensure Qt's focus/selection state is updated
+        if no_delay:
+            view.move_to_specific_cell(row, column)
+        else:
+            QTimer.singleShot(100,
+                lambda: view.move_to_specific_cell(
+                    row=row, column=column))
+
     def save_measurements(self) -> None:
         """
         Save measurement data for all columns in tableWidgetMeasurements.
+        Handles different modes: DEFAULT, EDIT, and CUSTOM.
         """
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
 
@@ -401,52 +438,134 @@ class MeasurementModule:
         # Get the comment
         comment: str = self.ui.lineEditMeasurementComment.text().strip()
 
-        # Iterate over each column in the table
+        # Check the mode and handle accordingly
+        match self.__mode:
+            case MeasurementModeEnum.DEFAULT:
+                # Save default mode measurements
+                self.__save_default_mode_measurements(view, spoke_id, comment)
+            case MeasurementModeEnum.EDIT | MeasurementModeEnum.CUSTOM:
+                # Save edit or custom mode measurements
+                self.__save_custom_mode_measurements(view, spoke_id, comment)
+
+        # Notify the user
+        self.messagebox.info("Measurements saved successfully")
+        self.load_measurements(None, None, False)
+
+    def __save_default_mode_measurements(
+            self, view: CustomTableWidget, spoke_id: int, comment: str) -> None:
+        """
+        Save measurements in DEFAULT mode with multiple tensiometers.
+        """
         for column in range(view.columnCount()):
             # Fetch the tensiometer ID for the column
-            current_column: QTableWidgetItem | None = view.horizontalHeaderItem(column)
-            if current_column is None:
-                self.messagebox.err(f"Column {column + 1}: No current column")
-                return
-
             header_item: QTableWidgetItem | None = view.horizontalHeaderItem(column)
             if header_item is None:
-                self.messagebox.err(f"Column {column + 1}: No header item")
+                self.messagebox.err(f"Column {column + 1}: Missing header")
                 return
 
             tensiometer_id = header_item.data(Qt.ItemDataRole.UserRole)
             if tensiometer_id is None:
-                self.messagebox.err(
-                    f"Column {column + 1}: No tensiometer ID "
-                    f"found in the header {header_item}")
+                self.messagebox.err(f"Column {column + 1}: Missing tensiometer ID")
                 return
 
-            # Extract tension values in the correct order
-            #tension_values: list[float] = [value for _, value in measurements]
+            # Validate and gather tension-deflection data
+            data: list[tuple[float, float]] = []
+            for row in range(view.rowCount()):
+                tension_item = view.verticalHeaderItem(row)
+                deflection_item = view.item(row, column)
 
-            # Prepare query parameters
-            #params = (
-            #    spoke_id,
-             #   tensiometer_id,
-             #   *tension_values,
-             #   formula,
-             #   comment,
-            #)
+                if tension_item is None or deflection_item is None:
+                    self.messagebox.err(f"Row {row + 1}: Missing data in column {column + 1}")
+                    return
 
-            # Execute the query
-            try:
-                #db.execute_query(query=SQLQueries.ADD_MEASUREMENT, params=params)
-                pass
-            except Exception as ex:
-                self.messagebox.err(f"Failed to save measurement for "
-                                    f"column {column + 1}: {str(ex)}")
-                return
+                try:
+                    tension = float(tension_item.text().split()[0])
+                    deflection = float(deflection_item.text())
+                    data.append((tension, deflection))
+                except ValueError:
+                    self.messagebox.err(f"Row {row + 1}, Column {column + 1}: Invalid data")
+                    return
 
-        # Notify the user
-        self.messagebox.info("Measurements saved successfully")
+            # Save the data to the database
+            self.__save_measurement_set(spoke_id, tensiometer_id, data, comment)
+
+    def __save_custom_mode_measurements(
+                self, view: CustomTableWidget, spoke_id: int, comment: str) -> None:
+        """
+        Save measurements in EDIT or CUSTOM mode.
+        In EDIT mode, delete the existing measurement set before saving new data.
+        """
+        # Fetch the tensiometer ID for the column (assumes a single tensiometer)
+        tensiometer_id = self.tensiometer_module.get_primary_tensiometer()
+        if tensiometer_id < 0:
+            self.messagebox.err("No tensiometer selected")
+            return
+
+        # Validate and gather tension-deflection data
+        data: list[tuple[float, float]] = []
         for row in range(view.rowCount()):
-            for col in range(view.columnCount()):
-                item: QTableWidgetItem | None = view.item(row, col)
-                if item:
-                    item.setText("")
-        self.load_measurements(None, None, False)
+            tension_item = view.item(row, 0)
+            deflection_item = view.item(row, 1)
+
+            if tension_item is None or deflection_item is None:
+                continue  # Ignore rows with missing data
+
+            try:
+                tension = float(tension_item.text())
+                deflection = float(deflection_item.text())
+                data.append((tension, deflection))
+            except ValueError:
+                continue  # Ignore rows with invalid data
+
+        if not data:
+            self.messagebox.err("No valid data to save")
+            return
+
+        # Handle EDIT mode: Delete the existing measurement set
+        if self.__mode == MeasurementModeEnum.EDIT:
+            # Get the current measurement set ID
+            measurement_id: int = Generics.get_selected_row_id(self.ui.tableWidgetMeasurementList)
+            if measurement_id < 0:
+                self.messagebox.err("No measurement set selected to overwrite")
+                return
+
+            # Delete the existing measurement set
+            try:
+                self.db.execute_query(
+                    query=SQLQueries.DELETE_MEASUREMENT_SET,
+                    params=(measurement_id,)
+                )
+            except Exception as ex:
+                self.messagebox.err(f"Failed to delete previous measurement set: {str(ex)}")
+                return
+
+        # Save the new data
+        self.__save_measurement_set(spoke_id, tensiometer_id, data, comment)
+
+    def __save_measurement_set(
+            self,
+            spoke_id: int,
+            tensiometer_id: int,
+            data: list[tuple[float, float]],
+            comment: str) -> None:
+        """
+        Save a single measurement set and its associated measurements.
+        """
+        # Save the measurement set
+        set_id = self.db.execute_query(
+            query=SQLQueries.ADD_MEASUREMENT_SET,
+            params=(spoke_id, tensiometer_id, comment)
+        )
+        if set_id is None:
+            self.messagebox.err("Failed to save measurement set")
+            return
+
+        # Save each measurement
+        for tension, deflection in data:
+            try:
+                self.db.execute_query(
+                    query=SQLQueries.ADD_MEASUREMENT,
+                    params=(set_id, tension, deflection)
+                )
+            except Exception as ex:
+                self.messagebox.err(f"Failed to save measurement: {str(ex)}")
