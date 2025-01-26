@@ -172,7 +172,7 @@ class MeasurementModule:
                 view.setItem(row_idx, col_idx, item)
 
         # Adjust column sizes
-        header = view.horizontalHeader()
+        header: QHeaderView = view.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
 
         # Hide headers

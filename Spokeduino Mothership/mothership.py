@@ -103,6 +103,7 @@ class Spokeduino(QMainWindow):
             unit_module=self.unit_module,
             tensiometer_module=self.tensiometer_module,
             messagebox=self.messagebox,
+            measurement_module=self.measurement_module,
             db=self.db,
             fitter=self.fitter,
             canvas=self.tensioning_canvas)

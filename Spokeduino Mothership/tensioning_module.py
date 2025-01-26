@@ -1,4 +1,4 @@
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, Any
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QTableWidget
@@ -12,10 +12,12 @@ from customtablewidget import CustomTableWidget
 from unit_module import UnitEnum, UnitModule
 from database_module import DatabaseModule
 from tensiometer_module import TensiometerModule
+from measurement_module import MeasurementModule
 from helpers import TextChecker, Generics
 from ui import Ui_mainWindow
 from calculation_module import TensionDeflectionFitter
 from visualisation_module import MatplotlibCanvas, VisualisationModule
+from sql_queries import SQLQueries
 
 if TYPE_CHECKING:
     from mothership import Spokeduino
@@ -29,6 +31,7 @@ class TensioningModule:
                  unit_module: UnitModule,
                  tensiometer_module: TensiometerModule,
                  messagebox: Messagebox,
+                 measurement_module: MeasurementModule,
                  db: DatabaseModule,
                  fitter: TensionDeflectionFitter,
                  canvas: MatplotlibCanvas) -> None:
@@ -38,6 +41,7 @@ class TensioningModule:
         self.setup_module = SetupModule
         self.messagebox: Messagebox = messagebox
         self.tensiometer_module: TensiometerModule = tensiometer_module
+        self.measurement_mnodule = measurement_module
         self.db: DatabaseModule = db
         self.fitter: TensionDeflectionFitter = fitter
         self.canvas = canvas
@@ -46,6 +50,8 @@ class TensioningModule:
         self.__tensions_right: list[tuple[float, float]] = []
         self.__measurement_left: int = -1
         self.__measurement_right: int = -1
+        self.__fit_left: dict[Any, Any]
+        self.__fit_right: dict[Any, Any]
 
     def setup_table(self, is_left: bool) -> None:
         """
@@ -183,11 +189,15 @@ class TensioningModule:
         header: str | None = view.get_row_header_text(row)
         if header is None:
             return
-
+        if is_left:
+            fit_model: dict[Any, Any] = self.__fit_left
+        else:
+            fit_model: dict[Any, Any] = self.__fit_right
         spoke_no: int = int(header)
         value = value.replace(",", ".")
         deflection: float = float(value)
-        tension: float = self.calculate_tension_from_deflection(deflection)
+
+        tension: float = self.calculate_tension(fit_model=fit_model, deflection=deflection)
         try:
             # tension = PiecewiseQuarticFit.evaluate(formula, deflection)
             pass
@@ -219,6 +229,7 @@ class TensioningModule:
         item = QTableWidgetItem(value)
         item.setFlags(Qt.ItemFlag.ItemIsEnabled)
         view.setItem(row, 1, item)
+        self.plot_spoke_tensions()
 
     def on_cell_changing(
             self,
@@ -267,63 +278,82 @@ class TensioningModule:
             f"{item.text()}"
         )
 
+        fit_type, header = self.measurement_mnodule.get_fit()
+        measurements: list[tuple[float, float]] = self.db.execute_select(
+            query=SQLQueries.GET_MEASUREMENTS_BY_ID,
+            params=(measurement_id,))
+
+        fit_model = self.fitter.fit_data(measurements, fit_type)
+
         if is_left:
             self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
             self.main_window.status_label_spoke_left.setText(f"<- {spoke_name} {self.ui.lineEditDimension.text()}")
             self.__measurement_left = measurement_id
+            self.__fit_left = fit_model
         else:
             self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
             self.main_window.status_label_spoke_right.setText(f"{spoke_name} {self.ui.lineEditDimension.text()} ->")
             self.__measurement_right = measurement_id
+            self.__fit_right = fit_model
 
-    def calculate_tension_from_deflection(self, deflection: float) -> float:
+    def calculate_tension(self, fit_model, deflection: float) -> float:
         """
         Given the string from a cell containing deflection (mm),
         parse and compute tension. If invalid or empty, return 0.
         Replace the formula with your own as needed.
         """
         try:
-            tension = deflection * 100.0  # Example formula
-            # Return only nonnegative for safety
-            return max(tension, 0.0)
+            tension = self.fitter.calculate_tension(fit_model, deflection)
+            if tension is None:
+                return 0.0
+            return tension
         except (ValueError, TypeError):
             return 0.0
 
-    def read_spoke_data(self, table_widget) -> list[tuple[int, float]]:
+    def read_spoke_data(self, is_left: bool) -> list[tuple[int, float]]:
         """
-        Reads the deflection from column 0 of each row, converts to tension,
+        Reads the deflection from column 0 of each row in table_widget,
+        uses the fitter + fit_model to compute tension,
         and returns a list of (spoke_index, tension).
-        The row header is parsed as the spoke_index.
+
+        The row header text is treated as the spoke_index.
         """
-        row_count = table_widget.rowCount()
+        if is_left:
+            table_widget: CustomTableWidget = self.ui.tableWidgetTensioningLeft
+        else:
+            table_widget = self.ui.tableWidgetTensioningRight
+        row_count: int = table_widget.rowCount()
         spoke_data = []
 
         for row in range(row_count):
-            # Row header => spoke index
-            header_item = table_widget.verticalHeaderItem(row)
+            # 1) The row header => spoke index
+            header_item: QTableWidgetItem = table_widget.verticalHeaderItem(row)
             if header_item is None:
-                continue  # Skip if missing
+                continue
             try:
                 spoke_index = int(header_item.text().strip())
             except ValueError:
-                continue  # If it’s not an integer, skip
+                continue  # If it's not an integer, skip this row
 
-            # Deflection in column 0 => tension
+            # 2) Deflection in column 0 => compute tension with fitter
+            tension_val = 0.0
             deflection_item = table_widget.item(row, 0)
-            if not deflection_item:
-                # No item => tension = 0
-                tension = 0.0
-            else:
-                tension: float = self.calculate_tension_from_deflection(float(deflection_item.text().strip()))
+            tension_item = table_widget.item(row, 1)
+            if deflection_item and tension_item:
+                try:
+                    tension_val: float = float(tension_item.text())
+                except ValueError:
+                    continue
 
-            # Optionally: write tension back into column 1 if desired
-            # tension_str = f"{tension:.2f}"
-            # table_widget.setItem(row, 1, QTableWidgetItem(tension_str))
 
-            spoke_data.append((spoke_index, tension))
+            # Optionally: write tension_val back into column 1 for display
+            # e.g.:
+            # from PySide6.QtWidgets import QTableWidgetItem
+            # table_widget.setItem(row, 1, QTableWidgetItem(f"{tension_val:.2f}"))
+
+            spoke_data.append((spoke_index, tension_val))
 
         return spoke_data
-
 
     def plot_spoke_tensions(self):
         """
@@ -331,11 +361,11 @@ class TensioningModule:
         then plot on a polar radar chart inside verticalLayoutMeasurementRight.
         """
         # 1) Gather spoke data for left side
-        tensions_left = self.read_spoke_data(self.ui.tableWidgetTensioningLeft)
+        tensions_left = self.read_spoke_data( True)
         left_spokes = self.ui.tableWidgetTensioningLeft.rowCount()
 
         # 2) Gather spoke data for right side
-        tensions_right = self.read_spoke_data(self.ui.tableWidgetTensioningRight)
+        tensions_right = self.read_spoke_data( False)
         right_spokes = self.ui.tableWidgetTensioningRight.rowCount()
 
         # If you only want one plot at a time, clear out the layout first:
@@ -350,16 +380,21 @@ class TensioningModule:
 
         # 5) Plot with either the symmetric or asymmetric method
         # If the left side has the same number of spokes as the right side => symmetrical
+        try:
+            target_left = float(self.ui.lineEditTargetTensionLeft.text())
+            target_right = float(self.ui.lineEditTargetTensionRight.text())
+        except ValueError:
+            target_left = 0.0
+            target_right = 0.0
+
         if left_spokes == right_spokes:
-            # For demonstration, let's pass example target tensions
-            # (Or None if you don't want to show target lines.)
             self.__chart.plot_spoke_tensions(
                 ax=cast(PolarAxes, ax),
                 spokes_per_side=left_spokes,
                 tensions_left=tensions_left,
                 tensions_right=tensions_right,
-                target_left=110.0,
-                target_right=130.0
+                target_left=target_left,
+                target_right=target_right
             )
         else:
             self.__chart.plot_asymmetric_spoke_tensions(
@@ -368,8 +403,8 @@ class TensioningModule:
                 right_spokes=right_spokes,
                 tensions_left=tensions_left,
                 tensions_right=tensions_right,
-                target_left=100.0,
-                target_right=140.0
+                target_left=target_left,
+                target_right=target_right
             )
 
         # 6) Redraw

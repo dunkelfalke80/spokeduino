@@ -190,12 +190,10 @@ class VisualisationModule:
         ax.set_theta_offset(np.pi / 2)
         ax.set_theta_direction(-1)
         ax.set_xticks(angles[:-1])
-        ax.set_xticklabels([f"Spoke {i + 1}" for i in range(spokes_per_side)])
+        ax.set_xticklabels([f"{i + 1}" for i in range(spokes_per_side)])
         ax.set_rlabel_position(180 / spokes_per_side)
         ax.set_yticks([])
         ax.legend(loc="upper right", bbox_to_anchor=(1.1, 1.1))
-
-        ax.set_title("Spoke Tensions Radar Chart (Symmetric)")
 
     def plot_asymmetric_spoke_tensions(
         self,
@@ -264,7 +262,6 @@ class VisualisationModule:
         ax.set_theta_offset(np.pi / 2)
         ax.set_theta_direction(-1)
         ax.legend(loc="upper right", bbox_to_anchor=(1.1, 1.1))
-        ax.set_title("Asymmetric Spoke Tensions Radar Chart")
 
     def __predict_deflection(
         self,

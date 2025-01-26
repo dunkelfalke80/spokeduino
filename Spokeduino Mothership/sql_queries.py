@@ -66,6 +66,17 @@ class SQLQueries:
                 WHERE
                     set_id IN"""
 
+    GET_MEASUREMENTS_BY_ID: str = """
+                SELECT
+                    tension, deflection
+                FROM
+                    measurements
+                WHERE
+                    set_id = ?
+                ORDER BY
+                    tension
+                ASC"""
+
     ADD_MEASUREMENT: str = """
                 INSERT INTO
                     measurements (set_id, tension, deflection)
