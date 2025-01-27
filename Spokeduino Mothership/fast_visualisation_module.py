@@ -1,8 +1,7 @@
-from typing import Any, Optional
+from typing import Any
 import numpy as np
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 import pyqtgraph as pg
-from pyqtgraph.Qt import QtCore
 from PySide6.QtCore import QRectF
 from calculation_module import FitType, TensionDeflectionFitter
 
@@ -41,6 +40,7 @@ class VisualisationModule:
         Store or instantiate a TensionDeflectionFitter here.
         """
         self.fitter: TensionDeflectionFitter = fitter
+        self.__legend_added = False
 
     def __predict_deflection(
         self,
@@ -193,18 +193,50 @@ class VisualisationModule:
         angles_closed = np.append(angles, angles[0])  # Close the loop
         return angles_closed, tensions_closed
 
-    def draw_static_elements(
-        self,
-        plot_widget: pg.PlotWidget,
-        left_spokes: int,
-        right_spokes: int,
-        target_tension_left: Optional[float] = None,
-        target_tension_right: Optional[float] = None
-    ) -> None:
-        """
-        Draw static elements for the radar chart, including spoke lines, spoke numbers,
-        and target tension circles. Handles asymmetric spoke counts and ensures proper scaling.
-        """
+    # Draw target circles
+    def __draw_circle(self, plot_widget: pg.PlotWidget, target_tension: float, is_left: bool, target: bool) -> None:
+        circle_x = np.cos(np.linspace(0, 2 * np.pi, 360)) * target_tension
+        circle_y = np.sin(np.linspace(0, 2 * np.pi, 360)) * target_tension
+
+        if target:
+            if is_left:
+                color: str = "red"
+                name: str = "Left target tension"
+            else:
+                color: str = "blue"
+                name: str = "Right target tension"
+            circle_item = plot_widget.plot(
+                circle_x, circle_y,
+                pen=pg.mkPen(color=color, style=pg.QtCore.Qt.PenStyle.DashLine, width=2, name=name))
+        else:
+            circle_item = plot_widget.plot(
+                circle_x, circle_y,
+                pen=pg.mkPen(color="black", style=pg.QtCore.Qt.PenStyle.SolidLine, width=1))
+
+        circle_item._static_element = True
+
+    # Helper to draw spokes and numbers
+    def __draw_spokes(self, plot_widget, angles, color, radius, offset_x=0, offset_y=0) -> None:
+        for i, angle in enumerate(angles):
+            x = np.cos(angle) * radius
+            y = np.sin(angle) * radius
+
+            # Draw spoke lines
+            line_item = plot_widget.plot(
+                [0, x + offset_x], [0, y + offset_y],
+                pen=pg.mkPen(color="gray", style=pg.QtCore.Qt.PenStyle.DotLine, width=1),
+                name=None,  # Do not add spoke lines to the legend
+            )
+            line_item._static_element = True  # Tag as static
+
+            # Draw spoke numbers
+            text_item = pg.TextItem(
+                str(i + 1), anchor=(0.5, 0.5), color=color
+            )
+            text_item.setPos(x * 1.05 + offset_x, y * 1.05 + offset_y)
+            plot_widget.addItem(text_item)
+
+    def init_static_elements(self, plot_widget: pg.PlotWidget) -> None:
         # Clear everything
         plot_widget.clear()
 
@@ -218,62 +250,53 @@ class VisualisationModule:
         plot_widget.setMouseEnabled(x=False, y=False)
         plot_widget.setAspectLocked(True)
 
+    def draw_static_elements(
+        self,
+        plot_widget: pg.PlotWidget,
+        left_spokes: int,
+        right_spokes: int,
+        target_tension_left: float,
+        target_tension_right: float
+    ) -> None:
+        """
+        Draw static elements for the radar chart, including spoke lines, spoke numbers,
+        and target tension circles. Handles asymmetric spoke counts and ensures proper scaling.
+        """
         # Determine max radius for scaling
-        max_target_tension = max(target_tension_left or 0, target_tension_right or 0, 1)
-        max_radius = max_target_tension + 200  # Add smaller buffer
+        max_target_tension: float = max(target_tension_left, target_tension_right, 0.0)
+        max_radius: float = max_target_tension + 200.0 if max_target_tension > 0.0 else 1600
 
         # Adjust chart range
         rect = QRectF(-max_radius, -max_radius, 2 * max_radius, 2 * max_radius)
         plot_widget.setRange(rect)
 
         # Prepare spoke angles (align first spoke to 0° and clockwise)
-        angles_left = -np.linspace(0, 2 * np.pi, left_spokes, endpoint=False) - np.pi / 2
-        angles_right = -np.linspace(0, 2 * np.pi, right_spokes, endpoint=False) - np.pi / 2
-
-        # Helper to draw spokes and numbers
-        def draw_spokes(angles, color, radius, offset_x=0, offset_y=0):
-            for i, angle in enumerate(angles):
-                x = np.cos(angle) * radius
-                y = np.sin(angle) * radius
-
-                # Draw spoke lines
-                plot_widget.plot(
-                    [0, x + offset_x], [0, y + offset_y],
-                    pen=pg.mkPen(color="gray", style=pg.QtCore.Qt.PenStyle.DotLine, width=1),
-                )
-
-                # Draw spoke numbers
-                text_item = pg.TextItem(
-                    str(i + 1), anchor=(0.5, 0.5), color=color
-                )
-                text_item.setPos(x * 1.1 + offset_x, y * 1.1 + offset_y)
-                plot_widget.addItem(text_item)
+        angles_left = np.linspace(0, 2 * np.pi, left_spokes, endpoint=False) + np.pi / 2
+        angles_right = np.linspace(0, 2 * np.pi, right_spokes, endpoint=False) + np.pi / 2
+        # Ensure the legend is created once
+        if not self.__legend_added:
+            plot_widget.addLegend(offset=(1, 1))
+            legend = plot_widget.addLegend(offset=(10, 10))
+            # Add target tension items manually
+            legend.addItem(
+                pg.PlotDataItem(pen=pg.mkPen(color="red", style=pg.QtCore.Qt.PenStyle.DashLine)),
+                "Left Target Tension",)
+            legend.addItem(
+                pg.PlotDataItem(pen=pg.mkPen(color="blue", style=pg.QtCore.Qt.PenStyle.DashLine)),
+                "Right Target Tension",)
+            self.__legend_added = True
 
         # Draw spokes and numbers
         if left_spokes == right_spokes:
-            draw_spokes(angles_left, color="blue", radius=max_radius)
+            self.__draw_spokes(plot_widget, angles_left, color="black", radius=max_radius)
         else:
-            draw_spokes(angles_left, color="blue", radius=max_radius, offset_x=-20)
-            draw_spokes(angles_right, color="red", radius=max_radius, offset_x=20)
+            self.__draw_spokes(plot_widget, angles_left, color="red", radius=max_radius, offset_x=-20)
+            self.__draw_spokes(plot_widget, angles_right, color="blue", radius=max_radius, offset_x=40)
 
-        # Draw target circles
-        def draw_target_circle(target_tension, color):
-            if target_tension is not None and target_tension > 0:
-                circle_x = np.cos(np.linspace(0, 2 * np.pi, 360)) * target_tension
-                circle_y = np.sin(np.linspace(0, 2 * np.pi, 360)) * target_tension
-                plot_widget.plot(
-                    circle_x, circle_y,
-                    pen=pg.mkPen(color=color, style=pg.QtCore.Qt.PenStyle.DashLine, width=2),
-                    name=f"{color.capitalize()} Target Tension",
-                )
-
-        draw_target_circle(target_tension_left, "blue")
-        draw_target_circle(target_tension_right, "red")
-
-        # Ensure the legend is created once
-        if not hasattr(self, "_legend_added") or not self._legend_added:
-            plot_widget.addLegend(offset=(10, 10))
-            self._legend_added = True
+        if max_target_tension > 0.0:
+            self.__draw_circle(plot_widget, target_tension_left, True, True)
+            self.__draw_circle(plot_widget, target_tension_right, False, True)
+        self.__draw_circle(plot_widget, max_radius, False, False)
 
     def plot_dynamic_tensions(
         self,
@@ -286,17 +309,18 @@ class VisualisationModule:
         """
         Plot spoke tensions dynamically. Clears previous tensions and updates.
         """
-        # Clear only dynamic plots
+        # Remove only dynamic elements
         for item in plot_widget.listDataItems():
-            plot_widget.removeItem(item)
+            if not hasattr(item, "_static_element"):
+                plot_widget.removeItem(item)
 
         # Prepare radar data
         angles_left, tensions_left = self.__prepare_radar_data(left_spokes, tensions_left)
         angles_right, tensions_right = self.__prepare_radar_data(right_spokes, tensions_right)
 
         # Adjust angles so the first spoke is at 0° and clockwise
-        angles_left = -angles_left - np.pi / 2
-        angles_right = -angles_right - np.pi / 2
+        angles_left = angles_left + np.pi / 2
+        angles_right = angles_right + np.pi / 2
 
         # Convert polar to Cartesian coordinates
         left_x = np.cos(angles_left) * tensions_left
@@ -307,11 +331,11 @@ class VisualisationModule:
         # Plot left and right tensions
         plot_widget.plot(
             left_x, left_y,
-            pen=pg.mkPen(color="blue", width=2),
+            pen=pg.mkPen(color="red", width=2),
             name="Left Tensions",
         )
         plot_widget.plot(
             right_x, right_y,
-            pen=pg.mkPen(color="red", width=2),
+            pen=pg.mkPen(color="blue", width=2),
             name="Right Tensions",
         )

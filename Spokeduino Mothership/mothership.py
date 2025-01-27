@@ -422,7 +422,7 @@ class Spokeduino(QMainWindow):
             lambda row, column, value: self.tensioning_module.on_cell_changing(
                 is_left=True, row=row, column=column, value=value))
         self.ui.lineEditTargetTensionLeft.textChanged.connect(
-            lambda: self.tensioning_module.set_tension(True))
+            lambda: self.tensioning_module.setup_table(True))
 
         # Right tensioning table
         self.ui.pushButtonUseRight.clicked.connect(
@@ -433,7 +433,7 @@ class Spokeduino(QMainWindow):
             lambda row, column, value: self.tensioning_module.on_cell_changing(
                 is_left=True, row=row, column=column, value=value))
         self.ui.lineEditTargetTensionRight.textChanged.connect(
-            lambda: self.tensioning_module.set_tension(False))
+            lambda: self.tensioning_module.setup_table(False))
 
     @override
     def resizeEvent(self, event) -> None:

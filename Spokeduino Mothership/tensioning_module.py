@@ -1,13 +1,12 @@
 import numpy as np
 import inspect
-from typing import TYPE_CHECKING, cast, Any
+from typing import TYPE_CHECKING, Any
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QTableWidget, QWidget
+from PySide6.QtWidgets import QTableWidget
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QLineEdit
-from matplotlib.projections.polar import PolarAxes
 from setup_module import SetupModule
 from helpers import Messagebox
 from customtablewidget import CustomTableWidget
@@ -118,6 +117,16 @@ class TensioningModule:
         view.setEnabled(spoke_amount > 0 and other_view.rowCount() > 0)
         other_view.setEnabled(spoke_amount > 0 and other_view.rowCount() > 0)
         self.set_tension(is_left)
+        self.__chart.init_static_elements(plot_widget=self.canvas.plot_widget)
+        if view.isEnabled() and other_view.isEnabled():
+            self.__chart.draw_static_elements(
+                plot_widget=self.canvas.plot_widget,
+                left_spokes=self.ui.tableWidgetTensioningLeft.rowCount(),
+                right_spokes=self.ui.tableWidgetTensioningRight.rowCount(),
+                target_tension_left=self.__target_left,
+                target_tension_right=self.__target_right
+            )
+            self.plot_spoke_tensions()
 
     def set_tension(self, is_left: bool) -> None:
         if is_left:
@@ -130,13 +139,6 @@ class TensioningModule:
                 self.__target_right = float(self.ui.lineEditTargetTensionRight.text())
             except ValueError:
                 self.__target_right = 0.0
-        self.__chart.draw_static_elements(
-            plot_widget=self.canvas.plot_widget,
-            left_spokes=self.ui.tableWidgetTensioningLeft.rowCount(),
-            right_spokes=self.ui.tableWidgetTensioningRight.rowCount(),
-            target_tension_left=self.__target_left,
-            target_tension_right=self.__target_right
-        )
 
     def start_tensioning(self) -> None:
         pass
@@ -175,11 +177,11 @@ class TensioningModule:
                 this_row = 0
             else:
                 this_row += 1
+                QTimer.singleShot(50,
+                    lambda: this_view.move_to_specific_cell(
+                        row=this_row,
+                        column=0))
 
-        QTimer.singleShot(50,
-            lambda: this_view.move_to_specific_cell(
-                row=this_row,
-                column=0))
 
     def previous_cell_callback_left(self) -> None:
         self.previous_cell_callback(is_left=True)
@@ -211,9 +213,6 @@ class TensioningModule:
             return
 
         value = TextChecker.check_text(value, True)
-        if value == "":
-            return
-
         view: CustomTableWidget = (self.ui.tableWidgetTensioningLeft
                                    if is_left
                                    else self.ui.tableWidgetTensioningRight)
@@ -222,8 +221,11 @@ class TensioningModule:
             return
 
         spoke_no: int = int(header)
-        value = value.replace(",", ".")
-        deflection: float = float(value)
+        if value != "":
+            value = value.replace(",", ".")
+            deflection: float = float(value)
+        else:
+            deflection: float = 0.0
 
         if is_left:
             tension: float = self.calculate_tension(fit_model=self.__fit_left, deflection=deflection)
