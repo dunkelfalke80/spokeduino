@@ -23,7 +23,6 @@ from PySide6.QtWidgets import QStyleOptionViewItem
 from PySide6.QtWidgets import QLineEdit
 from PySide6.QtWidgets import QWidget
 from helpers import TextChecker
-import inspect
 
 
 class CustomTableWidget(QTableWidget):
@@ -31,7 +30,7 @@ class CustomTableWidget(QTableWidget):
     A custom table widget designed to handle specific features such as custom
     navigation callbacks, cell editing, and clipboard paste operations.
     """
-    onCellDataChanging = Signal(int, int, str)  # row, column, value
+    onCellChanged = Signal(int, int, str)  # row, column, value
 
     def __init__(self,
                  move_to_next_cell_callback:
@@ -83,7 +82,7 @@ class CustomTableWidget(QTableWidget):
         """
         Emit the onCellDataChanged signal on editing a cell.
         """
-        self.onCellDataChanging.emit(self.currentRow(), self.currentColumn(), value)
+        self.onCellChanged.emit(self.currentRow(), self.currentColumn(), value)
 
     @override
     def keyPressEvent(self, event) -> None:
@@ -115,18 +114,6 @@ class CustomTableWidget(QTableWidget):
         if self.currentColumn() == self.columnCount() - 1:
             self.__sorting_stopped = False
             self.setSortingEnabled(self.__old_sorting_enabled)
-
-    def get_row_header_text(self, row: int | None) -> str | None:
-        """
-        Retrieve the header text for a specific row.
-
-        :param row: The row index.
-        :return: The header text or None if no header is set.
-        """
-        if row is None:
-            row = self.currentRow()
-        header_item: QTableWidgetItem = self.verticalHeaderItem(row)
-        return header_item.text() if header_item else None
 
     def paste_row(self) -> None:
             """

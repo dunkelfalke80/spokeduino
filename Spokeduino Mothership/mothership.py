@@ -418,9 +418,9 @@ class Spokeduino(QMainWindow):
             lambda: self.tensioning_module.use_spoke(True))
         self.ui.lineEditSpokeAmountLeft.textChanged.connect(
             lambda: self.tensioning_module.setup_table(is_left=True))
-        self.ui.tableWidgetTensioningLeft.onCellDataChanging.connect(
-            lambda row, column, value: self.tensioning_module.on_cell_changing(
-                is_left=True, row=row, column=column, value=value))
+#        self.ui.tableWidgetTensioningLeft.onCellDataChanging.connect(
+#            lambda row, column, value: self.tensioning_module.on_cell_changing(
+#                is_left=True, row=row, column=column, value=value))
         self.ui.lineEditTargetTensionLeft.textChanged.connect(
             lambda: self.tensioning_module.setup_table(True))
 
@@ -429,9 +429,6 @@ class Spokeduino(QMainWindow):
             lambda: self.tensioning_module.use_spoke(False))
         self.ui.lineEditSpokeAmountRight.textChanged.connect(
             lambda: self.tensioning_module.setup_table(is_left=False))
-        self.ui.tableWidgetTensioningRight.onCellDataChanging.connect(
-            lambda row, column, value: self.tensioning_module.on_cell_changing(
-                is_left=True, row=row, column=column, value=value))
         self.ui.lineEditTargetTensionRight.textChanged.connect(
             lambda: self.tensioning_module.setup_table(False))
 

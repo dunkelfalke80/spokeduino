@@ -124,15 +124,24 @@ class VisualisationModule:
         fit_model: dict,
         data: list[tuple[float, float]],
         step: float = 100.0,
-        deviation_range: tuple[float, float] = (-50, 50),
+        deviation_range: tuple[float, float] = (-20, 20),
         header: str = ""
     ) -> None:
         """
         Generates a chart showing the fitted deflection curve and deviation of
         measured data points (in tension) from the fitted model.
         """
-        # Clear the plot
-        plot_widget.clear()
+        # Ensure deviation Y-axis exists
+        if not hasattr(self, "_deviation_axis"):
+            self._deviation_axis = pg.AxisItem(orientation="right", pen="green")
+            self._deviation_axis.setLabel("Deviation (N)", color="green")
+            plot_item = plot_widget.getPlotItem()
+            if plot_item is None or not hasattr(plot_item, "layout"):
+                raise RuntimeError("PlotWidget is not properly initialized with a PlotItem.")
+            plot_item.layout.addItem(self._deviation_axis, 1, 2, 1, 1)
+
+        # Adjust deviation Y-axis range
+        self._deviation_axis.setRange(deviation_range[0], deviation_range[1])
 
         # Extract metadata
         t_min, t_max = fit_model["t_min"], fit_model["t_max"]
@@ -153,9 +162,15 @@ class VisualisationModule:
             for t_calc, t_meas in zip(calculated_tensions, measured_tensions)
         ]
 
+        # Clear only dynamic elements
+        for item in plot_widget.listDataItems():
+            plot_widget.removeItem(item)
+
         # Plot the fitted curve
         plot_widget.plot(
-            tensions, deflections, pen=pg.mkPen(color="b", width=2), name="Fitted Curve"
+            tensions, deflections,
+            pen=pg.mkPen(color="blue", width=2),
+            name="Fitted Curve"
         )
 
         # Plot measured points
@@ -164,18 +179,32 @@ class VisualisationModule:
             measured_deflections,
             pen=None,
             symbol="o",
-            symbolBrush="r",
+            symbolBrush="red",
             name="Measured Points",
         )
 
-        # Add a second plot for deviations
-        deviation_plot = pg.ViewBox()
-        plot_widget.scene().addItem(deviation_plot)
-        deviation_plot.setYRange(deviation_range[0], deviation_range[1])
-        deviation_curve = pg.PlotCurveItem(
-            measured_tensions, deviations, pen=pg.mkPen(color="orange", width=2)
+        # Plot deviations (green dots and lines)
+        deviation_x = measured_tensions
+        deviation_y = deviations
+        plot_widget.plot(
+            deviation_x,
+            deviation_y,
+            pen=pg.mkPen(color="green", width=1),  # Thin green lines connecting points
+            symbol="o",
+            symbolBrush="green",
+            name="Deviations",
         )
-        deviation_plot.addItem(deviation_curve)
+
+        # Ensure the legend exists
+        if not hasattr(self, "_legend_added") or not self._legend_added:
+            plot_widget.addLegend(offset=(10, 10))
+            self._legend_added = True
+
+        # Dynamically set axis ranges
+        x_min, x_max = tensions[0], tensions[-1]  # Use first and last values
+        y_min, y_max = min(deflections), max(deflections)
+        plot_widget.setXRange(x_min, x_max)
+        plot_widget.setYRange(y_min, y_max)
 
         # Set plot labels and grid
         plot_widget.setTitle(header, color="black", size="12pt")
@@ -236,6 +265,20 @@ class VisualisationModule:
             text_item.setPos(x * 1.05 + offset_x, y * 1.05 + offset_y)
             plot_widget.addItem(text_item)
 
+    # Draw target polygons
+    def __draw_target_polygon(self, plot_widget, target_tension, angles, color):
+        if target_tension is not None and target_tension > 0:
+            x_coords = np.cos(angles) * target_tension
+            y_coords = np.sin(angles) * target_tension
+            # Close the polygon by appending the first point
+            x_coords = np.append(x_coords, x_coords[0])
+            y_coords = np.append(y_coords, y_coords[0])
+            polygon_item = plot_widget.plot(
+                x_coords, y_coords,
+                pen=pg.mkPen(color=color, style=pg.QtCore.Qt.PenStyle.DashLine, width=1),
+            )
+            polygon_item._static_element = True  # Tag as static
+
     def init_static_elements(self, plot_widget: pg.PlotWidget) -> None:
         # Clear everything
         plot_widget.clear()
@@ -294,8 +337,8 @@ class VisualisationModule:
             self.__draw_spokes(plot_widget, angles_right, color="blue", radius=max_radius, offset_x=40)
 
         if max_target_tension > 0.0:
-            self.__draw_circle(plot_widget, target_tension_left, True, True)
-            self.__draw_circle(plot_widget, target_tension_right, False, True)
+            self.__draw_target_polygon(plot_widget, target_tension_left, angles_left, "red")
+            self.__draw_target_polygon(plot_widget, target_tension_right, angles_right, "blue")
         self.__draw_circle(plot_widget, max_radius, False, False)
 
     def plot_dynamic_tensions(
@@ -331,11 +374,11 @@ class VisualisationModule:
         # Plot left and right tensions
         plot_widget.plot(
             left_x, left_y,
-            pen=pg.mkPen(color="red", width=2),
+            pen=pg.mkPen(color="red", width=3),
             name="Left Tensions",
         )
         plot_widget.plot(
             right_x, right_y,
-            pen=pg.mkPen(color="blue", width=2),
+            pen=pg.mkPen(color="blue", width=3),
             name="Right Tensions",
         )

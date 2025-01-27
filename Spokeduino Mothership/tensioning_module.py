@@ -47,6 +47,8 @@ class TensioningModule:
         self.fitter: TensionDeflectionFitter = fitter
         self.canvas: PyQtGraphCanvas = canvas
         self.__chart = VisualisationModule(fitter=self.fitter)
+        self.__spoke_amount_left: int = 0
+        self.__spoke_amount_right: int = 0
         self.__tensions_left: np.ndarray
         self.__tensions_right: np.ndarray
         self.__target_left: float = 0.0
@@ -56,6 +58,8 @@ class TensioningModule:
         self.__unit: UnitEnum = UnitEnum.NEWTON
         self.ui.tableWidgetTensioningLeft.setEnabled(False)
         self.ui.tableWidgetTensioningRight.setEnabled(False)
+        self.__cell_changed_signal_connected = False
+        self.__clockwise: bool = True
 
     def setup_table(self, is_left: bool) -> None:
         """
@@ -82,8 +86,10 @@ class TensioningModule:
 
         if is_left:
             self.__tensions_left = np.zeros(spoke_amount)
+            self.__spoke_amount_left = spoke_amount
         else:
             self.__tensions_right = np.zeros(spoke_amount)
+            self.__spoke_amount_right = spoke_amount
         # Define headers
         headers: list[str] = ["mm", self.unit_module.get_unit().value]
 
@@ -92,10 +98,11 @@ class TensioningModule:
         view.setRowCount(spoke_amount)
         view.setColumnCount(2)
         view.setHorizontalHeaderLabels(headers)
-        if self.ui.radioButtonRotationClockwise.isChecked():
+        self.__clockwise = self.ui.radioButtonRotationClockwise.isChecked()
+        if self.__clockwise:
             view.setVerticalHeaderLabels(
                     [f"{value}" for value in range(1, spoke_amount, 1)])
-        elif self.ui.radioButtonRotationAnticlockwise.isChecked():
+        else:
             view.setVerticalHeaderLabels(
                     [f"{value}" for value in range(spoke_amount, 0, -1)])
 
@@ -114,19 +121,39 @@ class TensioningModule:
         # Resize columns to fit within the table
         view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         view.resize_table_font()
-        view.setEnabled(spoke_amount > 0 and other_view.rowCount() > 0)
-        other_view.setEnabled(spoke_amount > 0 and other_view.rowCount() > 0)
+        view_enabled: bool = (
+            self.__spoke_amount_left > 0 and
+            self.__spoke_amount_right > 0)
+        view.setEnabled(view_enabled)
+        other_view.setEnabled(view_enabled)
         self.set_tension(is_left)
         self.__chart.init_static_elements(plot_widget=self.canvas.plot_widget)
         if view.isEnabled() and other_view.isEnabled():
             self.__chart.draw_static_elements(
                 plot_widget=self.canvas.plot_widget,
-                left_spokes=self.ui.tableWidgetTensioningLeft.rowCount(),
-                right_spokes=self.ui.tableWidgetTensioningRight.rowCount(),
+                left_spokes=self.__spoke_amount_left,
+                right_spokes=self.__spoke_amount_left,
                 target_tension_left=self.__target_left,
                 target_tension_right=self.__target_right
             )
             self.plot_spoke_tensions()
+            if not self.__cell_changed_signal_connected:
+                self.__cell_changed_signal_connected = True
+                self.ui.tableWidgetTensioningLeft.onCellChanged.connect(
+                    lambda row, column, value: self.on_cell_changing(
+                        is_left=True, row=row, column=column, value=value))
+                self.ui.tableWidgetTensioningRight.onCellChanged.connect(
+                    lambda row, column, value: self.on_cell_changing(
+                        is_left=False, row=row, column=column, value=value))
+        else:
+            if self.__cell_changed_signal_connected:
+                self.__cell_changed_signal_connected = False
+                self.ui.tableWidgetTensioningLeft.onCellChanged.disconnect(
+                    lambda row, column, value: self.on_cell_changing(
+                        is_left=True, row=row, column=column, value=value))
+                self.ui.tableWidgetTensioningRight.onCellChanged.disconnect(
+                    lambda row, column, value: self.on_cell_changing(
+                        is_left=False, row=row, column=column, value=value))
 
     def set_tension(self, is_left: bool) -> None:
         if is_left:
@@ -175,13 +202,18 @@ class TensioningModule:
             if this_row == this_count - 1:
                 this_view = other_view
                 this_row = 0
+                print("switching view")
+                QTimer.singleShot(50,
+                    lambda: other_view.move_to_specific_cell(
+                        row=this_row,
+                        column=0))
             else:
                 this_row += 1
+                print("next row")
                 QTimer.singleShot(50,
                     lambda: this_view.move_to_specific_cell(
                         row=this_row,
                         column=0))
-
 
     def previous_cell_callback_left(self) -> None:
         self.previous_cell_callback(is_left=True)
@@ -211,16 +243,10 @@ class TensioningModule:
         """
         if column == 1:
             return
-
         value = TextChecker.check_text(value, True)
         view: CustomTableWidget = (self.ui.tableWidgetTensioningLeft
                                    if is_left
                                    else self.ui.tableWidgetTensioningRight)
-        header: str | None = view.get_row_header_text(row)
-        if header is None:
-            return
-
-        spoke_no: int = int(header)
         if value != "":
             value = value.replace(",", ".")
             deflection: float = float(value)
@@ -250,10 +276,17 @@ class TensioningModule:
         item.setFlags(Qt.ItemFlag.ItemIsEnabled)
         view.setItem(row, 1, item)
         if is_left:
-            self.__tensions_left[spoke_no] = tension
+            spoke_no: int = (
+                row + 1 if self.__clockwise
+                else self.__spoke_amount_left - row)
+            self.__tensions_left[spoke_no - 1] = tension
         else:
-            self.__tensions_right[spoke_no] = tension
+            spoke_no: int = (
+                row + 1 if self.__clockwise
+                else self.__spoke_amount_right - row)
+            self.__tensions_right[spoke_no - 1] = tension
         self.plot_spoke_tensions()
+
 
     def use_spoke(self, is_left: bool) -> None:
         """
