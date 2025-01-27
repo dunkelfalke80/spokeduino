@@ -1,10 +1,10 @@
-from typing import Any
+from typing import Any, Optional
 import numpy as np
 from matplotlib.projections.polar import PolarAxes
 from matplotlib.figure import Figure
+from matplotlib.axes import Axes
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 from matplotlib.backends.backend_qtagg import FigureCanvasQTAgg
-from matplotlib.axes import Axes
 from calculation_module import FitType, TensionDeflectionFitter
 
 
@@ -42,7 +42,6 @@ class MatplotlibCanvas(QWidget):
 class VisualisationModule:
     """
     A module for visualizing fitted curves and spoke tensions.
-    Assumes the 'fit_model' dictionary was produced by TensionDeflectionFitter.fit_data(...).
     """
 
     def __init__(self, fitter: TensionDeflectionFitter) -> None:
@@ -50,6 +49,25 @@ class VisualisationModule:
         Store or instantiate a TensionDeflectionFitter here.
         """
         self.fitter: TensionDeflectionFitter = fitter
+
+    @staticmethod
+    def __validate_array_size(array: np.ndarray, expected_size: int, name: str) -> None:
+        """
+        Validates that an array matches an expected size.
+        """
+        if array.shape[0] != expected_size:
+            raise ValueError(f"{name} array must have {expected_size} elements, "
+                             f"but has {array.shape[0]}.")
+
+    @staticmethod
+    def __prepare_radar_data(spokes: int, tensions: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+        """
+        Prepares angles and closes the radar chart data for plotting.
+        """
+        angles = np.linspace(0, 2 * np.pi, spokes, endpoint=False)
+        tensions_closed = np.append(tensions, tensions[0])  # Close the loop
+        angles_closed = np.append(angles, angles[0])  # Close the loop
+        return angles_closed, tensions_closed
 
     def __predict_deflection(
         self,
@@ -138,50 +156,33 @@ class VisualisationModule:
     ) -> None:
         """
         Generates a chart showing the fitted deflection curve and deviation of
-        measured data points (in tension) from the fitted model, **on the Axes you provide**.
-
-        :param ax: A Matplotlib Axes (regular Cartesian axes).
-        :param fit_model: Dictionary returned by TensionDeflectionFitter.fit_data(...).
-        :param data: List of (tension, deflection) pairs (N, mm).
-        :param step: Step size for tension values in the plotted range (N).
-        :param deviation_range: (ymin, ymax) for the deviation axis on the twin Axes.
+        measured data points (in tension) from the fitted model.
         """
-        # Clear these axes
+        # Clear existing plots
         ax.cla()
         ax2 = ax.twinx()
         ax2.cla()
 
-        # Extract metadata from fit_model
-        t_min = fit_model["t_min"]
-        t_max = fit_model["t_max"]
-        fit_type = fit_model["fit_type"]
-        model = fit_model["model"]
+        # Extract metadata
+        t_min, t_max = fit_model["t_min"], fit_model["t_max"]
+        fit_type, model = fit_model["fit_type"], fit_model["model"]
 
-        # Generate tension values for plotting
+        # Generate tension values and deflections
         tensions = np.arange(t_min, t_max + step, step)
+        deflections = self.__predict_deflection(fit_type, model, tensions, fit_model)
 
-        # Compute deflections from the model
-        deflections = self.__predict_deflection(
-            fit_type=fit_type,
-            model=model,
-            tensions=tensions,
-            fit_model=fit_model)
-
-        # Calculate deviations for the measured data
+        # Compute deviations
         measured_tensions, measured_deflections = zip(*data)
-
         calculated_tensions = [
             self.fitter.calculate_tension(fit_model, d_meas)
             for d_meas in measured_deflections
         ]
-
-        # Deviation = (calculated tension) - (measured tension)
         deviations = [
             (t_calc - t_meas) if t_calc is not None else np.nan
             for t_calc, t_meas in zip(calculated_tensions, measured_tensions)
         ]
 
-        # Plot the fitted curve (left Y-axis)
+        # Plot the fitted curve
         ax.plot(tensions, deflections, label="Fitted Curve", color="blue")
         ax.scatter(measured_tensions, measured_deflections, label="Measured Points", color="red")
         ax.set_xlabel("Tension (N)")
@@ -190,10 +191,8 @@ class VisualisationModule:
         ax.legend(loc="upper left")
         ax.grid(True)
 
-        # Plot the deviations (right Y-axis)
-        ax2.scatter(measured_tensions, deviations,
-                    label="Deviation (Measured vs Calculated)",
-                    color="orange", marker="x")
+        # Plot deviations
+        ax2.scatter(measured_tensions, deviations, color="orange", marker="x", label="Deviation")
         ax2.set_ylabel("Deviation in Tension (N)", color="orange")
         ax2.yaxis.set_label_position("right")
         ax2.yaxis.set_ticks_position("right")
@@ -210,39 +209,22 @@ class VisualisationModule:
         right_spokes: int,
         tensions_left: np.ndarray,
         tensions_right: np.ndarray,
-        target_left: float = 0,
-        target_right: float = 0
+        target_left: Optional[float] = None,
+        target_right: Optional[float] = None
     ) -> None:
         """
-        Plots a radar chart of spoke tensions for both sides of a wheel,
-        accommodating symmetric or asymmetric spoke counts, **on the polar Axes you provide**.
-
-        :param ax: A Matplotlib polar Axes (e.g., from figure.add_subplot(projection="polar")).
-        :param left_spokes: Number of spokes on the left side.
-        :param right_spokes: Number of spokes on the right side.
-        :param tensions_left: Numpy array of tensions for left spokes, indexed by spoke number.
-        :param tensions_right: Numpy array of tensions for right spokes, indexed by spoke number.
-        :param target_left: Optional target tension for left spokes.
-        :param target_right: Optional target tension for right spokes.
+        Plots a radar chart of spoke tensions for both sides of a wheel.
         """
         # Clear the polar Axes
         ax.cla()
 
         # Validate input arrays
-        if tensions_left.shape[0] != left_spokes:
-            raise ValueError("Input tension array for the left side must match the number of left spokes.")
-        if tensions_right.shape[0] != right_spokes:
-            raise ValueError("Input tension array for the right side must match the number of right spokes.")
+        self.__validate_array_size(tensions_left, left_spokes, "Left tensions")
+        self.__validate_array_size(tensions_right, right_spokes, "Right tensions")
 
-        # Generate angles for each side
-        angles_left: Any = np.linspace(0, 2 * np.pi, left_spokes, endpoint=False).tolist()
-        angles_right: Any = np.linspace(0, 2 * np.pi, right_spokes, endpoint=False).tolist()
-
-        # Close arrays and angles for radar chart
-        tensions_left = np.append(tensions_left, tensions_left[0])
-        tensions_right = np.append(tensions_right, tensions_right[0])
-        angles_left += angles_left[:1]
-        angles_right += angles_right[:1]
+        # Prepare radar data
+        angles_left, tensions_left = self.__prepare_radar_data(left_spokes, tensions_left)
+        angles_right, tensions_right = self.__prepare_radar_data(right_spokes, tensions_right)
 
         # Plot left side
         ax.plot(angles_left, tensions_left, label="Left Tensions", color="blue")
@@ -252,18 +234,19 @@ class VisualisationModule:
         ax.plot(angles_right, tensions_right, label="Right Tensions", color="red")
         ax.fill(angles_right, tensions_right, color="red", alpha=0.25)
 
-        # Plot target tensions, if provided
-        if target_left > 0:
+        # Plot target tensions
+        if target_left:
             target_left_array = np.full(left_spokes, target_left)
-            target_left_array = np.append(target_left_array, target_left_array[0])
+            _, target_left_array = self.__prepare_radar_data(left_spokes, target_left_array)
             ax.plot(angles_left, target_left_array, label="Left Target", color="blue", linestyle="--")
 
-        if target_right > 0:
+        if target_right:
             target_right_array = np.full(right_spokes, target_right)
-            target_right_array = np.append(target_right_array, target_right_array[0])
+            _, target_right_array = self.__prepare_radar_data(right_spokes, target_right_array)
             ax.plot(angles_right, target_right_array, label="Right Target", color="red", linestyle="--")
 
         # Polar adjustments
         ax.set_theta_offset(np.pi / 2)
         ax.set_theta_direction(-1)
-        ax.legend(loc="upper right", bbox_to_anchor=(1.1, 1.1))
+        if not ax.get_legend():
+            ax.legend(loc="upper right", bbox_to_anchor=(1.1, 1.1))

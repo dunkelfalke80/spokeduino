@@ -422,7 +422,6 @@ class Spokeduino(QMainWindow):
             lambda row, column, value: self.tensioning_module.on_cell_changing(
                 is_left=True, row=row, column=column, value=value))
 
-
         # Right tensioning table
         self.ui.pushButtonUseRight.clicked.connect(
             lambda: self.tensioning_module.use_spoke(False))

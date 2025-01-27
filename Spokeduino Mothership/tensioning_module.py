@@ -47,15 +47,15 @@ class TensioningModule:
         self.measurement_mnodule: MeasurementModule = measurement_module
         self.db: DatabaseModule = db
         self.fitter: TensionDeflectionFitter = fitter
-        self.canvas = canvas
+        self.canvas: MatplotlibCanvas = canvas
         self.__chart = VisualisationModule(fitter=self.fitter)
         self.__tensions_left: np.ndarray
         self.__tensions_right: np.ndarray
-        self.__measurement_left: int = -1
-        self.__measurement_right: int = -1
         self.__fit_left: dict[Any, Any] | None = None
         self.__fit_right: dict[Any, Any] | None = None
         self.__unit: UnitEnum = UnitEnum.NEWTON
+        self.ui.tableWidgetTensioningLeft.setEnabled(False)
+        self.ui.tableWidgetTensioningRight.setEnabled(False)
 
     def setup_table(self, is_left: bool) -> None:
         """
@@ -68,9 +68,11 @@ class TensioningModule:
         if is_left:
             line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountLeft
             view: CustomTableWidget = self.ui.tableWidgetTensioningLeft
+            other_view: CustomTableWidget = self.ui.tableWidgetTensioningRight
         else:
             line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountRight
             view: CustomTableWidget = self.ui.tableWidgetTensioningRight
+            other_view: CustomTableWidget = self.ui.tableWidgetTensioningLeft
 
         # Get spoke amount and target tension
         try:
@@ -112,6 +114,8 @@ class TensioningModule:
         # Resize columns to fit within the table
         view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         view.resize_table_font()
+        view.setEnabled(spoke_amount > 0 and other_view.rowCount() > 0)
+        other_view.setEnabled(spoke_amount > 0 and other_view.rowCount() > 0)
 
     def start_tensioning(self) -> None:
         pass
@@ -266,12 +270,10 @@ class TensioningModule:
         if is_left:
             self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
             self.main_window.status_label_spoke_left.setText(f"<- {spoke_name} {self.ui.lineEditDimension.text()}")
-            self.__measurement_left = measurement_id
             self.__fit_left = fit_model
         else:
             self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
             self.main_window.status_label_spoke_right.setText(f"{spoke_name} {self.ui.lineEditDimension.text()} ->")
-            self.__measurement_right = measurement_id
             self.__fit_right = fit_model
 
     def calculate_tension(self, fit_model, deflection: float) -> float:
@@ -333,26 +335,27 @@ class TensioningModule:
 
         return spoke_data
 
-    def plot_spoke_tensions(self):
+    def plot_spoke_tensions(self) -> None:
         """
-        Example slot: read data from tableWidgetTensioningLeft/right,
-        then plot on a polar radar chart inside verticalLayoutMeasurementRight.
+        Update the polar radar chart inside verticalLayoutMeasurementRight
+        without recreating the canvas.
         """
         left_spokes: int = self.ui.tableWidgetTensioningLeft.rowCount()
         right_spokes: int = self.ui.tableWidgetTensioningRight.rowCount()
 
-        # If you only want one plot at a time, clear out the layout first:
-        while self.ui.verticalLayoutMeasurementRight.count():
-            item = self.ui.verticalLayoutMeasurementRight.takeAt(0)
-            w: QWidget = item.widget()
-            if w:
-                w.deleteLater()
+        # Create the canvas and Axes if they don't exist
+        if not hasattr(self, "ax"):
+            # Clear the layout only once
+            while self.ui.verticalLayoutMeasurementRight.count():
+                item = self.ui.verticalLayoutMeasurementRight.takeAt(0)
+                w: QWidget = item.widget()
+                if w:
+                    w.deleteLater()
 
-        # 4) Build a polar axes
-        ax: Axes = self.canvas.figure.add_subplot(111, projection="polar")
+            # Create and add the canvas
+            self.ax = cast(PolarAxes, self.canvas.figure.add_subplot(111, projection="polar"))
 
-        # 5) Plot with either the symmetric or asymmetric method
-        # If the left side has the same number of spokes as the right side => symmetrical
+        # Read target tensions
         try:
             target_left = float(self.ui.lineEditTargetTensionLeft.text())
             target_right = float(self.ui.lineEditTargetTensionRight.text())
@@ -360,8 +363,9 @@ class TensioningModule:
             target_left = 0.0
             target_right = 0.0
 
+        # Call the radar chart plotting function
         self.__chart.plot_spoke_tensions(
-            ax=cast(PolarAxes, ax),
+            ax=self.ax,
             left_spokes=left_spokes,
             right_spokes=right_spokes,
             tensions_left=self.__tensions_left,
@@ -369,5 +373,6 @@ class TensioningModule:
             target_left=target_left,
             target_right=target_right
         )
-        # 6) Redraw
+
+        # Redraw the canvas
         self.canvas.draw_figure()
