@@ -23,7 +23,7 @@ from unit_module import UnitEnum
 from customtablewidget import CustomTableWidget
 from helpers import Messagebox
 from calculation_module import TensionDeflectionFitter
-from visualisation_module import MatplotlibCanvas
+from fast_visualisation_module import PyQtGraphCanvas
 
 class Spokeduino(QMainWindow):
     """
@@ -57,8 +57,8 @@ class Spokeduino(QMainWindow):
         self.ui = Ui_mainWindow()
         self.ui.setupUi(mainWindow=self)
         # Visualisation
-        self.measurement_canvas = MatplotlibCanvas()
-        self.tensioning_canvas = MatplotlibCanvas()
+        self.measurement_canvas = PyQtGraphCanvas()
+        self.tensioning_canvas = PyQtGraphCanvas()
         self.ui.verticalLayoutMeasurementRight.addWidget(self.measurement_canvas)
         self.ui.verticalLayoutWheelDiagram.addWidget(self.tensioning_canvas)
 
@@ -421,6 +421,8 @@ class Spokeduino(QMainWindow):
         self.ui.tableWidgetTensioningLeft.onCellDataChanging.connect(
             lambda row, column, value: self.tensioning_module.on_cell_changing(
                 is_left=True, row=row, column=column, value=value))
+        self.ui.lineEditTargetTensionLeft.textChanged.connect(
+            lambda: self.tensioning_module.set_tension(True))
 
         # Right tensioning table
         self.ui.pushButtonUseRight.clicked.connect(
@@ -430,6 +432,8 @@ class Spokeduino(QMainWindow):
         self.ui.tableWidgetTensioningRight.onCellDataChanging.connect(
             lambda row, column, value: self.tensioning_module.on_cell_changing(
                 is_left=True, row=row, column=column, value=value))
+        self.ui.lineEditTargetTensionRight.textChanged.connect(
+            lambda: self.tensioning_module.set_tension(False))
 
     @override
     def resizeEvent(self, event) -> None:

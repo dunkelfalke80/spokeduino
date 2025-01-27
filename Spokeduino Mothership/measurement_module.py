@@ -16,7 +16,7 @@ from sql_queries import SQLQueries
 from unit_module import UnitEnum, UnitModule
 from database_module import DatabaseModule
 from tensiometer_module import TensiometerModule
-from visualisation_module import MatplotlibCanvas, VisualisationModule
+from fast_visualisation_module import PyQtGraphCanvas, VisualisationModule
 from calculation_module import TensionDeflectionFitter, FitType
 
 
@@ -36,7 +36,7 @@ class MeasurementModule:
                  messagebox: Messagebox,
                  db: DatabaseModule,
                  fitter: TensionDeflectionFitter,
-                 canvas: MatplotlibCanvas) -> None:
+                 canvas: PyQtGraphCanvas) -> None:
         self.ui: Ui_mainWindow = ui
         self.unit_module: UnitModule = unit_module
         self.main_window: QMainWindow = main_window
@@ -621,17 +621,15 @@ class MeasurementModule:
         #         widget.deleteLater()
 
         # 4) Draw the plot on our new canvas
-        self.canvas.clear_figure()
-        ax = self.canvas.figure.add_subplot(111)
+        self.canvas.clear()
         self.__chart.plot_fit_with_deviation(
-            ax=ax,
+            plot_widget=self.canvas.plot_widget,
             fit_model=fit_model,
             data=data,
             step=10.0,
             deviation_range=(-20, 20),
             header=f"{header} fit"
         )
-        self.canvas.draw_figure()
 
     def get_fit(self) -> tuple[FitType, str]:
         if self.ui.radioButtonFitQuadratic.isChecked():

@@ -1,6 +1,5 @@
 import numpy as np
 import inspect
-from matplotlib.axes import Axes
 from typing import TYPE_CHECKING, cast, Any
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QTimer
@@ -19,7 +18,7 @@ from measurement_module import MeasurementModule
 from helpers import TextChecker, Generics
 from ui import Ui_mainWindow
 from calculation_module import TensionDeflectionFitter
-from visualisation_module import MatplotlibCanvas, VisualisationModule
+from fast_visualisation_module import PyQtGraphCanvas, VisualisationModule
 from sql_queries import SQLQueries
 
 if TYPE_CHECKING:
@@ -37,7 +36,7 @@ class TensioningModule:
                  measurement_module: MeasurementModule,
                  db: DatabaseModule,
                  fitter: TensionDeflectionFitter,
-                 canvas: MatplotlibCanvas) -> None:
+                 canvas: PyQtGraphCanvas) -> None:
         self.ui: Ui_mainWindow = ui
         self.unit_module: UnitModule = unit_module
         self.main_window: Spokeduino = main_window
@@ -47,10 +46,12 @@ class TensioningModule:
         self.measurement_mnodule: MeasurementModule = measurement_module
         self.db: DatabaseModule = db
         self.fitter: TensionDeflectionFitter = fitter
-        self.canvas: MatplotlibCanvas = canvas
+        self.canvas: PyQtGraphCanvas = canvas
         self.__chart = VisualisationModule(fitter=self.fitter)
         self.__tensions_left: np.ndarray
         self.__tensions_right: np.ndarray
+        self.__target_left: float = 0.0
+        self.__target_right: float = 0.0
         self.__fit_left: dict[Any, Any] | None = None
         self.__fit_right: dict[Any, Any] | None = None
         self.__unit: UnitEnum = UnitEnum.NEWTON
@@ -116,6 +117,26 @@ class TensioningModule:
         view.resize_table_font()
         view.setEnabled(spoke_amount > 0 and other_view.rowCount() > 0)
         other_view.setEnabled(spoke_amount > 0 and other_view.rowCount() > 0)
+        self.set_tension(is_left)
+
+    def set_tension(self, is_left: bool) -> None:
+        if is_left:
+            try:
+                self.__target_left = float(self.ui.lineEditTargetTensionLeft.text())
+            except ValueError:
+                self.__target_left = 0.0
+        else:
+            try:
+                self.__target_right = float(self.ui.lineEditTargetTensionRight.text())
+            except ValueError:
+                self.__target_right = 0.0
+        self.__chart.draw_static_elements(
+            plot_widget=self.canvas.plot_widget,
+            left_spokes=self.ui.tableWidgetTensioningLeft.rowCount(),
+            right_spokes=self.ui.tableWidgetTensioningRight.rowCount(),
+            target_tension_left=self.__target_left,
+            target_tension_right=self.__target_right
+        )
 
     def start_tensioning(self) -> None:
         pass
@@ -290,89 +311,19 @@ class TensioningModule:
         except (ValueError, TypeError):
             return 0.0
 
-    def read_spoke_data(self, is_left: bool) -> list[tuple[int, float]]:
-        """
-        Reads the deflection from column 0 of each row in table_widget,
-        uses the fitter + fit_model to compute tension,
-        and returns a list of (spoke_index, tension).
-
-        The row header text is treated as the spoke_index.
-        """
-        if is_left:
-            table_widget: CustomTableWidget = self.ui.tableWidgetTensioningLeft
-        else:
-            table_widget = self.ui.tableWidgetTensioningRight
-        row_count: int = table_widget.rowCount()
-        spoke_data = []
-
-        for row in range(row_count):
-            # 1) The row header => spoke index
-            header_item: QTableWidgetItem = table_widget.verticalHeaderItem(row)
-            if header_item is None:
-                continue
-            try:
-                spoke_index = int(header_item.text().strip())
-            except ValueError:
-                continue  # If it's not an integer, skip this row
-
-            # 2) Deflection in column 0 => compute tension with fitter
-            tension_val = 0.0
-            deflection_item = table_widget.item(row, 0)
-            tension_item = table_widget.item(row, 1)
-            if deflection_item and tension_item:
-                try:
-                    tension_val: float = float(tension_item.text())
-                except ValueError:
-                    continue
-
-
-            # Optionally: write tension_val back into column 1 for display
-            # e.g.:
-            # from PySide6.QtWidgets import QTableWidgetItem
-            # table_widget.setItem(row, 1, QTableWidgetItem(f"{tension_val:.2f}"))
-
-            spoke_data.append((spoke_index, tension_val))
-
-        return spoke_data
-
     def plot_spoke_tensions(self) -> None:
         """
         Update the polar radar chart inside verticalLayoutMeasurementRight
-        without recreating the canvas.
+        using the PyQtGraph-based VisualisationModule.
         """
         left_spokes: int = self.ui.tableWidgetTensioningLeft.rowCount()
         right_spokes: int = self.ui.tableWidgetTensioningRight.rowCount()
 
-        # Create the canvas and Axes if they don't exist
-        if not hasattr(self, "ax"):
-            # Clear the layout only once
-            while self.ui.verticalLayoutMeasurementRight.count():
-                item = self.ui.verticalLayoutMeasurementRight.takeAt(0)
-                w: QWidget = item.widget()
-                if w:
-                    w.deleteLater()
-
-            # Create and add the canvas
-            self.ax = cast(PolarAxes, self.canvas.figure.add_subplot(111, projection="polar"))
-
-        # Read target tensions
-        try:
-            target_left = float(self.ui.lineEditTargetTensionLeft.text())
-            target_right = float(self.ui.lineEditTargetTensionRight.text())
-        except ValueError:
-            target_left = 0.0
-            target_right = 0.0
-
-        # Call the radar chart plotting function
-        self.__chart.plot_spoke_tensions(
-            ax=self.ax,
+        # Call the radar chart plotting function from the VisualisationModule
+        self.__chart.plot_dynamic_tensions(
+            plot_widget=self.canvas.plot_widget,
             left_spokes=left_spokes,
             right_spokes=right_spokes,
             tensions_left=self.__tensions_left,
-            tensions_right=self.__tensions_right,
-            target_left=target_left,
-            target_right=target_right
+            tensions_right=self.__tensions_right
         )
-
-        # Redraw the canvas
-        self.canvas.draw_figure()
