@@ -54,7 +54,6 @@ class Spokeduino(QMainWindow):
         self.waiting_event = threading.Event()
         self.fitter = TensionDeflectionFitter()
 
-
         self.ui = Ui_mainWindow()
         self.ui.setupUi(mainWindow=self)
         # Visualisation
@@ -206,6 +205,7 @@ class Spokeduino(QMainWindow):
         self.update_statusbar_unit()
         self.update_statusbar_tensiometer()
         self.update_statusbar_spokeduino()
+        self.update_statusbar_fit()
 
     def setup_signals_and_slots(self) -> None:
         """
@@ -418,25 +418,16 @@ class Spokeduino(QMainWindow):
             lambda: self.tensioning_module.use_spoke(True))
         self.ui.lineEditSpokeAmountLeft.textChanged.connect(
             lambda: self.tensioning_module.setup_table(is_left=True))
-        self.ui.lineEditTargetTensionLeft.textChanged.connect(
-            lambda: self.tensioning_module.setup_table(is_left=True))
-        self.ui.tableWidgetTensioningLeft.cellChanged.connect(
-            lambda row, column: self.tensioning_module.on_cell_changed(
-                is_left=True, row=row, column=column))
         self.ui.tableWidgetTensioningLeft.onCellDataChanging.connect(
             lambda row, column, value: self.tensioning_module.on_cell_changing(
                 is_left=True, row=row, column=column, value=value))
+
 
         # Right tensioning table
         self.ui.pushButtonUseRight.clicked.connect(
             lambda: self.tensioning_module.use_spoke(False))
         self.ui.lineEditSpokeAmountRight.textChanged.connect(
             lambda: self.tensioning_module.setup_table(is_left=False))
-        self.ui.lineEditTargetTensionRight.textChanged.connect(
-            lambda: self.tensioning_module.setup_table(is_left=False))
-        self.ui.tableWidgetTensioningRight.cellChanged.connect(
-            lambda row, column: self.tensioning_module.on_cell_changed(
-                is_left=False, row=row, column=column))
         self.ui.tableWidgetTensioningRight.onCellDataChanging.connect(
             lambda row, column, value: self.tensioning_module.on_cell_changing(
                 is_left=True, row=row, column=column, value=value))
@@ -502,12 +493,20 @@ class Spokeduino(QMainWindow):
         self.status_label_port.setText(
             f"Spokeduino: {spokeduino_status}")
 
+def trace_calls(frame, event, arg):
+    if event == "call":
+        print(f"Calling {frame.f_code.co_name} at {frame.f_lineno} in {frame.f_code.co_filename}")
+    return trace_calls
+
+
 def main() -> None:
     """
     Entry point for the Spokeduino Mothership application.
 
     Initializes the QApplication and the main application window.
     """
+    #sys.settrace(trace_calls)
+
     app = QApplication(sys.argv)
     window = Spokeduino()
     window.show()

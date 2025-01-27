@@ -168,3 +168,24 @@ class SetupModule:
                 self.ui.radioButtonLeftRight.setChecked(True)
             case "right_left":
                 self.ui.radioButtonRightLeft.setChecked(True)
+
+        # Load fit
+        fit_type: str = settings_dict.get(
+            "fit", "Quadratic")
+        match fit_type:
+            case "Quadratic":
+                self.ui.radioButtonFitQuadratic.setChecked(True)
+            case "Cubic":
+                self.ui.radioButtonFitCubic.setChecked(True)
+            case "Quartic":
+                self.ui.radioButtonFitQuartic.setChecked(True)
+            case "Spline":
+                self.ui.radioButtonFitSpline.setChecked(True)
+            case "Exponential":
+                self.ui.radioButtonFitExponential.setChecked(True)
+            case "Logarithmic":
+                self.ui.radioButtonFitLogarithmic.setChecked(True)
+            case "Power law":
+                self.ui.radioButtonFitPowerLaw.setChecked(True)
+            case _:
+                self.ui.radioButtonFitLinear.setChecked(True)

@@ -23,6 +23,7 @@ from PySide6.QtWidgets import QStyleOptionViewItem
 from PySide6.QtWidgets import QLineEdit
 from PySide6.QtWidgets import QWidget
 from helpers import TextChecker
+import inspect
 
 
 class CustomTableWidget(QTableWidget):

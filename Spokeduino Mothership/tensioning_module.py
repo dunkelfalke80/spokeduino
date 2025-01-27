@@ -1,7 +1,10 @@
+import numpy as np
+import inspect
+from matplotlib.axes import Axes
 from typing import TYPE_CHECKING, cast, Any
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QTableWidget
+from PySide6.QtWidgets import QTableWidget, QWidget
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QLineEdit
@@ -41,17 +44,18 @@ class TensioningModule:
         self.setup_module = SetupModule
         self.messagebox: Messagebox = messagebox
         self.tensiometer_module: TensiometerModule = tensiometer_module
-        self.measurement_mnodule = measurement_module
+        self.measurement_mnodule: MeasurementModule = measurement_module
         self.db: DatabaseModule = db
         self.fitter: TensionDeflectionFitter = fitter
         self.canvas = canvas
         self.__chart = VisualisationModule(fitter=self.fitter)
-        self.__tensions_left: list[tuple[float, float]] = []
-        self.__tensions_right: list[tuple[float, float]] = []
+        self.__tensions_left: np.ndarray
+        self.__tensions_right: np.ndarray
         self.__measurement_left: int = -1
         self.__measurement_right: int = -1
-        self.__fit_left: dict[Any, Any]
-        self.__fit_right: dict[Any, Any]
+        self.__fit_left: dict[Any, Any] | None = None
+        self.__fit_right: dict[Any, Any] | None = None
+        self.__unit: UnitEnum = UnitEnum.NEWTON
 
     def setup_table(self, is_left: bool) -> None:
         """
@@ -59,6 +63,7 @@ class TensioningModule:
         based on spoke amount and target tension.
         Populate the table manually for QTableWidget.
         """
+        self.__unit = self.unit_module.get_unit()
         # Select the appropriate UI elements
         if is_left:
             line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountLeft
@@ -74,9 +79,9 @@ class TensioningModule:
             spoke_amount = 0
 
         if is_left:
-            self.__tensions_left = [(0.0, 0.0)] * spoke_amount
+            self.__tensions_left = np.zeros(spoke_amount)
         else:
-            self.__tensions_right = [(0.0, 0.0)] * spoke_amount
+            self.__tensions_right = np.zeros(spoke_amount)
         # Define headers
         headers: list[str] = ["mm", self.unit_module.get_unit().value]
 
@@ -163,74 +168,6 @@ class TensioningModule:
         else:
             print("Previous cell right")
 
-    def on_cell_changed(
-            self,
-            is_left: bool,
-            row: int,
-            column: int) -> None:
-        """
-        Handle updates when a cell's text has changed.
-
-        :param is_left: Left or right side of the wheel
-        :param row: The row index of the changed cell.
-        :param column: The column index of the changed cell.
-        """
-        # Get the new value
-        view: CustomTableWidget = (self.ui.tableWidgetTensioningLeft
-                                   if is_left
-                                   else self.ui.tableWidgetTensioningRight)
-        item: QTableWidgetItem | None = view.item(row, column)
-        if item is None:
-            return
-        value: str = item.text()
-        if value == "":
-            return
-
-        header: str | None = view.get_row_header_text(row)
-        if header is None:
-            return
-        if is_left:
-            fit_model: dict[Any, Any] = self.__fit_left
-        else:
-            fit_model: dict[Any, Any] = self.__fit_right
-        spoke_no: int = int(header)
-        value = value.replace(",", ".")
-        deflection: float = float(value)
-
-        tension: float = self.calculate_tension(fit_model=fit_model, deflection=deflection)
-        try:
-            # tension = PiecewiseQuarticFit.evaluate(formula, deflection)
-            pass
-        except Exception as ex:
-            print(ex)
-            return
-
-        if tension == 0.0:
-            return
-
-        _, kgf, lbf = self.unit_module.convert_units(
-            value=deflection,
-            source=UnitEnum.NEWTON)
-        # Newton is the base unit for this applicaiton
-        tension_converted: float = tension
-        unit: UnitEnum = self.unit_module.get_unit()
-        match unit:
-            case UnitEnum.KGF:
-                tension_converted = kgf
-            case UnitEnum.LBF:
-                tension_converted = lbf
-
-        if tension_converted == 0.0:
-            return
-
-        value = (f"{tension:.0f}"
-                 if unit == UnitEnum.NEWTON
-                 else f"{tension:.1f}")
-        item = QTableWidgetItem(value)
-        item.setFlags(Qt.ItemFlag.ItemIsEnabled)
-        view.setItem(row, 1, item)
-        self.plot_spoke_tensions()
-
     def on_cell_changing(
             self,
             is_left: bool,
@@ -245,10 +182,51 @@ class TensioningModule:
         :param column: The column index.
         :param value: The current value.
         """
+        if column == 1:
+            return
+
         value = TextChecker.check_text(value, True)
         if value == "":
             return
-        self.on_cell_changed(is_left=is_left, row=row, column=column)
+
+        view: CustomTableWidget = (self.ui.tableWidgetTensioningLeft
+                                   if is_left
+                                   else self.ui.tableWidgetTensioningRight)
+        header: str | None = view.get_row_header_text(row)
+        if header is None:
+            return
+
+        spoke_no: int = int(header)
+        value = value.replace(",", ".")
+        deflection: float = float(value)
+
+        if is_left:
+            tension: float = self.calculate_tension(fit_model=self.__fit_left, deflection=deflection)
+        else:
+            tension: float = self.calculate_tension(fit_model=self.__fit_right, deflection=deflection)
+
+        _, kgf, lbf = self.unit_module.convert_units(
+            value=tension,
+            source=UnitEnum.NEWTON)
+        # Newton is the base unit for this applicaiton
+        tension_converted: float = tension
+
+        if self.__unit == UnitEnum.KGF:
+            tension_converted = kgf
+        elif self.__unit == UnitEnum.LBF:
+            tension_converted = lbf
+
+        value = (f"{tension_converted:.0f}"
+                 if self.__unit == UnitEnum.NEWTON
+                 else f"{tension_converted:.1f}")
+        item = QTableWidgetItem(value)
+        item.setFlags(Qt.ItemFlag.ItemIsEnabled)
+        view.setItem(row, 1, item)
+        if is_left:
+            self.__tensions_left[spoke_no] = tension
+        else:
+            self.__tensions_right[spoke_no] = tension
+        self.plot_spoke_tensions()
 
     def use_spoke(self, is_left: bool) -> None:
         """
@@ -360,23 +338,18 @@ class TensioningModule:
         Example slot: read data from tableWidgetTensioningLeft/right,
         then plot on a polar radar chart inside verticalLayoutMeasurementRight.
         """
-        # 1) Gather spoke data for left side
-        tensions_left = self.read_spoke_data( True)
-        left_spokes = self.ui.tableWidgetTensioningLeft.rowCount()
-
-        # 2) Gather spoke data for right side
-        tensions_right = self.read_spoke_data( False)
-        right_spokes = self.ui.tableWidgetTensioningRight.rowCount()
+        left_spokes: int = self.ui.tableWidgetTensioningLeft.rowCount()
+        right_spokes: int = self.ui.tableWidgetTensioningRight.rowCount()
 
         # If you only want one plot at a time, clear out the layout first:
         while self.ui.verticalLayoutMeasurementRight.count():
             item = self.ui.verticalLayoutMeasurementRight.takeAt(0)
-            w = item.widget()
+            w: QWidget = item.widget()
             if w:
                 w.deleteLater()
 
         # 4) Build a polar axes
-        ax = self.canvas.figure.add_subplot(111, projection="polar")
+        ax: Axes = self.canvas.figure.add_subplot(111, projection="polar")
 
         # 5) Plot with either the symmetric or asymmetric method
         # If the left side has the same number of spokes as the right side => symmetrical
@@ -387,25 +360,14 @@ class TensioningModule:
             target_left = 0.0
             target_right = 0.0
 
-        if left_spokes == right_spokes:
-            self.__chart.plot_spoke_tensions(
-                ax=cast(PolarAxes, ax),
-                spokes_per_side=left_spokes,
-                tensions_left=tensions_left,
-                tensions_right=tensions_right,
-                target_left=target_left,
-                target_right=target_right
-            )
-        else:
-            self.__chart.plot_asymmetric_spoke_tensions(
-                ax=cast(PolarAxes, ax),
-                left_spokes=left_spokes,
-                right_spokes=right_spokes,
-                tensions_left=tensions_left,
-                tensions_right=tensions_right,
-                target_left=target_left,
-                target_right=target_right
-            )
-
+        self.__chart.plot_spoke_tensions(
+            ax=cast(PolarAxes, ax),
+            left_spokes=left_spokes,
+            right_spokes=right_spokes,
+            tensions_left=self.__tensions_left,
+            tensions_right=self.__tensions_right,
+            target_left=target_left,
+            target_right=target_right
+        )
         # 6) Redraw
         self.canvas.draw_figure()
