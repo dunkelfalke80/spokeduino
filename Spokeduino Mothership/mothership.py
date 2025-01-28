@@ -460,6 +460,9 @@ class Spokeduino(QMainWindow):
             case self.ui.measurementTab:
                 self.measurement_module.setup_measurements_table()
             case self.ui.tensioningTab:
+                self.ui.pushButtonStartTensioning.setText("Start")
+                self.ui.tableWidgetTensioningLeft.setEnabled(False)
+                self.ui.tableWidgetTensioningRight.setEnabled(False)
                 self.tensioning_module.setup_table(True)
                 self.tensioning_module.setup_table(False)
             case self.ui.databaseTab:
