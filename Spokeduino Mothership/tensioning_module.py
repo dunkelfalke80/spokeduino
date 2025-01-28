@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QLineEdit
 from setup_module import SetupModule
 from helpers import Messagebox
-from customtablewidget import CustomTableWidget
+from customtablewidget import CustomTableWidget, NumericTableWidgetItem
 from unit_module import UnitEnum, UnitModule
 from database_module import DatabaseModule
 from tensiometer_module import TensiometerModule
@@ -74,11 +74,9 @@ class TensioningModule:
         if is_left:
             line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountLeft
             view: CustomTableWidget = self.ui.tableWidgetTensioningLeft
-            other_view: CustomTableWidget = self.ui.tableWidgetTensioningRight
         else:
             line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountRight
             view: CustomTableWidget = self.ui.tableWidgetTensioningRight
-            other_view: CustomTableWidget = self.ui.tableWidgetTensioningLeft
 
         # Get spoke amount and target tension
         try:
@@ -111,12 +109,12 @@ class TensioningModule:
         # Populate rows
         for row in range(spoke_amount):
             # Create editable cell for "mm" column
-            mm_item = QTableWidgetItem("")
+            mm_item = NumericTableWidgetItem("")
             mm_item.setFlags(Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
             view.setItem(row, 0, mm_item)
 
             # Create non-editable cell for tension column
-            tension_item = QTableWidgetItem("")
+            tension_item = NumericTableWidgetItem("")
             tension_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
             view.setItem(row, 1, tension_item)
 
@@ -309,7 +307,7 @@ class TensioningModule:
         value = (f"{tension_converted:.0f}"
                  if self.__unit == UnitEnum.NEWTON
                  else f"{tension_converted:.1f}")
-        item = QTableWidgetItem(value)
+        item = NumericTableWidgetItem(value)
         item.setFlags(Qt.ItemFlag.ItemIsEnabled)
         view.setItem(row, 1, item)
         if is_left:

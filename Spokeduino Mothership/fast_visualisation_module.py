@@ -273,10 +273,6 @@ class VisualisationModule:
             name="Deviation"
         )
         self._deviation_viewbox.addItem(deviation_curve)
-        print("measured_tensions =", measured_tensions)
-        print("deviations       =", deviations)
-        print("Deviations X array =", measured_tensions)
-        print("Deviations Y array =", deviations)
 
     @staticmethod
     def __prepare_radar_data(spokes: int, tensions: np.ndarray, clockwise: bool = False) -> tuple[np.ndarray, np.ndarray]:
