@@ -35,6 +35,7 @@ class TensioningModule:
                  measurement_module: MeasurementModule,
                  db: DatabaseModule,
                  fitter: TensionDeflectionFitter,
+                 chart: VisualisationModule,
                  canvas: PyQtGraphCanvas) -> None:
         self.ui: Ui_mainWindow = ui
         self.unit_module: UnitModule = unit_module
@@ -45,8 +46,8 @@ class TensioningModule:
         self.measurement_mnodule: MeasurementModule = measurement_module
         self.db: DatabaseModule = db
         self.fitter: TensionDeflectionFitter = fitter
+        self.chart: VisualisationModule = chart
         self.canvas: PyQtGraphCanvas = canvas
-        self.__chart = VisualisationModule(fitter=self.fitter)
         self.__spoke_amount_left: int = 0
         self.__spoke_amount_right: int = 0
         self.__tensions_left: np.ndarray
@@ -127,9 +128,10 @@ class TensioningModule:
         view.setEnabled(view_enabled)
         other_view.setEnabled(view_enabled)
         self.set_tension(is_left)
-        self.__chart.init_static_elements(plot_widget=self.canvas.plot_widget)
+
+        self.chart.init_radar_plot(plot_widget=self.canvas.plot_widget, clockwise=True)
         if view.isEnabled() and other_view.isEnabled():
-            self.__chart.draw_static_elements(
+            self.chart.draw_radar_plot(
                 plot_widget=self.canvas.plot_widget,
                 left_spokes=self.__spoke_amount_left,
                 right_spokes=self.__spoke_amount_left,
@@ -355,7 +357,7 @@ class TensioningModule:
         right_spokes: int = self.ui.tableWidgetTensioningRight.rowCount()
 
         # Call the radar chart plotting function from the VisualisationModule
-        self.__chart.plot_dynamic_tensions(
+        self.chart.update_radar_plot(
             plot_widget=self.canvas.plot_widget,
             left_spokes=left_spokes,
             right_spokes=right_spokes,

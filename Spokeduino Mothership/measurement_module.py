@@ -11,7 +11,7 @@ from ui import Ui_mainWindow
 from enum import Enum
 from setup_module import SetupModule
 from helpers import Messagebox, Generics
-from customtablewidget import CustomTableWidget
+from customtablewidget import CustomTableWidget, NumericTableWidgetItem
 from sql_queries import SQLQueries
 from unit_module import UnitEnum, UnitModule
 from database_module import DatabaseModule
@@ -36,6 +36,7 @@ class MeasurementModule:
                  messagebox: Messagebox,
                  db: DatabaseModule,
                  fitter: TensionDeflectionFitter,
+                 chart: VisualisationModule,
                  canvas: PyQtGraphCanvas) -> None:
         self.ui: Ui_mainWindow = ui
         self.unit_module: UnitModule = unit_module
@@ -45,8 +46,8 @@ class MeasurementModule:
         self.tensiometer_module: TensiometerModule = tensiometer_module
         self.db: DatabaseModule = db
         self.fitter: TensionDeflectionFitter = fitter
-        self.canvas = canvas
-        self.__chart = VisualisationModule(fitter=self.fitter)
+        self.canvas: PyQtGraphCanvas = canvas
+        self.chart: VisualisationModule = chart
         self.__mode: MeasurementModeEnum = MeasurementModeEnum.DEFAULT
         self.__add_row_signal_connected = False
 
@@ -165,7 +166,7 @@ class MeasurementModule:
 
         for row_idx, (row_id, row_data) in enumerate(data):
             for col_idx, cell_data in enumerate(row_data):
-                item = QTableWidgetItem(cell_data)
+                item = NumericTableWidgetItem(cell_data)
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 if col_idx == 0:  # Store the ID in the first visible column
                     item.setData(Qt.ItemDataRole.UserRole, row_id)
@@ -293,7 +294,7 @@ class MeasurementModule:
         # Populate cells
         for row in range(len(tensions_converted)):
             for column in range(len(tensiometers)):
-                item = QTableWidgetItem()
+                item = NumericTableWidgetItem()
                 item.setFlags(
                     Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
                 view.setItem(row, column, item)
@@ -319,7 +320,7 @@ class MeasurementModule:
             # Add one empty editable row
             view.setRowCount(1)
             for column in range(2):
-                item = QTableWidgetItem()
+                item = NumericTableWidgetItem()
                 item.setFlags(
                     Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
                 view.setItem(0, column, item)
@@ -364,10 +365,10 @@ class MeasurementModule:
                     UnitEnum.NEWTON)[unit_index]
 
                 # Create editable items
-                tension_item = QTableWidgetItem(f"{converted_tension:.1f}")
+                tension_item = NumericTableWidgetItem(f"{converted_tension:.1f}")
                 tension_item.setFlags(
                     Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
-                deflection_item = QTableWidgetItem(f"{deflection:.2f}")
+                deflection_item = NumericTableWidgetItem(f"{deflection:.2f}")
                 deflection_item.setFlags(
                     Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
 
@@ -609,6 +610,7 @@ class MeasurementModule:
             return
 
         # 2) Fit the data. Pick whichever FitType you want:
+        data.sort(key=lambda pair: pair[0])
         fit_type, header = self.get_fit()
         fit_model = self.fitter.fit_data(data, fit_type)
 
@@ -621,8 +623,8 @@ class MeasurementModule:
         #         widget.deleteLater()
 
         # 4) Draw the plot on our new canvas
-        self.canvas.clear()
-        self.__chart.plot_fit_with_deviation(
+        #self.canvas.clear()
+        self.chart.update_fit_plot(
             plot_widget=self.canvas.plot_widget,
             fit_model=fit_model,
             data=data,

@@ -23,7 +23,7 @@ from unit_module import UnitEnum
 from customtablewidget import CustomTableWidget
 from helpers import Messagebox
 from calculation_module import TensionDeflectionFitter
-from fast_visualisation_module import PyQtGraphCanvas
+from fast_visualisation_module import PyQtGraphCanvas, VisualisationModule
 
 class Spokeduino(QMainWindow):
     """
@@ -53,6 +53,7 @@ class Spokeduino(QMainWindow):
         self.serial_port = None
         self.waiting_event = threading.Event()
         self.fitter = TensionDeflectionFitter()
+        self.chart = VisualisationModule(self.fitter)
 
         self.ui = Ui_mainWindow()
         self.ui.setupUi(mainWindow=self)
@@ -83,6 +84,7 @@ class Spokeduino(QMainWindow):
             messagebox=self.messagebox,
             db=self.db,
             fitter=self.fitter,
+            chart=self.chart,
             canvas=self.measurement_canvas)
         self.spokeduino_module = SpokeduinoModule(
             ui=self.ui,
@@ -105,6 +107,7 @@ class Spokeduino(QMainWindow):
             measurement_module=self.measurement_module,
             db=self.db,
             fitter=self.fitter,
+            chart=self.chart,
             canvas=self.tensioning_canvas)
 
         # Replace the tableWidgetMeasurements with the custom widget
