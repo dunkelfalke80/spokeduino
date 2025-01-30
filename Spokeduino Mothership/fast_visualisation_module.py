@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 import numpy as np
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 import pyqtgraph as pg
@@ -41,6 +41,7 @@ class VisualisationModule:
         """
         self.fitter: TensionDeflectionFitter = fitter
         self.__legend_added = False
+        self.__clockwise: bool = True
 
     def __predict_deflection(
         self,
@@ -118,7 +119,7 @@ class VisualisationModule:
             # Unsupported or unknown fit type => return all zeros or NaNs
             return np.full_like(tensions, np.nan)
 
-    def plot_fit_with_deviation(
+    def update_fit_plot(
         self,
         plot_widget: pg.PlotWidget,
         fit_model: dict,
@@ -128,26 +129,52 @@ class VisualisationModule:
         header: str = ""
     ) -> None:
         """
-        Generates a chart showing the fitted deflection curve and deviation of
-        measured data points (in tension) from the fitted model.
+        Generates a chart showing the fitted deflection curve (on the main Y axis)
+        and the deviation data (on a secondary Y axis to the right).
         """
-        # Ensure deviation Y-axis exists
-        if not hasattr(self, "_deviation_axis"):
-            self._deviation_axis = pg.AxisItem(orientation="right", pen="green")
-            self._deviation_axis.setLabel("Deviation (N)", color="green")
-            plot_item = plot_widget.getPlotItem()
-            if plot_item is None or not hasattr(plot_item, "layout"):
-                raise RuntimeError("PlotWidget is not properly initialized with a PlotItem.")
-            plot_item.layout.addItem(self._deviation_axis, 1, 2, 1, 1)
 
-        # Adjust deviation Y-axis range
-        self._deviation_axis.setRange(deviation_range[0], deviation_range[1])
+        # 1) Clear old items from the widget
+        plot_widget.clear()
 
-        # Extract metadata
-        t_min, t_max = fit_model["t_min"], fit_model["t_max"]
-        fit_type, model = fit_model["fit_type"], fit_model["model"]
+        # Disable mouse-based panning/zooming
+        plot_widget.setMouseEnabled(x=False, y=False)
 
-        # Generate tension values and deflections
+        # 2) Get the main PlotItem and check None
+        plot_item = plot_widget.getPlotItem()
+        if plot_item is None:
+            raise RuntimeError("No PlotItem found in the given PlotWidget.")
+
+        plot_item.showGrid(x=True, y=True)
+        # Also disable scrolling/zooming from scroll wheel or axis dragging
+        plot_widget.setMouseEnabled(x=False, y=False)
+        plot_widget.enableAutoRange(axis=pg.ViewBox.XYAxes, enable=False)
+
+        # 3) Create (or retrieve) a second ViewBox for deviation data
+        if not hasattr(self, "_deviation_viewbox"):
+            self._deviation_viewbox = pg.ViewBox()
+            # Show the right axis in the main PlotItem
+            plot_item.showAxis("right")
+            plot_item.getAxis("right").setLabel("Deviation (N)", color="green")
+            # Add the second ViewBox to the PlotItem's scene
+            plot_item.scene().addItem(self._deviation_viewbox)
+            # Link the right axis to the new ViewBox
+            plot_item.getAxis("right").linkToView(self._deviation_viewbox)
+        else:
+            self._deviation_viewbox.clear()
+
+        # 4) Link the second ViewBox's X-axis to the main view box
+        main_vb = plot_item.getViewBox()
+        if main_vb is None:
+            raise RuntimeError("No default ViewBox found in the PlotItem.")
+        self._deviation_viewbox.setXLink(main_vb)
+
+        # 5) Extract fit_model info
+        t_min = fit_model["t_min"]
+        t_max = fit_model["t_max"]
+        fit_type = fit_model["fit_type"]
+        model = fit_model["model"]
+
+        # Generate tension values (X) and predicted deflections (Y)
         tensions = np.arange(t_min, t_max + step, step)
         deflections = self.__predict_deflection(fit_type, model, tensions, fit_model)
 
@@ -162,64 +189,111 @@ class VisualisationModule:
             for t_calc, t_meas in zip(calculated_tensions, measured_tensions)
         ]
 
-        # Clear only dynamic elements
-        for item in plot_widget.listDataItems():
-            plot_widget.removeItem(item)
-
-        # Plot the fitted curve
-        plot_widget.plot(
-            tensions, deflections,
+        # 6) Plot main data on the main PlotItem/view
+        # Fitted curve (blue)
+        fitted_curve = pg.PlotDataItem(
+            x=tensions,
+            y=deflections,
             pen=pg.mkPen(color="blue", width=2),
             name="Fitted Curve"
         )
+        plot_item.addItem(fitted_curve)
 
-        # Plot measured points
-        plot_widget.plot(
-            measured_tensions,
-            measured_deflections,
+        # Measured points (red)
+        measured_points = pg.PlotDataItem(
+            x=measured_tensions,
+            y=measured_deflections,
             pen=None,
             symbol="o",
             symbolBrush="red",
-            name="Measured Points",
+            name="Measured Points"
         )
+        plot_item.addItem(measured_points)
 
-        # Plot deviations (green dots and lines)
-        deviation_x = measured_tensions
-        deviation_y = deviations
-        plot_widget.plot(
-            deviation_x,
-            deviation_y,
-            pen=pg.mkPen(color="green", width=1),  # Thin green lines connecting points
+        # 7) Plot deviation data on the second ViewBox
+        #    Just green symbols, no connecting line:
+        deviation_curve = pg.PlotDataItem(
+            x=measured_tensions,
+            y=deviations,
+            pen=None,  # <--- No line
             symbol="o",
             symbolBrush="green",
-            name="Deviations",
+            name="Deviation"
         )
+        self._deviation_viewbox.addItem(deviation_curve)
 
-        # Ensure the legend exists
-        if not hasattr(self, "_legend_added") or not self._legend_added:
-            plot_widget.addLegend(offset=(10, 10))
-            self._legend_added = True
+        # 8) Labels, Title, Legend
+        plot_item.setLabel("left", "Deflection (mm)", color="blue")
+        plot_item.setLabel("bottom", "Tension (N)", color="black")
+        plot_item.setTitle(header, color="black", size="12pt")
 
-        # Dynamically set axis ranges
-        x_min, x_max = tensions[0], tensions[-1]  # Use first and last values
-        y_min, y_max = min(deflections), max(deflections)
-        plot_widget.setXRange(x_min, x_max)
-        plot_widget.setYRange(y_min, y_max)
+        if not hasattr(self, "_legend"):
+            self._legend = plot_item.addLegend(offset=(10, 10))
 
-        # Set plot labels and grid
-        plot_widget.setTitle(header, color="black", size="12pt")
-        plot_widget.setLabel("left", "Deflection (mm)", color="blue")
-        plot_widget.setLabel("bottom", "Tension (N)", color="black")
-        plot_widget.showGrid(x=True, y=True)
+        # 9) Ensure second ViewBox in sync with main ViewBox
+        def update_views():
+            """Keep second ViewBox geometry in sync with main one."""
+            self._deviation_viewbox.setGeometry(main_vb.sceneBoundingRect())
+
+        try:
+            main_vb.sigResized.disconnect()
+        except TypeError:
+            pass
+        main_vb.sigResized.connect(update_views)
+        update_views()
+
+        # 10) Manually zoom out to make sure everything is visible
+        #
+        #    We'll compute overall bounds for the main plot from the fitted curve
+        #    and measured data. Then manually set the X and Y ranges.
+        #
+        all_x_vals = np.concatenate([tensions, measured_tensions])
+        all_y_vals = np.concatenate([deflections, measured_deflections])
+
+        x_min, x_max = np.nanmin(all_x_vals), np.nanmax(all_x_vals)
+        y_min, y_max = np.nanmin(all_y_vals), np.nanmax(all_y_vals)
+        x_min_float: float = cast(float, x_min)
+        x_max_float: float = cast(float, x_max)
+
+        # Add a small margin so points are not on the extreme edge:
+        x_margin: float = 0.05 * (x_max_float - x_min_float if x_max_float > x_min_float else 1.0)
+        y_margin: float = 0.05 * (y_max - y_min if y_max > y_min else 1.0)
+
+        plot_widget.setXRange(x_min - x_margin, x_max_float + x_margin)
+        plot_widget.setYRange(y_min - y_margin, y_max + y_margin)
+
+        # And fix the second axis range for deviations
+        self._deviation_viewbox.setYRange(deviation_range[0], deviation_range[1])
+        deviation_curve = pg.PlotDataItem(
+            x=measured_tensions,
+            y=deviations,
+            pen=pg.mkPen(color="green", width=1),  # <-- Draw a green line
+            symbol="o",
+            symbolBrush="green",
+            name="Deviation"
+        )
+        self._deviation_viewbox.addItem(deviation_curve)
 
     @staticmethod
-    def __prepare_radar_data(spokes: int, tensions: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    def __prepare_radar_data(spokes: int, tensions: np.ndarray, clockwise: bool = False) -> tuple[np.ndarray, np.ndarray]:
         """
         Prepares angles and closes the radar chart data for plotting.
+
+        :param spokes: Number of spokes in the radar chart.
+        :param tensions: Array of tension values.
+        :param clockwise: Direction of the radar chart. True for clockwise, False for anticlockwise.
+        :return: Tuple of angles and closed tensions arrays.
         """
-        angles = np.linspace(0, 2 * np.pi, spokes, endpoint=False)
+        # Starting angle at pi/2 to position the first spoke at the top (12 o'clock)
+        start_angle = np.pi / 2
+
+        if clockwise:
+            angles = np.linspace(start_angle, start_angle - 2 * np.pi, spokes, endpoint=False)
+        else:
+            angles = np.linspace(start_angle, start_angle + 2 * np.pi, spokes, endpoint=False)
+
         tensions_closed = np.append(tensions, tensions[0])  # Close the loop
-        angles_closed = np.append(angles, angles[0])  # Close the loop
+        angles_closed = np.append(angles, angles[0])        # Close the loop
         return angles_closed, tensions_closed
 
     # Draw target circles
@@ -246,7 +320,7 @@ class VisualisationModule:
 
     # Helper to draw spokes and numbers
     def __draw_spokes(self, plot_widget, angles, color, radius, offset_x=0, offset_y=0) -> None:
-        for i, angle in enumerate(angles):
+        for i, angle in enumerate(angles[:-1]):  # Exclude the last angle as it's a duplicate for closing
             x = np.cos(angle) * radius
             y = np.sin(angle) * radius
 
@@ -279,9 +353,10 @@ class VisualisationModule:
             )
             polygon_item._static_element = True  # Tag as static
 
-    def init_static_elements(self, plot_widget: pg.PlotWidget) -> None:
+    def init_radar_plot(self, plot_widget: pg.PlotWidget, clockwise: bool) -> None:
         # Clear everything
         plot_widget.clear()
+        self.__clockwise = clockwise
 
         # Hide X and Y axes completely
         for axis in ("bottom", "left"):
@@ -293,7 +368,7 @@ class VisualisationModule:
         plot_widget.setMouseEnabled(x=False, y=False)
         plot_widget.setAspectLocked(True)
 
-    def draw_static_elements(
+    def draw_radar_plot(
         self,
         plot_widget: pg.PlotWidget,
         left_spokes: int,
@@ -304,6 +379,7 @@ class VisualisationModule:
         """
         Draw static elements for the radar chart, including spoke lines, spoke numbers,
         and target tension circles. Handles asymmetric spoke counts and ensures proper scaling.
+        Respects the direction specified by the `clockwise` attribute.
         """
         # Determine max radius for scaling
         max_target_tension: float = max(target_tension_left, target_tension_right, 0.0)
@@ -313,12 +389,18 @@ class VisualisationModule:
         rect = QRectF(-max_radius, -max_radius, 2 * max_radius, 2 * max_radius)
         plot_widget.setRange(rect)
 
-        # Prepare spoke angles (align first spoke to 0° and clockwise)
-        angles_left = np.linspace(0, 2 * np.pi, left_spokes, endpoint=False) + np.pi / 2
-        angles_right = np.linspace(0, 2 * np.pi, right_spokes, endpoint=False) + np.pi / 2
+        # Initialize angles
+        angles_left = np.array([])
+        angles_right = np.array([])
+
+        # Prepare spoke angles based on direction using the centralized method
+        if left_spokes > 0:
+            angles_left, _ = self.__prepare_radar_data(left_spokes, np.zeros(left_spokes), self.__clockwise)
+        if right_spokes > 0:
+            angles_right, _ = self.__prepare_radar_data(right_spokes, np.zeros(right_spokes), self.__clockwise)
+
         # Ensure the legend is created once
         if not self.__legend_added:
-            plot_widget.addLegend(offset=(1, 1))
             legend = plot_widget.addLegend(offset=(10, 10))
             # Add target tension items manually
             legend.addItem(
@@ -336,12 +418,15 @@ class VisualisationModule:
             self.__draw_spokes(plot_widget, angles_left, color="red", radius=max_radius, offset_x=-20)
             self.__draw_spokes(plot_widget, angles_right, color="blue", radius=max_radius, offset_x=40)
 
+        # Draw target polygons
         if max_target_tension > 0.0:
-            self.__draw_target_polygon(plot_widget, target_tension_left, angles_left, "red")
-            self.__draw_target_polygon(plot_widget, target_tension_right, angles_right, "blue")
+            if left_spokes > 0:
+                self.__draw_target_polygon(plot_widget, target_tension_left, angles_left, "red")
+            if right_spokes > 0:
+                self.__draw_target_polygon(plot_widget, target_tension_right, angles_right, "blue")
         self.__draw_circle(plot_widget, max_radius, False, False)
 
-    def plot_dynamic_tensions(
+    def update_radar_plot(
         self,
         plot_widget: pg.PlotWidget,
         left_spokes: int,
@@ -351,34 +436,50 @@ class VisualisationModule:
     ) -> None:
         """
         Plot spoke tensions dynamically. Clears previous tensions and updates.
+        Respects the direction specified by the `clockwise` attribute.
         """
         # Remove only dynamic elements
         for item in plot_widget.listDataItems():
             if not hasattr(item, "_static_element"):
                 plot_widget.removeItem(item)
 
-        # Prepare radar data
-        angles_left, tensions_left = self.__prepare_radar_data(left_spokes, tensions_left)
-        angles_right, tensions_right = self.__prepare_radar_data(right_spokes, tensions_right)
+        # Initialize angles
+        angles_left = np.array([])
+        angles_right = np.array([])
 
-        # Adjust angles so the first spoke is at 0° and clockwise
-        angles_left = angles_left + np.pi / 2
-        angles_right = angles_right + np.pi / 2
+        # Initialize tensions
+        tensions_left_closed = np.array([])
+        tensions_right_closed = np.array([])
+
+        # Prepare radar data with direction
+        if left_spokes > 0:
+            angles_left, tensions_left_closed = self.__prepare_radar_data(left_spokes, tensions_left, self.__clockwise)
+        if right_spokes > 0:
+            angles_right, tensions_right_closed = self.__prepare_radar_data(right_spokes, tensions_right, self.__clockwise)
 
         # Convert polar to Cartesian coordinates
-        left_x = np.cos(angles_left) * tensions_left
-        left_y = np.sin(angles_left) * tensions_left
-        right_x = np.cos(angles_right) * tensions_right
-        right_y = np.sin(angles_right) * tensions_right
+        if left_spokes > 0:
+            left_x = np.cos(angles_left) * tensions_left_closed
+            left_y = np.sin(angles_left) * tensions_left_closed
+            # Plot left tensions
+            left_tensions_plot = pg.PlotDataItem(
+                left_x, left_y,
+                pen=pg.mkPen(color="red", width=3),
+                name="Left Tensions",
+                symbol='o',
+                symbolBrush='red'
+            )
+            plot_widget.addItem(left_tensions_plot)
 
-        # Plot left and right tensions
-        plot_widget.plot(
-            left_x, left_y,
-            pen=pg.mkPen(color="red", width=3),
-            name="Left Tensions",
-        )
-        plot_widget.plot(
-            right_x, right_y,
-            pen=pg.mkPen(color="blue", width=3),
-            name="Right Tensions",
-        )
+        if right_spokes > 0:
+            right_x = np.cos(angles_right) * tensions_right_closed
+            right_y = np.sin(angles_right) * tensions_right_closed
+            # Plot right tensions
+            right_tensions_plot = pg.PlotDataItem(
+                right_x, right_y,
+                pen=pg.mkPen(color="blue", width=3),
+                name="Right Tensions",
+                symbol='o',
+                symbolBrush='blue'
+            )
+            plot_widget.addItem(right_tensions_plot)

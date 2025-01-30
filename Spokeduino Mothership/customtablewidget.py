@@ -25,6 +25,20 @@ from PySide6.QtWidgets import QWidget
 from helpers import TextChecker
 
 
+class NumericTableWidgetItem(QTableWidgetItem):
+    """
+    A QTableWidgetItem that sorts based on numeric value,
+    falling back to string comparison if not a valid float.
+    """
+    def __lt__(self, other: QTableWidgetItem) -> bool:
+        # Attempt numeric comparison
+        try:
+            return float(self.text()) < float(other.text())
+        except ValueError:
+            # If either text is non-numeric, fall back to string comparison
+            return self.text() < other.text()
+
+
 class CustomTableWidget(QTableWidget):
     """
     A custom table widget designed to handle specific features such as custom

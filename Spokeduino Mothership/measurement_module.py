@@ -1,5 +1,5 @@
 import time
-from typing import Any
+from typing import Any, cast
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QModelIndex
 from PySide6.QtCore import QTimer
@@ -11,7 +11,7 @@ from ui import Ui_mainWindow
 from enum import Enum
 from setup_module import SetupModule
 from helpers import Messagebox, Generics
-from customtablewidget import CustomTableWidget
+from customtablewidget import CustomTableWidget, NumericTableWidgetItem
 from sql_queries import SQLQueries
 from unit_module import UnitEnum, UnitModule
 from database_module import DatabaseModule
@@ -36,6 +36,7 @@ class MeasurementModule:
                  messagebox: Messagebox,
                  db: DatabaseModule,
                  fitter: TensionDeflectionFitter,
+                 chart: VisualisationModule,
                  canvas: PyQtGraphCanvas) -> None:
         self.ui: Ui_mainWindow = ui
         self.unit_module: UnitModule = unit_module
@@ -45,8 +46,8 @@ class MeasurementModule:
         self.tensiometer_module: TensiometerModule = tensiometer_module
         self.db: DatabaseModule = db
         self.fitter: TensionDeflectionFitter = fitter
-        self.canvas = canvas
-        self.__chart = VisualisationModule(fitter=self.fitter)
+        self.canvas: PyQtGraphCanvas = canvas
+        self.chart: VisualisationModule = chart
         self.__mode: MeasurementModeEnum = MeasurementModeEnum.DEFAULT
         self.__add_row_signal_connected = False
 
@@ -165,7 +166,7 @@ class MeasurementModule:
 
         for row_idx, (row_id, row_data) in enumerate(data):
             for col_idx, cell_data in enumerate(row_data):
-                item = QTableWidgetItem(cell_data)
+                item = NumericTableWidgetItem(cell_data)
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 if col_idx == 0:  # Store the ID in the first visible column
                     item.setData(Qt.ItemDataRole.UserRole, row_id)
@@ -293,7 +294,7 @@ class MeasurementModule:
         # Populate cells
         for row in range(len(tensions_converted)):
             for column in range(len(tensiometers)):
-                item = QTableWidgetItem()
+                item = NumericTableWidgetItem()
                 item.setFlags(
                     Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
                 view.setItem(row, column, item)
@@ -319,7 +320,7 @@ class MeasurementModule:
             # Add one empty editable row
             view.setRowCount(1)
             for column in range(2):
-                item = QTableWidgetItem()
+                item = NumericTableWidgetItem()
                 item.setFlags(
                     Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
                 view.setItem(0, column, item)
@@ -364,10 +365,10 @@ class MeasurementModule:
                     UnitEnum.NEWTON)[unit_index]
 
                 # Create editable items
-                tension_item = QTableWidgetItem(f"{converted_tension:.1f}")
+                tension_item = NumericTableWidgetItem(f"{converted_tension:.1f}")
                 tension_item.setFlags(
                     Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
-                deflection_item = QTableWidgetItem(f"{deflection:.2f}")
+                deflection_item = NumericTableWidgetItem(f"{deflection:.2f}")
                 deflection_item.setFlags(
                     Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
 
@@ -390,10 +391,11 @@ class MeasurementModule:
         Insert an empty row below the clicked row header.
         """
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
-        view.insertRow(row + 1)
+        row += 1
+        view.insertRow(row)
         row_headers: list[str] = ["+" for _ in range(view.rowCount())]
         view.setVerticalHeaderLabels(row_headers)
-        view.move_to_specific_cell(row + 1, 0)
+        view.move_to_specific_cell(row , 0)
 
     def move_to_next_cell(self, no_delay: bool) -> None:
         """
@@ -405,9 +407,16 @@ class MeasurementModule:
         :param no_delay: If True, immediately move to the next cell.
                         Otherwise, introduce a slight delay.
         """
+        self.plot_measurements()
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
         row: int = view.currentRow()
         column: int = view.currentColumn()
+        print(f"item {column}:{row}")
+
+        item: QTableWidgetItem | None = view.itemAt(column, row)
+        if item is not None:
+            item = cast(NumericTableWidgetItem, item)
+            view.setItem(row, column, item)
 
         if column < view.columnCount() - 1:
             column += 1
@@ -426,7 +435,7 @@ class MeasurementModule:
         if no_delay:
             view.move_to_specific_cell(row, column)
         else:
-            QTimer.singleShot(100,
+            QTimer.singleShot(50,
                 lambda: view.move_to_specific_cell(
                     row=row, column=column))
 
@@ -479,8 +488,8 @@ class MeasurementModule:
             # Validate and gather tension-deflection data
             data: list[tuple[float, float]] = []
             for row in range(view.rowCount()):
-                tension_item = view.verticalHeaderItem(row)
-                deflection_item = view.item(row, column)
+                tension_item: NumericTableWidgetItem = cast(NumericTableWidgetItem, view.verticalHeaderItem(row))
+                deflection_item: NumericTableWidgetItem = cast(NumericTableWidgetItem, view.item(row, column))
 
                 if tension_item is None or deflection_item is None:
                     self.messagebox.err(f"Row {row + 1}: Missing data in column {column + 1}")
@@ -583,17 +592,19 @@ class MeasurementModule:
         Gathers tension/deflection data from a QTableWidget,
         fits it, and plots inside the verticalLayoutMeasurementRight.
         """
-        # 1) Gather data from tableWidgetMeasurements
+        # Collect data from tableWidgetMeasurements
         data = []
-        row_count = self.ui.tableWidgetMeasurements.rowCount()
+        row_count: int = self.ui.tableWidgetMeasurements.rowCount()
         for row in range(row_count):
-            tension_item = self.ui.tableWidgetMeasurements.item(row, 0)
-            deflection_item = self.ui.tableWidgetMeasurements.item(row, 1)
+            tension_item: QTableWidgetItem | None = \
+                self.ui.tableWidgetMeasurements.item(row, 0)
+            deflection_item: QTableWidgetItem | None = \
+                self.ui.tableWidgetMeasurements.item(row, 1)
 
             # Check that both cells exist and are not empty
             if tension_item and deflection_item:
-                tension_text = tension_item.text().strip()
-                deflection_text = deflection_item.text().strip()
+                tension_text: str = tension_item.text().strip()
+                deflection_text: str = deflection_item.text().strip()
                 if tension_text and deflection_text:
                     # Attempt to parse floats
                     try:
@@ -608,21 +619,12 @@ class MeasurementModule:
             print("No valid tension/deflection data found.")
             return
 
-        # 2) Fit the data. Pick whichever FitType you want:
+        data.sort(key=lambda pair: pair[0])
         fit_type, header = self.get_fit()
         fit_model = self.fitter.fit_data(data, fit_type)
 
-        # 3) Create (or reuse) a MatplotlibCanvas and place it in the layout
-        # Optionally clear out the layout first if you don't want multiple canvases
-        # while self.verticalLayoutMeasurementRight.count():
-        #     item = self.verticalLayoutMeasurementRight.takeAt(0)
-        #     widget = item.widget()
-        #     if widget:
-        #         widget.deleteLater()
-
-        # 4) Draw the plot on our new canvas
         self.canvas.clear()
-        self.__chart.plot_fit_with_deviation(
+        self.chart.update_fit_plot(
             plot_widget=self.canvas.plot_widget,
             fit_model=fit_model,
             data=data,

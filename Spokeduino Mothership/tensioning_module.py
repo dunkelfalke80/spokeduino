@@ -9,7 +9,7 @@ from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QLineEdit
 from setup_module import SetupModule
 from helpers import Messagebox
-from customtablewidget import CustomTableWidget
+from customtablewidget import CustomTableWidget, NumericTableWidgetItem
 from unit_module import UnitEnum, UnitModule
 from database_module import DatabaseModule
 from tensiometer_module import TensiometerModule
@@ -35,6 +35,7 @@ class TensioningModule:
                  measurement_module: MeasurementModule,
                  db: DatabaseModule,
                  fitter: TensionDeflectionFitter,
+                 chart: VisualisationModule,
                  canvas: PyQtGraphCanvas) -> None:
         self.ui: Ui_mainWindow = ui
         self.unit_module: UnitModule = unit_module
@@ -45,8 +46,8 @@ class TensioningModule:
         self.measurement_mnodule: MeasurementModule = measurement_module
         self.db: DatabaseModule = db
         self.fitter: TensionDeflectionFitter = fitter
+        self.chart: VisualisationModule = chart
         self.canvas: PyQtGraphCanvas = canvas
-        self.__chart = VisualisationModule(fitter=self.fitter)
         self.__spoke_amount_left: int = 0
         self.__spoke_amount_right: int = 0
         self.__tensions_left: np.ndarray
@@ -60,6 +61,7 @@ class TensioningModule:
         self.ui.tableWidgetTensioningRight.setEnabled(False)
         self.__cell_changed_signal_connected = False
         self.__clockwise: bool = True
+        self.__left_right: bool = False
 
     def setup_table(self, is_left: bool) -> None:
         """
@@ -72,11 +74,9 @@ class TensioningModule:
         if is_left:
             line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountLeft
             view: CustomTableWidget = self.ui.tableWidgetTensioningLeft
-            other_view: CustomTableWidget = self.ui.tableWidgetTensioningRight
         else:
             line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountRight
             view: CustomTableWidget = self.ui.tableWidgetTensioningRight
-            other_view: CustomTableWidget = self.ui.tableWidgetTensioningLeft
 
         # Get spoke amount and target tension
         try:
@@ -109,12 +109,12 @@ class TensioningModule:
         # Populate rows
         for row in range(spoke_amount):
             # Create editable cell for "mm" column
-            mm_item = QTableWidgetItem("")
+            mm_item = NumericTableWidgetItem("")
             mm_item.setFlags(Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
             view.setItem(row, 0, mm_item)
 
             # Create non-editable cell for tension column
-            tension_item = QTableWidgetItem("")
+            tension_item = NumericTableWidgetItem("")
             tension_item.setFlags(Qt.ItemFlag.ItemIsEnabled)
             view.setItem(row, 1, tension_item)
 
@@ -124,12 +124,12 @@ class TensioningModule:
         view_enabled: bool = (
             self.__spoke_amount_left > 0 and
             self.__spoke_amount_right > 0)
-        view.setEnabled(view_enabled)
-        other_view.setEnabled(view_enabled)
         self.set_tension(is_left)
-        self.__chart.init_static_elements(plot_widget=self.canvas.plot_widget)
-        if view.isEnabled() and other_view.isEnabled():
-            self.__chart.draw_static_elements(
+
+        self.chart.init_radar_plot(plot_widget=self.canvas.plot_widget, clockwise=True)
+        if view_enabled:
+            # Draw the empty radar plot
+            self.chart.draw_radar_plot(
                 plot_widget=self.canvas.plot_widget,
                 left_spokes=self.__spoke_amount_left,
                 right_spokes=self.__spoke_amount_left,
@@ -137,6 +137,11 @@ class TensioningModule:
                 target_tension_right=self.__target_right
             )
             self.plot_spoke_tensions()
+            self.__left_right = (
+                self.ui.radioButtonLeftRight.isChecked() or
+                self.ui.radioButtonRightLeft.isChecked())
+
+            # Connect the signal for realtime tension and chart update
             if not self.__cell_changed_signal_connected:
                 self.__cell_changed_signal_connected = True
                 self.ui.tableWidgetTensioningLeft.onCellChanged.connect(
@@ -156,19 +161,54 @@ class TensioningModule:
                         is_left=False, row=row, column=column, value=value))
 
     def set_tension(self, is_left: bool) -> None:
+        line_edit: QLineEdit
         if is_left:
-            try:
-                self.__target_left = float(self.ui.lineEditTargetTensionLeft.text())
-            except ValueError:
-                self.__target_left = 0.0
+            line_edit = self.ui.lineEditTargetTensionLeft
         else:
-            try:
-                self.__target_right = float(self.ui.lineEditTargetTensionRight.text())
-            except ValueError:
-                self.__target_right = 0.0
+            line_edit = self.ui.lineEditTargetTensionRight
+
+        try:
+            target: float = float(line_edit.text())
+        except ValueError:
+            target: float = 0.0
+
+        newton, _, _ = self.unit_module.convert_units(
+            value=target,
+            source=self.__unit)
+
+        if is_left:
+            self.__target_left = newton
+        else:
+            self.__target_right = newton
 
     def start_tensioning(self) -> None:
-        pass
+        if self.ui.tableWidgetTensioningLeft.isEnabled() and \
+            self.ui.tableWidgetTensioningLeft.isEnabled():
+            self.ui.pushButtonStartTensioning.setText("Start")
+            self.ui.tableWidgetTensioningLeft.setEnabled(False)
+            self.ui.tableWidgetTensioningRight.setEnabled(False)
+            return
+
+        self.ui.pushButtonStartTensioning.setText("Stop")
+        self.ui.tableWidgetTensioningLeft.setEnabled(True)
+        self.ui.tableWidgetTensioningRight.setEnabled(True)
+
+        if self.ui.radioButtonLeftRight.isChecked():
+            QTimer.singleShot(50,
+                lambda: self.ui.tableWidgetTensioningLeft.move_to_specific_cell(
+                    row=0,
+                    column=0))
+        # Starting on the left
+        elif self.ui.radioButtonRightLeft.isChecked():
+            QTimer.singleShot(50,
+                lambda: self.ui.tableWidgetTensioningRight.move_to_specific_cell(
+                    row=0,
+                    column=0))
+        else:  # Starting and staying on the right until the side is finished
+            QTimer.singleShot(50,
+                lambda: self.ui.tableWidgetTensioningRight.move_to_specific_cell(
+                    row=0,
+                    column=0))
 
     def next_cell_callback_left(self, no_delay: bool = False) -> None:
         self.next_cell_callback(True)
@@ -191,29 +231,24 @@ class TensioningModule:
         this_count: int = this_view.rowCount()
         other_count: int = other_view.rowCount()
 
-        if self.ui.radioButtonLeftRight.isChecked() \
-            or self.ui.radioButtonRightLeft.isChecked():
+        if self.__left_right:
             if other_row == other_count -1:
                 this_row = 0
             else:
                 this_row = other_row + 1
             this_view = other_view
-        elif self.ui.radioButtonSideBySide.isChecked():
+        else:
             if this_row == this_count - 1:
                 this_view = other_view
                 this_row = 0
-                print("switching view")
-                QTimer.singleShot(50,
-                    lambda: other_view.move_to_specific_cell(
-                        row=this_row,
-                        column=0))
             else:
                 this_row += 1
-                print("next row")
-                QTimer.singleShot(50,
-                    lambda: this_view.move_to_specific_cell(
-                        row=this_row,
-                        column=0))
+
+        QTimer.singleShot(
+            50,
+            lambda: other_view.move_to_specific_cell(
+            row=this_row,
+            column=0))
 
     def previous_cell_callback_left(self) -> None:
         self.previous_cell_callback(is_left=True)
@@ -261,7 +296,7 @@ class TensioningModule:
         _, kgf, lbf = self.unit_module.convert_units(
             value=tension,
             source=UnitEnum.NEWTON)
-        # Newton is the base unit for this applicaiton
+
         tension_converted: float = tension
 
         if self.__unit == UnitEnum.KGF:
@@ -272,7 +307,7 @@ class TensioningModule:
         value = (f"{tension_converted:.0f}"
                  if self.__unit == UnitEnum.NEWTON
                  else f"{tension_converted:.1f}")
-        item = QTableWidgetItem(value)
+        item = NumericTableWidgetItem(value)
         item.setFlags(Qt.ItemFlag.ItemIsEnabled)
         view.setItem(row, 1, item)
         if is_left:
@@ -355,7 +390,7 @@ class TensioningModule:
         right_spokes: int = self.ui.tableWidgetTensioningRight.rowCount()
 
         # Call the radar chart plotting function from the VisualisationModule
-        self.__chart.plot_dynamic_tensions(
+        self.chart.update_radar_plot(
             plot_widget=self.canvas.plot_widget,
             left_spokes=left_spokes,
             right_spokes=right_spokes,
