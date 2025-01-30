@@ -1,8 +1,6 @@
 // MIT License
 //
 // Copyright (c) 2025 Roman Galperin
-// Original code Copyright (c) David Pilling (https://www.davidpilling.com/wiki/index.php/DialGauge)
-// and used with explicid permission.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
@@ -26,8 +24,8 @@
 
 BluetoothSerial SerialBT;
 
-#define PIN_GAUGE1_CLOCK 34
-#define PIN_GAUGE1_DATA  35
+#define PIN_GAUGE1_CLOCK 23
+#define PIN_GAUGE1_DATA  22
 #define PIN_GAUGE2_CLOCK 32
 #define PIN_GAUGE2_DATA  39
 #define PIN_GAUGE3_CLOCK 36
@@ -52,8 +50,7 @@ bool btn_func_value_toggle = false;
 bool btn_func2_value_toggle = false;
 
 /**
- * @brief Reads the gauge by toggling ADMUX between two channels
- * @author Original code by David Pilling, extracted to a function for multiple gauges support
+ * @brief Reads the gauge with the signal inverted by the transistor.
  *
  * @param clock_pin       The clock pin of the gauge
  * @param data_pin        The data pin of the gauge
@@ -63,51 +60,47 @@ bool btn_func2_value_toggle = false;
  */
 float read_gauge(uint8_t clock_pin, uint8_t data_pin, unsigned long timeout)
 {
-    int outputval = 0;
     unsigned long looptime = millis();
     int shift = 0;
+    int outputval = 0;
+    bool inches = false;
+    bool negative = false;
+    
+    unsigned long pulse_start = millis();
+    while (!digitalRead(clock_pin));  // Wait for HIGH clock
+    unsigned long high_duration = millis() - pulse_start;
+    
+    bool start_pulse_detected = (high_duration > 500);
 
-    while (shift < 24)
+    while (shift < 24) 
     {
-        looptime = millis(); // Reset looptime for each bit
-        while (digitalRead(clock_pin))
-        {
-            if ((millis() - looptime) > timeout)
-            {
-                Serial.println("Gauge timeout!");
-                return -1000.0f;
-            }
-        }
-        looptime = millis(); // Reset again for the next phase
-        while (!digitalRead(clock_pin))
-        {
-            if ((millis() - looptime) > timeout)
-            {
-                Serial.println("Gauge timeout!");
-                return -1000.0f;
-            }
-        }
-        if (digitalRead(data_pin))
+        while (!digitalRead(clock_pin)); // Wait for LOW (actual HIGH from gauge)
+        while (digitalRead(clock_pin));  // Wait for HIGH (actual LOW from gauge)
+
+        if (!digitalRead(data_pin))  // Inverted logic
         {
             outputval |= (1 << shift);
         }
         shift++;
     }
 
+    negative = (outputval & (1 << 20)) != 0;
+    inches = (outputval & (1 << 23)) != 0;  
+    outputval &= 0xFFFFF; 
 
-    bool inches = (outputval & 0x800000) != 0;
-    bool negative = (outputval & 0x400000) != 0;
-    outputval &= 0x3FFFFF;
-
-    float measurement = static_cast<float>(outputval) / 20480.0f;
-    if (inches)
-    {
+    float measurement = static_cast<float>(negative ? -outputval : outputval) / 100.0f;
+    
+    if (inches) 
         measurement *= 25.4;
-    }
-    if (negative)
-    {
-        measurement = -measurement;
-    }
+
+    // Store values instead of printing inside function
+    static char debug_buffer[128];  // Create buffer to store formatted output
+    snprintf(debug_buffer, sizeof(debug_buffer), "Start pulse: %d | Raw: %d | Measurement: %.2f %s", start_pulse_detected,
+             outputval, measurement, inches ? "in" : "mm");
+    Serial.println(debug_buffer);
+
+    // Return measurement and save debug output
+    // SerialBT.println(debug_buffer);  // Send over Bluetooth
     return measurement;
 }
 
@@ -208,8 +201,10 @@ void setup()
     SerialBT.begin("Spokeduino-ESP32"); // Bluetooth Serial name
 
     // Configure gauge ports as analog inputs
-    pinMode(PIN_GAUGE1_CLOCK, INPUT);
-    pinMode(PIN_GAUGE1_DATA, INPUT);
+    //pinMode(PIN_GAUGE1_CLOCK, INPUT);
+    //pinMode(PIN_GAUGE1_DATA, INPUT);
+    pinMode(PIN_GAUGE1_CLOCK, INPUT_PULLUP);
+    pinMode(PIN_GAUGE1_DATA, INPUT_PULLUP);    
     pinMode(PIN_GAUGE2_CLOCK, INPUT);
     pinMode(PIN_GAUGE2_DATA, INPUT);
     pinMode(PIN_GAUGE3_CLOCK, INPUT);
@@ -231,13 +226,40 @@ void setup()
     Serial.println(analogRead(PIN_GAUGE1_DATA));
 }
 
-void loop() {
+
+static int lastClock = -1;
+static int lastData = -1;
+unsigned long lastTime = micros();
+
+void loop() 
+{
 
     //process_pin(PIN_PEDAL, pedal_value_old, pedal_value_toggle);
     //process_pin(PIN_BTN_FUNC, btn_func_value_old, btn_func_value_toggle);
     //process_pin(PIN_BTN_FUNC2, btn_func2_value_old, btn_func2_value_toggle);
-    process_gauge(PIN_GAUGE1_CLOCK, PIN_GAUGE1_DATA, 0, gauge1_deflection_old);
+    //process_gauge(PIN_GAUGE1_CLOCK, PIN_GAUGE1_DATA, 0, gauge1_deflection_old);
     //process_gauge(PIN_GAUGE2_CLOCK, PIN_GAUGE2_DATA, 1, gauge2_deflection_old);
     //process_gauge(PIN_GAUGE3_CLOCK, PIN_GAUGE3_DATA, 2, gauge3_deflection_old);
-    delay(50);
+    //delay(50);
+    //Serial.print("Clock Pin: ");
+    //Serial.print(digitalRead(PIN_GAUGE1_CLOCK));
+    //Serial.print(" | Data Pin: ");
+    //Serial.println(digitalRead(PIN_GAUGE1_DATA));
+    //delay(100);  // Slow down for readability
+    
+    int clockState = digitalRead(PIN_GAUGE1_CLOCK);
+    int dataState = digitalRead(PIN_GAUGE1_DATA);
+
+    // Detect clock edge
+    if (clockState != lastClock) {
+        unsigned long now = micros();
+        Serial.print("Clock Edge Detected | Duration: ");
+        Serial.print(now - lastTime);
+        Serial.print(" µs | Clock: ");
+        Serial.print(clockState);
+        Serial.print(" | Data: ");
+        Serial.println(dataState);
+        lastTime = now;
+        lastClock = clockState;
+    }
 }
