@@ -1,3 +1,4 @@
+import logging
 import time
 from typing import Any, cast
 from PySide6.QtCore import Qt
@@ -314,7 +315,7 @@ class MeasurementModule:
         view.setColumnCount(2)
         view.setHorizontalHeaderLabels([
             f"Tension ({unit.value})", "Deflection"])
-        view.setVerticalHeaderLabels(["+"])
+        view.setVerticalHeaderLabels(["+"] * (1 if custom_mode else 0))
 
         if custom_mode:
             # Add one empty editable row
@@ -323,6 +324,11 @@ class MeasurementModule:
                 item = NumericTableWidgetItem()
                 item.setFlags(
                     Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
+                # Initialize with an empty string or a locale-formatted zero
+                # Here, we'll use an empty string to prevent sorting
+                cell_text = ""
+                item.setText(cell_text)
+                # Do not set UserRole initially
                 view.setItem(0, column, item)
         else:
             # Load measurements as a list
@@ -360,21 +366,33 @@ class MeasurementModule:
             for row_idx, (_, tension, deflection) in enumerate(
                 filtered_measurements):
                 # Convert tension to the selected unit
-                converted_tension = self.unit_module.convert_units(
+                converted_tension: float = self.unit_module.convert_units(
                     tension,
                     UnitEnum.NEWTON)[unit_index]
 
-                # Create editable items
-                tension_item = NumericTableWidgetItem(
-                    f"{TextChecker.check_text(
-                        f'{converted_tension:.1f}', True)}")
+                # Format numbers according to locale
+                tension_text: str = TextChecker.check_text(str(converted_tension), True)
+                deflection_text: str = TextChecker.check_text(str(deflection), True)
+
+                tension_item = NumericTableWidgetItem(tension_text)
                 tension_item.setFlags(
                     Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
-                deflection_item = NumericTableWidgetItem(
-                    f"{TextChecker.check_text(
-                        f'{deflection:.2f}', True)}")
+                deflection_item = NumericTableWidgetItem(deflection_text)
                 deflection_item.setFlags(
                     Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
+
+                # Set UserRole data for sorting
+                try:
+                    tension_item.setData(Qt.ItemDataRole.UserRole, tension)
+                except ValueError:
+                    logging.error(f"Invalid tension value '{tension_text}' at row {row_idx}, column 0.")
+                    tension_item.setData(Qt.ItemDataRole.UserRole, None)  # Do not sort
+
+                try:
+                    deflection_item.setData(Qt.ItemDataRole.UserRole, deflection)
+                except ValueError:
+                    logging.error(f"Invalid deflection value '{deflection_text}' at row {row_idx}, column 1.")
+                    deflection_item.setData(Qt.ItemDataRole.UserRole, None)  # Do not sort
 
                 view.setItem(row_idx, 0, tension_item)
                 view.setItem(row_idx, 1, deflection_item)
@@ -397,9 +415,19 @@ class MeasurementModule:
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
         row += 1
         view.insertRow(row)
-        row_headers: list[str] = ["+" for _ in range(view.rowCount())]
+        row_headers: list[str] = ["+"] * view.rowCount()
         view.setVerticalHeaderLabels(row_headers)
-        view.move_to_specific_cell(row , 0)
+
+        for column in range(view.columnCount()):
+            cell_text: str = ""
+            item = NumericTableWidgetItem(cell_text)
+            item.setFlags(
+                Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
+            # Do not set UserRole initially
+            view.setItem(row, column, item)
+
+        # Move focus to the first cell of the new row
+        view.move_to_specific_cell(row, 0)
 
     def move_to_next_cell(self, no_delay: bool) -> None:
         """

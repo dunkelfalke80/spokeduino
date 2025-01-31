@@ -1,5 +1,6 @@
 from typing import override, cast
 from collections.abc import Callable
+from PySide6.QtCore import Qt
 from PySide6.QtCore import QAbstractItemModel
 from PySide6.QtCore import QObject
 from PySide6.QtCore import QModelIndex
@@ -31,12 +32,23 @@ class NumericTableWidgetItem(QTableWidgetItem):
     falling back to string comparison if not a valid float.
     """
     def __lt__(self, other: QTableWidgetItem) -> bool:
-        # Attempt numeric comparison
-        try:
-            return float(self.text().replace(",", ".")) < float(other.text().replace(",", "."))
-        except ValueError:
-            # If either text is non-numeric, fall back to string comparison
-            return self.text() < other.text()
+        # Attempt to compare using UserRole data if available
+        self_value = self.data(Qt.ItemDataRole.UserRole)
+        other_value = other.data(Qt.ItemDataRole.UserRole)
+
+        if self_value is not None and other_value is not None:
+            return float(self_value) < float(other_value)
+        elif self_value is not None:
+            return True  # self has data, other does not
+        elif other_value is not None:
+            return False  # other has data, self does not
+        else:
+            # Both have no UserRole, compare text
+            try:
+                return float(self.text().replace(",", ".")) < float(other.text().replace(",", "."))
+            except ValueError:
+                # If either text is non-numeric, fall back to string comparison
+                return self.text() < other.text()
 
 
 class CustomTableWidget(QTableWidget):
@@ -371,8 +383,19 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
                 text=text,
                 full_string=True)
             if validated_text == "":
+                # Optionally, you can clear the cell or keep it as is
+                model.setData(index, "")
+                model.setData(index, None, Qt.ItemDataRole.UserRole)
                 return
 
-            model.setData(index, text)
+            model.setData(index, validated_text)
+
+            # Extract and set the UserRole data
+            try:
+                numerical_value = float(validated_text.replace(",", "."))
+                model.setData(index, numerical_value, Qt.ItemDataRole.UserRole)
+            except ValueError:
+                # If conversion fails, set UserRole to None
+                model.setData(index, None, Qt.ItemDataRole.UserRole)
         else:
             super().setModelData(editor, model, index)
