@@ -10,7 +10,7 @@ from PySide6.QtWidgets import QHeaderView
 from ui import Ui_mainWindow
 from enum import Enum
 from setup_module import SetupModule
-from helpers import Messagebox, Generics
+from helpers import Messagebox, Generics, TextChecker
 from customtablewidget import CustomTableWidget, NumericTableWidgetItem
 from sql_queries import SQLQueries
 from unit_module import UnitEnum, UnitModule
@@ -62,14 +62,14 @@ class MeasurementModule:
         Enable or disable measurement buttons based
         on the completeness of the current column.
         """
-        table: CustomTableWidget = self.ui.tableWidgetMeasurements
-        selected_column: int = table.currentColumn()
+        view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        selected_column: int = view.currentColumn()
 
         if selected_column != -1:
             all_filled: bool = all(
-                table.item(row, selected_column) and
-                table.item(row, selected_column).text().strip() # type: ignore
-                for row in range(table.rowCount())
+                view.item(row, selected_column) and
+                view.item(row, selected_column).text().strip() # type: ignore
+                for row in range(view.rowCount())
             )
             self.ui.pushButtonSaveMeasurement.setEnabled(all_filled)
         else:
@@ -89,8 +89,8 @@ class MeasurementModule:
         - Subsequent columns displaying tension:deflection pairs with unit conversion.
         """
         if spoke_id is None:
-            view: QTableWidget = self.ui.tableWidgetSpokesDatabase
-            spoke_id = Generics.get_selected_row_id(view)
+            spoke_id = Generics.get_selected_row_id(
+                self.ui.tableWidgetSpokesDatabase)
 
         if tensiometer_id is None:
             tensiometer_id = self.tensiometer_module.get_primary_tensiometer()
@@ -146,8 +146,8 @@ class MeasurementModule:
                 self.unit_module.convert_units(value=tension, source=UnitEnum.NEWTON)
             tension_converted: str = {
                 UnitEnum.NEWTON: f"{converted_tensions[0]:.0f}N",
-                UnitEnum.KGF: f"{converted_tensions[1]:.1f}kgF",
-                UnitEnum.LBF: f"{converted_tensions[2]:.1f}lbF"
+                UnitEnum.KGF: TextChecker.check_text(f"{converted_tensions[1]:.1f} kgF", True),
+                UnitEnum.LBF: TextChecker.check_text(f"{converted_tensions[2]:.1f} lbF", True)
             }[unit]
             # Add the tension-deflection pair to the set's measurements
             grouped_measurements[set_id].append((tension, f"{tension_converted}: {deflection:.2f}mm"))
@@ -274,7 +274,7 @@ class MeasurementModule:
         row_headers: list[str] = [
             f"{value} {unit.value}"
             if unit == UnitEnum.NEWTON
-            else f"{value:.1f} {unit.value}"
+            else f"{TextChecker.check_text(f'{value:.1f}', True)} {unit.value}"
             for value in tensions_converted
         ]
         view.setVerticalHeaderLabels(row_headers)
@@ -365,10 +365,14 @@ class MeasurementModule:
                     UnitEnum.NEWTON)[unit_index]
 
                 # Create editable items
-                tension_item = NumericTableWidgetItem(f"{converted_tension:.1f}")
+                tension_item = NumericTableWidgetItem(
+                    f"{TextChecker.check_text(
+                        f'{converted_tension:.1f}', True)}")
                 tension_item.setFlags(
                     Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
-                deflection_item = NumericTableWidgetItem(f"{deflection:.2f}")
+                deflection_item = NumericTableWidgetItem(
+                    f"{TextChecker.check_text(
+                        f'{deflection:.2f}', True)}")
                 deflection_item.setFlags(
                     Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
 
@@ -411,12 +415,10 @@ class MeasurementModule:
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
         row: int = view.currentRow()
         column: int = view.currentColumn()
-        print(f"item {column}:{row}")
 
         item: QTableWidgetItem | None = view.itemAt(column, row)
         if item is not None:
-            item = cast(NumericTableWidgetItem, item)
-            view.setItem(row, column, item)
+            print(f"Itemtext = {item.text()}")
 
         if column < view.columnCount() - 1:
             column += 1
@@ -504,7 +506,11 @@ class MeasurementModule:
                     return
 
             # Save the data to the database
-            self.__save_measurement_set(spoke_id, tensiometer_id, data, comment)
+            self.__save_measurement_set(
+                spoke_id=spoke_id,
+                tensiometer_id=tensiometer_id,
+                data=data,
+                comment=comment)
 
     def __save_custom_mode_measurements(
                 self, view: CustomTableWidget, spoke_id: int, comment: str) -> None:
@@ -608,8 +614,8 @@ class MeasurementModule:
                 if tension_text and deflection_text:
                     # Attempt to parse floats
                     try:
-                        tension_val = float(tension_text)
-                        deflection_val = float(deflection_text)
+                        tension_val = float(tension_text.replace(",", "."))
+                        deflection_val = float(deflection_text.replace(",", "."))
                         data.append((tension_val, deflection_val))
                     except ValueError:
                         # Non-numeric in that row => skip it

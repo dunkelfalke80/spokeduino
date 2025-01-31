@@ -33,7 +33,7 @@ class NumericTableWidgetItem(QTableWidgetItem):
     def __lt__(self, other: QTableWidgetItem) -> bool:
         # Attempt numeric comparison
         try:
-            return float(self.text()) < float(other.text())
+            return float(self.text().replace(",", ".")) < float(other.text().replace(",", "."))
         except ValueError:
             # If either text is non-numeric, fall back to string comparison
             return self.text() < other.text()
@@ -79,24 +79,27 @@ class CustomTableWidget(QTableWidget):
         if move_to_next_cell_callback is None:
             self.move_to_next_cell: Callable[[bool], None] = \
                 self.__move_to_next_cell_default
-            self.__stop_sorting_enabled: bool = True
         else:
             self.move_to_next_cell = move_to_next_cell_callback
-            self.__stop_sorting_enabled = False
 
         if move_to_previous_cell_callback is None:
             self.move_to_previous_cell: Callable[[], None] = \
                 self.__move_to_previous_cell_default
         else:
             self.move_to_previous_cell = move_to_previous_cell_callback
-        self.__old_sorting_enabled: bool = False
-        self.__sorting_stopped: bool = False
+
+        self.__stop_sorting_enabled: bool = False
+        self.__old_sorting_enabled: bool = self.isSortingEnabled()
 
     def emit_on_cell_data_changing(self, value: str) -> None:
         """
         Emit the onCellDataChanged signal on editing a cell.
         """
         self.onCellChanged.emit(self.currentRow(), self.currentColumn(), value)
+        if (self.__stop_sorting_enabled
+            and self.__old_sorting_enabled
+            and self.currentColumn() < self.columnCount() - 1):
+            self.setSortingEnabled(False)
 
     @override
     def keyPressEvent(self, event) -> None:
@@ -108,26 +111,21 @@ class CustomTableWidget(QTableWidget):
 
         :param event: The key press event to handle.
         """
+        if not self.__old_sorting_enabled and self.isSortingEnabled():
+            self.__old_sorting_enabled = True
         if event.matches(QKeySequence.StandardKey.Paste):
             self.paste_row()
         elif event.matches(QKeySequence.StandardKey.InsertParagraphSeparator):
-            if self.__stop_sorting_enabled:
-                self.__check_sorting()
             super().keyPressEvent(event)
             self.move_to_next_cell(False)
+            if self.__stop_sorting_enabled and self.__old_sorting_enabled:
+                self.setSortingEnabled(self.currentColumn() == self.columnCount() - 1)
         else:
             super().keyPressEvent(event)
 
-    def __check_sorting(self) -> None:
-        if not self.__sorting_stopped:
-            if not self.isSortingEnabled():
-                return
-            self.__old_sorting_enabled = self.isSortingEnabled()
-            self.__sorting_stopped = True
-            self.setSortingEnabled(False)
-        if self.currentColumn() == self.columnCount() - 1:
-            self.__sorting_stopped = False
-            self.setSortingEnabled(self.__old_sorting_enabled)
+    def stop_sorting(self) -> None:
+        self.__stop_sorting_enabled = True
+        self.__old_sorting_enabled = self.isSortingEnabled()
 
     def paste_row(self) -> None:
             """
@@ -160,7 +158,6 @@ class CustomTableWidget(QTableWidget):
                                          else self.currentItem())
         if item is None:
             return
-        item = cast(QTableWidgetItem, item)
         item.setSelected(True)
 
     def move_to_specific_cell(self, row: int, column: int) -> None:

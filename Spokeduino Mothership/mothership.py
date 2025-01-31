@@ -459,6 +459,7 @@ class Spokeduino(QMainWindow):
         match self.ui.tabWidget.currentWidget():
             case self.ui.measurementTab:
                 self.measurement_module.setup_measurements_table()
+                self.ui.tableWidgetMeasurements.stop_sorting()
             case self.ui.tensioningTab:
                 self.ui.pushButtonStartTensioning.setText("Start")
                 self.ui.tableWidgetTensioningLeft.setEnabled(False)
