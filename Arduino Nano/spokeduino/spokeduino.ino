@@ -217,7 +217,7 @@ void process_pin(const uint8_t pin_number, int& old_value, bool& toggle_value)
  */
 void setup()
 {
-    Serial.begin(9600);
+    Serial.begin(115200);
 
     ADCSRA = 0;            // ADC Control and Status Register A
     ADCSRB = (1 << ACME);  // Enable muliplxer
