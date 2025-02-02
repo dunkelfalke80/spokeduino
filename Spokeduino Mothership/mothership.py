@@ -318,6 +318,9 @@ class Spokeduino(QMainWindow):
             SpokeduinoState.WAITING))
         self.ui.pushButtonSaveMeasurement.clicked.connect(
             self.measurement_module.save_measurements)
+        self.ui.tableWidgetMeasurements.onCellChanged.connect(
+            lambda row, column, value: self.measurement_module.on_cell_changing(
+                row=row, column=column, value=value))
 
         # Language selection
         self.ui.comboBoxSelectLanguage.currentTextChanged.connect(
@@ -421,9 +424,6 @@ class Spokeduino(QMainWindow):
             lambda: self.tensioning_module.use_spoke(True))
         self.ui.lineEditSpokeAmountLeft.textChanged.connect(
             lambda: self.tensioning_module.setup_table(is_left=True))
-#        self.ui.tableWidgetTensioningLeft.onCellDataChanging.connect(
-#            lambda row, column, value: self.tensioning_module.on_cell_changing(
-#                is_left=True, row=row, column=column, value=value))
         self.ui.lineEditTargetTensionLeft.textChanged.connect(
             lambda: self.tensioning_module.setup_table(True))
 

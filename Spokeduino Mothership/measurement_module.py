@@ -363,7 +363,7 @@ class MeasurementModule:
             }
             unit_index: int = unit_index_map[unit]
 
-            for row_idx, (_, tension, deflection) in enumerate(
+            for row, (_, tension, deflection) in enumerate(
                 filtered_measurements):
                 # Convert tension to the selected unit
                 converted_tension: float = self.unit_module.convert_units(
@@ -385,17 +385,17 @@ class MeasurementModule:
                 try:
                     tension_item.setData(Qt.ItemDataRole.UserRole, tension)
                 except ValueError:
-                    logging.error(f"Invalid tension value '{tension_text}' at row {row_idx}, column 0.")
-                    tension_item.setData(Qt.ItemDataRole.UserRole, None)  # Do not sort
+                    logging.error(f"Invalid value '{tension_text}' at 1:{row}")
+                    tension_item.setData(Qt.ItemDataRole.UserRole, None)
 
                 try:
                     deflection_item.setData(Qt.ItemDataRole.UserRole, deflection)
                 except ValueError:
-                    logging.error(f"Invalid deflection value '{deflection_text}' at row {row_idx}, column 1.")
-                    deflection_item.setData(Qt.ItemDataRole.UserRole, None)  # Do not sort
+                    logging.error(f"Invalid value '{deflection}' at 1:{row}")
+                    deflection_item.setData(Qt.ItemDataRole.UserRole, None)
 
-                view.setItem(row_idx, 0, tension_item)
-                view.setItem(row_idx, 1, deflection_item)
+                view.setItem(row, 0, tension_item)
+                view.setItem(row, 1, deflection_item)
 
         # Enable sorting by columns and sort by tension
         view.setSortingEnabled(True)
@@ -417,17 +417,46 @@ class MeasurementModule:
         view.insertRow(row)
         row_headers: list[str] = ["+"] * view.rowCount()
         view.setVerticalHeaderLabels(row_headers)
-
-        for column in range(view.columnCount()):
-            cell_text: str = ""
-            item = NumericTableWidgetItem(cell_text)
-            item.setFlags(
-                Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
-            # Do not set UserRole initially
-            view.setItem(row, column, item)
-
-        # Move focus to the first cell of the new row
         view.move_to_specific_cell(row, 0)
+
+    def on_cell_changing(self, row: int, column: int, value: str) -> None:
+        if self.__mode == MeasurementModeEnum.DEFAULT:
+            return
+
+        try:
+            parsed_val = float(value.replace(",", "."))
+        except ValueError:
+            return
+
+        view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        view.setSortingEnabled(False)
+
+        if column == 0:
+            converted_tensions: tuple[float, float, float] = \
+            self.unit_module.convert_units(
+                value=parsed_val,
+                source=self.unit_module.get_unit())
+            print(f"Tension: {converted_tensions[0]}")
+            tension_item = NumericTableWidgetItem(value)
+            tension_item.setFlags(
+                Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
+            try:
+                tension_item.setData(Qt.ItemDataRole.UserRole, converted_tensions[0])
+            except ValueError:
+                logging.error(f"Invalid value '{value}' at {column}:{row}")
+                tension_item.setData(Qt.ItemDataRole.UserRole, None)
+            view.setItem(row, 0, tension_item)
+        else:
+            print(f"Deflection: {parsed_val}")
+            deflection_item = NumericTableWidgetItem(value)
+            deflection_item.setFlags(
+                Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
+            try:
+                deflection_item.setData(Qt.ItemDataRole.UserRole, parsed_val)
+            except ValueError:
+                logging.error(f"Invalid value '{value}' at {column}:{row}")
+                deflection_item.setData(Qt.ItemDataRole.UserRole, None)
+            view.setItem(row, 1, deflection_item)
 
     def move_to_next_cell(self, no_delay: bool) -> None:
         """
@@ -444,9 +473,12 @@ class MeasurementModule:
         row: int = view.currentRow()
         column: int = view.currentColumn()
 
-        item: QTableWidgetItem | None = view.itemAt(column, row)
+        print(f"column: {column} row {row}")
+        item: QTableWidgetItem | None = view.itemAt(row, column)
+        print(item)
         if item is not None:
-            print(f"Itemtext = {item.text()}")
+            print(f"Item role = {item.data(Qt.ItemDataRole.UserRole)}")
+            print(f"Item text = {item.text()}")
 
         if column < view.columnCount() - 1:
             column += 1
