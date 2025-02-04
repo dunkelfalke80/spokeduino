@@ -488,12 +488,14 @@ class Spokeduino(QMainWindow):
 
     def measurement_custom(self) -> None:
         if self.ui.radioButtonMeasurementCustom.isChecked():
+            self.ui.pushButtonMultipleTensiometers.setEnabled(False)
             self.setup_module.save_setting(
                 "measaurement_custom",
                 "1")
             self.measurement_module.set_mode(
                 MeasurementModeEnum.CUSTOM)
         else:
+            self.ui.pushButtonMultipleTensiometers.setEnabled(True)
             self.setup_module.save_setting(
                 "measaurement_custom",
                 "0")

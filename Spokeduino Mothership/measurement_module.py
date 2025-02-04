@@ -58,23 +58,36 @@ class MeasurementModule:
                 mode = MeasurementModeEnum.CUSTOM
         self.__mode = mode
 
+    def __check_row_data(self, row: int) -> bool:
+        view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        for column in range(view.columnCount()):
+            item: QTableWidgetItem | None = view.item(row, column)
+            if item is None:
+                return False
+            else:
+                value: float = cast(
+                    float,
+                    item.data(Qt.ItemDataRole.UserRole))
+                if value is None:
+                    return False
+        return True
+
     def update_measurement_button_states(self) -> None:
         """
         Enable or disable measurement buttons based
         on the completeness of the current column.
         """
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
-        selected_column: int = view.currentColumn()
+        row_count: int = view.rowCount()
+        enable_button: bool = True
 
-        if selected_column != -1:
-            all_filled: bool = all(
-                view.item(row, selected_column) and
-                view.item(row, selected_column).text().strip() # type: ignore
-                for row in range(view.rowCount())
-            )
-            self.ui.pushButtonSaveMeasurement.setEnabled(all_filled)
-        else:
-            self.ui.pushButtonSaveMeasurement.setEnabled(False)
+        if row_count < 1:
+            enable_button = False
+
+        if row_count == 1:
+            enable_button = self.__check_row_data(0)
+
+        self.ui.pushButtonSaveMeasurement.setEnabled(enable_button)
 
     def load_measurements(
             self,
@@ -318,11 +331,12 @@ class MeasurementModule:
         view.setColumnCount(2)
         view.setHorizontalHeaderLabels([
             f"Tension ({unit.value})", "Deflection"])
-        view.setVerticalHeaderLabels(["+"] * (1 if custom_mode else 0))
+        view.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.Stretch)
 
         if custom_mode:
-            # Add one empty editable row
             view.setRowCount(1)
+
             for column in range(2):
                 item = NumericTableWidgetItem()
                 item.setFlags(
@@ -333,8 +347,10 @@ class MeasurementModule:
                 item.setText(cell_text)
                 # Do not set UserRole initially
                 view.setItem(0, column, item)
+                view.setVerticalHeaderLabels("+")
         else:
             # Load measurements as a list
+            view.setVerticalHeaderLabels("+")
             measurements = self.load_measurements(
                 spoke_id=None,
                 tensiometer_id=None,
@@ -374,7 +390,7 @@ class MeasurementModule:
                     UnitEnum.NEWTON)[unit_index]
 
                 # Format numbers according to locale
-                tension_text: str = TextChecker.check_text(str(converted_tension), True)
+                tension_text: str = TextChecker.check_text(f"{converted_tension:.2f}", True)
                 deflection_text: str = TextChecker.check_text(str(deflection), True)
 
                 tension_item = NumericTableWidgetItem(tension_text)
@@ -416,6 +432,8 @@ class MeasurementModule:
         Insert an empty row below the clicked row header.
         """
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        if not self.__check_row_data(row):
+            return
         row += 1
         view.insertRow(row)
         row_headers: list[str] = ["+"] * view.rowCount()
@@ -610,7 +628,6 @@ class MeasurementModule:
                 continue  # Ignore rows with invalid data
 
         if not data:
-            self.messagebox.err("No valid data to save")
             return
 
         # Handle EDIT mode: Delete the existing measurement set
@@ -670,7 +687,8 @@ class MeasurementModule:
         # Collect data from tableWidgetMeasurements
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
         row_count: int = view.rowCount()
-
+        if row_count < 3:
+            return # Too few measurements to draw a plot
         data = []
         for row in range(row_count):
             if self.__mode == MeasurementModeEnum.DEFAULT:

@@ -148,6 +148,8 @@ class SetupModule:
         measurement_custom: str = settings_dict.get("measaurement_custom", "0")
         self.ui.radioButtonMeasurementDefault.setChecked(measurement_custom == "0")
         self.ui.radioButtonMeasurementCustom.setChecked(measurement_custom == "1")
+        self.ui.pushButtonMultipleTensiometers.setEnabled(
+            self.ui.radioButtonMeasurementDefault.isChecked())
 
         # Load directional settings
         measurement_direction: str = settings_dict.get(
