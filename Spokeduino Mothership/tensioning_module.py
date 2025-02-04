@@ -17,7 +17,7 @@ from measurement_module import MeasurementModule
 from helpers import TextChecker, Generics
 from ui import Ui_mainWindow
 from calculation_module import TensionDeflectionFitter
-from fast_visualisation_module import PyQtGraphCanvas, VisualisationModule
+from visualisation_module import PyQtGraphCanvas, VisualisationModule
 from sql_queries import SQLQueries
 
 if TYPE_CHECKING:

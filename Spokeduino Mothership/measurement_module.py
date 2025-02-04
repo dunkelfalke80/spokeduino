@@ -17,7 +17,7 @@ from sql_queries import SQLQueries
 from unit_module import UnitEnum, UnitModule
 from database_module import DatabaseModule
 from tensiometer_module import TensiometerModule
-from fast_visualisation_module import PyQtGraphCanvas, VisualisationModule
+from visualisation_module import PyQtGraphCanvas, VisualisationModule
 from calculation_module import TensionDeflectionFitter, FitType
 
 
@@ -54,7 +54,7 @@ class MeasurementModule:
 
     def set_mode(self, mode: MeasurementModeEnum) -> None:
         if mode == MeasurementModeEnum.DEFAULT:
-            if self.ui.radioButtonMeasurementCustom.isChecked:
+            if self.ui.radioButtonMeasurementCustom.isChecked():
                 mode = MeasurementModeEnum.CUSTOM
         self.__mode = mode
 
@@ -146,12 +146,12 @@ class MeasurementModule:
             converted_tensions: tuple[float, float, float] = \
                 self.unit_module.convert_units(value=tension, source=UnitEnum.NEWTON)
             tension_converted: str = {
-                UnitEnum.NEWTON: f"{converted_tensions[0]:.0f}N",
-                UnitEnum.KGF: TextChecker.check_text(f"{converted_tensions[1]:.1f} kgF", True),
-                UnitEnum.LBF: TextChecker.check_text(f"{converted_tensions[2]:.1f} lbF", True)
+                UnitEnum.NEWTON: f"{converted_tensions[0]:.0f} N",
+                UnitEnum.KGF: TextChecker.check_text(f"{converted_tensions[1]:.1f}", True) + " kgF",
+                UnitEnum.LBF: TextChecker.check_text(f"{converted_tensions[2]:.1f}", True) + " lbF"
             }[unit]
             # Add the tension-deflection pair to the set's measurements
-            grouped_measurements[set_id].append((tension, f"{tension_converted}: {deflection:.2f}mm"))
+            grouped_measurements[set_id].append((tension, f"{tension_converted}: {deflection:.2f} mm"))
 
         # Build rows for each set, with measurements sorted by tension
         for set_id, measurements_list in grouped_measurements.items():
@@ -705,13 +705,12 @@ class MeasurementModule:
         fit_type, header = self.get_fit()
         fit_model = self.fitter.fit_data(data, fit_type)
 
-        self.canvas.clear()
         self.chart.update_fit_plot(
             plot_widget=self.canvas.plot_widget,
             fit_model=fit_model,
             data=data,
             step=10.0,
-            deviation_range=(-20, 20),
+            deviation_range=(-30, 30),
             header=f"{header} fit"
         )
 

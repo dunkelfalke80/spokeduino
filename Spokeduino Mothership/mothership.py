@@ -23,7 +23,7 @@ from unit_module import UnitEnum
 from customtablewidget import CustomTableWidget
 from helpers import Messagebox
 from calculation_module import TensionDeflectionFitter
-from fast_visualisation_module import PyQtGraphCanvas, VisualisationModule
+from visualisation_module import PyQtGraphCanvas, VisualisationModule
 
 class Spokeduino(QMainWindow):
     """
@@ -209,6 +209,7 @@ class Spokeduino(QMainWindow):
         self.update_statusbar_tensiometer()
         self.update_statusbar_spokeduino()
         self.update_statusbar_fit()
+        self.measurement_module.set_mode(MeasurementModeEnum.DEFAULT)
 
     def setup_signals_and_slots(self) -> None:
         """
@@ -352,6 +353,9 @@ class Spokeduino(QMainWindow):
         self.ui.radioButtonLbF.toggled.connect(
                 self.update_statusbar_unit)
 
+        self.ui.radioButtonMeasurementDefault.toggled.connect(
+            self.measurement_custom)
+
         # Fit settings
         self.ui.radioButtonFitLinear.toggled.connect(
                 self.update_statusbar_fit)
@@ -461,21 +465,40 @@ class Spokeduino(QMainWindow):
                 self.measurement_module.setup_measurements_table()
                 self.ui.tableWidgetMeasurements.stop_sorting()
             case self.ui.tensioningTab:
+                self.chart.clear_fit_plot(self.measurement_canvas.plot_widget)
+                self.measurement_module.set_mode(
+                    MeasurementModeEnum.DEFAULT)
                 self.ui.pushButtonStartTensioning.setText("Start")
                 self.ui.tableWidgetTensioningLeft.setEnabled(False)
                 self.ui.tableWidgetTensioningRight.setEnabled(False)
                 self.tensioning_module.setup_table(True)
                 self.tensioning_module.setup_table(False)
             case self.ui.databaseTab:
-                self.spoke_module.load_spoke_details()
+                self.chart.clear_fit_plot(self.measurement_canvas.plot_widget)
                 self.measurement_module.set_mode(
                     MeasurementModeEnum.DEFAULT)
+                self.spoke_module.load_spoke_details()
                 QTimer.singleShot(
                     50,
                     self.spoke_module.align_filters_with_table)
             case self.ui.setupTab:
+                self.chart.clear_fit_plot(self.measurement_canvas.plot_widget)
                 self.measurement_module.set_mode(
                     MeasurementModeEnum.DEFAULT)
+
+    def measurement_custom(self) -> None:
+        if self.ui.radioButtonMeasurementCustom.isChecked():
+            self.setup_module.save_setting(
+                "measaurement_custom",
+                "1")
+            self.measurement_module.set_mode(
+                MeasurementModeEnum.CUSTOM)
+        else:
+            self.setup_module.save_setting(
+                "measaurement_custom",
+                "0")
+            self.measurement_module.set_mode(
+                MeasurementModeEnum.DEFAULT)
 
     def update_statusbar_unit(self) -> None:
         self.status_label_unit.setText(

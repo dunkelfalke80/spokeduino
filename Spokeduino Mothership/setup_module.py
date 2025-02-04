@@ -144,6 +144,11 @@ class SetupModule:
             case "lbF":
                 self.ui.radioButtonLbF.setChecked(True)
 
+        # Load measurement type
+        measurement_custom: str = settings_dict.get("measaurement_custom", "0")
+        self.ui.radioButtonMeasurementDefault.setChecked(measurement_custom == "0")
+        self.ui.radioButtonMeasurementCustom.setChecked(measurement_custom == "1")
+
         # Load directional settings
         measurement_direction: str = settings_dict.get(
             "spoke_direction", "down")
