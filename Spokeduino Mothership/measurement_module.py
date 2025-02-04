@@ -270,15 +270,18 @@ class MeasurementModule:
         ]
 
         # Set row headers
-        view.setRowCount(len(tensions_converted))
         unit: UnitEnum = self.unit_module.get_unit()
-        row_headers: list[str] = [
-            f"{value} {unit.value}"
-            if unit == UnitEnum.NEWTON
-            else f"{TextChecker.check_text(f'{value:.1f}', True)} {unit.value}"
-            for value in tensions_converted
-        ]
-        view.setVerticalHeaderLabels(row_headers)
+        view.setRowCount(len(tensions_converted))
+        for row in range(view.rowCount()):
+            header_text: str = (
+                f"{tensions_newton[row]} {unit.value}"
+                if unit == UnitEnum.NEWTON
+                else f"{TextChecker.check_text(
+                    f'{tensions_converted[row]:.1f}'
+                    , True)} {unit.value}")
+            header_item = QTableWidgetItem(header_text)
+            header_item.setData(Qt.ItemDataRole.UserRole, tensions_newton[row])
+            view.setVerticalHeaderItem(row, header_item)
 
         # Populate column headers with selected tensiometers
         tensiometers: list[tuple[int, str]] = \
@@ -436,7 +439,6 @@ class MeasurementModule:
             self.unit_module.convert_units(
                 value=parsed_val,
                 source=self.unit_module.get_unit())
-            print(f"Tension: {converted_tensions[0]}")
             tension_item = NumericTableWidgetItem(value)
             tension_item.setFlags(
                 Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
@@ -447,7 +449,6 @@ class MeasurementModule:
                 tension_item.setData(Qt.ItemDataRole.UserRole, None)
             view.setItem(row, 0, tension_item)
         else:
-            print(f"Deflection: {parsed_val}")
             deflection_item = NumericTableWidgetItem(value)
             deflection_item.setFlags(
                 Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
@@ -472,13 +473,6 @@ class MeasurementModule:
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
         row: int = view.currentRow()
         column: int = view.currentColumn()
-
-        print(f"column: {column} row {row}")
-        item: QTableWidgetItem | None = view.itemAt(row, column)
-        print(item)
-        if item is not None:
-            print(f"Item role = {item.data(Qt.ItemDataRole.UserRole)}")
-            print(f"Item text = {item.text()}")
 
         if column < view.columnCount() - 1:
             column += 1
@@ -509,7 +503,8 @@ class MeasurementModule:
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
 
         # Ensure a valid spoke ID is selected
-        spoke_id: int = Generics.get_selected_row_id(self.ui.tableWidgetSpokesDatabase)
+        spoke_id: int = Generics.get_selected_row_id(
+            self.ui.tableWidgetSpokesDatabase)
         if spoke_id < 0:
             self.messagebox.err("No spoke selected")
             return
@@ -550,16 +545,24 @@ class MeasurementModule:
             # Validate and gather tension-deflection data
             data: list[tuple[float, float]] = []
             for row in range(view.rowCount()):
-                tension_item: NumericTableWidgetItem = cast(NumericTableWidgetItem, view.verticalHeaderItem(row))
-                deflection_item: NumericTableWidgetItem = cast(NumericTableWidgetItem, view.item(row, column))
+                tension_item: QTableWidgetItem | None = view.verticalHeaderItem(row)
+                deflection_item: QTableWidgetItem | None = view.item(row, column)
 
                 if tension_item is None or deflection_item is None:
                     self.messagebox.err(f"Row {row + 1}: Missing data in column {column + 1}")
                     return
 
                 try:
-                    tension = float(tension_item.text().split()[0])
-                    deflection = float(deflection_item.text())
+                    tension: float = cast(
+                        float,
+                        tension_item.data(Qt.ItemDataRole.UserRole))
+                    deflection: float = cast(
+                        float,
+                        deflection_item.data(Qt.ItemDataRole.UserRole))
+                    if tension is None or deflection is None:
+                        self.messagebox.err(f"Row {row + 1}, Column {column + 1}: Invalid data")
+                        return
+
                     data.append((tension, deflection))
                 except ValueError:
                     self.messagebox.err(f"Row {row + 1}, Column {column + 1}: Invalid data")
@@ -587,15 +590,21 @@ class MeasurementModule:
         # Validate and gather tension-deflection data
         data: list[tuple[float, float]] = []
         for row in range(view.rowCount()):
-            tension_item = view.item(row, 0)
-            deflection_item = view.item(row, 1)
+            tension_item: QTableWidgetItem | None = view.item(row, 0)
+            deflection_item: QTableWidgetItem | None = view.item(row, 1)
 
             if tension_item is None or deflection_item is None:
                 continue  # Ignore rows with missing data
 
             try:
-                tension = float(tension_item.text())
-                deflection = float(deflection_item.text())
+                tension: float = cast(
+                    float,
+                    tension_item.data(Qt.ItemDataRole.UserRole))
+                deflection: float = cast(
+                    float,
+                    deflection_item.data(Qt.ItemDataRole.UserRole))
+                if tension is None or deflection is None:
+                    continue  # Ignore rows with missing data
                 data.append((tension, deflection))
             except ValueError:
                 continue  # Ignore rows with invalid data
@@ -659,27 +668,34 @@ class MeasurementModule:
         fits it, and plots inside the verticalLayoutMeasurementRight.
         """
         # Collect data from tableWidgetMeasurements
-        data = []
-        row_count: int = self.ui.tableWidgetMeasurements.rowCount()
-        for row in range(row_count):
-            tension_item: QTableWidgetItem | None = \
-                self.ui.tableWidgetMeasurements.item(row, 0)
-            deflection_item: QTableWidgetItem | None = \
-                self.ui.tableWidgetMeasurements.item(row, 1)
+        view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        row_count: int = view.rowCount()
 
-            # Check that both cells exist and are not empty
-            if tension_item and deflection_item:
-                tension_text: str = tension_item.text().strip()
-                deflection_text: str = deflection_item.text().strip()
-                if tension_text and deflection_text:
-                    # Attempt to parse floats
-                    try:
-                        tension_val = float(tension_text.replace(",", "."))
-                        deflection_val = float(deflection_text.replace(",", "."))
-                        data.append((tension_val, deflection_val))
-                    except ValueError:
-                        # Non-numeric in that row => skip it
-                        pass
+        data = []
+        for row in range(row_count):
+            if self.__mode == MeasurementModeEnum.DEFAULT:
+                tension_item: QTableWidgetItem | None = view.verticalHeaderItem(row)
+                deflection_item: QTableWidgetItem | None = view.item(row, 0)
+            else:
+                tension_item: QTableWidgetItem | None = view.item(row, 0)
+                deflection_item: QTableWidgetItem | None = view.item(row, 1)
+
+            if tension_item is None or deflection_item is None:
+                continue
+
+            try:
+                tension: float = cast(
+                    float,
+                    tension_item.data(Qt.ItemDataRole.UserRole))
+                deflection: float = cast(
+                    float,
+                    deflection_item.data(Qt.ItemDataRole.UserRole))
+                if tension is None or deflection is None:
+                    continue
+
+                data.append((tension, deflection))
+            except ValueError:
+                continue
 
         if not data:
             print("No valid tension/deflection data found.")
