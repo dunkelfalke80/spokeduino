@@ -210,6 +210,7 @@ class Spokeduino(QMainWindow):
         self.update_statusbar_spokeduino()
         self.update_statusbar_fit()
         self.measurement_module.set_mode(MeasurementModeEnum.DEFAULT)
+        self.ui.tensioningTab.setEnabled(False)
 
     def setup_signals_and_slots(self) -> None:
         """

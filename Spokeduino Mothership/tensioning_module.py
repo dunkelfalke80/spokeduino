@@ -367,6 +367,9 @@ class TensioningModule:
             self.main_window.status_label_spoke_right.setText(f"{spoke_name} {self.ui.lineEditDimension.text()} ->")
             self.__fit_right = fit_model
 
+        if self.__fit_left is not None and self.__fit_right is not None:
+            self.ui.tensioningTab.setEnabled(True)
+
     def calculate_tension(self, fit_model, deflection: float) -> float:
         """
         Given the string from a cell containing deflection (mm),
