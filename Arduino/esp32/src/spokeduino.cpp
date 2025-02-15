@@ -144,12 +144,12 @@ int get_gauge_bit(int clock_pin, int data_pin)
 	unsigned long timeout = millis() + BIT_READ_TIMEOUT;
 	while (analogRead(clock_pin) > ADC_THRESHOLD)
 	{
-		if (millis() > timeout)
+        if (millis() > timeout)
 			return -1;
 	}
 	while (analogRead(clock_pin) < ADC_THRESHOLD)
 	{
-		if (millis() > timeout)
+        if (millis() > timeout)
 			return -1;
 	}
 	int data = (analogRead(data_pin) > ADC_THRESHOLD) ? 1 : 0;
@@ -313,7 +313,7 @@ void senderTask(void *param)
 void setup()
 {
 	Serial.begin(115200);
-	SerialBT.begin("GaugeReaderBT");
+	SerialBT.begin("Spokeduino");
 #ifndef USE_TRANSISTOR
 	// Only used in analog mode.
 	analogReadResolution(11);
@@ -328,8 +328,8 @@ void setup()
 	static GaugeTaskParams gauge2Params = { 2, GAUGE2_CLOCK, GAUGE2_DATA };
 	static GaugeTaskParams gauge3Params = { 3, GAUGE3_CLOCK, GAUGE3_DATA };
 	xTaskCreatePinnedToCore(gauge_task, "Gauge1Task", 2048, &gauge1Params, 1, NULL, 1);
-	xTaskCreatePinnedToCore(gauge_task, "Gauge2Task", 2048, &gauge2Params, 1, NULL, 1);
-	xTaskCreatePinnedToCore(gauge_task, "Gauge3Task", 2048, &gauge3Params, 1, NULL, 1);
+	//xTaskCreatePinnedToCore(gauge_task, "Gauge2Task", 2048, &gauge2Params, 1, NULL, 1);
+	//xTaskCreatePinnedToCore(gauge_task, "Gauge3Task", 2048, &gauge3Params, 1, NULL, 1);
 
 	// Set up the digital inputs task.
 	xTaskCreatePinnedToCore(digitalInputTask, "DigitalInputTask", 2048, NULL, 1, NULL, 1);
@@ -338,7 +338,7 @@ void setup()
 	xTaskCreatePinnedToCore(senderTask, "SenderTask", 2048, NULL, 1, NULL, 0);
 
 	// Set up the BLE scanner task (runs on core 0).
-	xTaskCreatePinnedToCore(bleScannerTask, "BLEScannerTask", 4096, NULL, 1, NULL, 0);
+	//xTaskCreatePinnedToCore(bleScannerTask, "BLEScannerTask", 4096, NULL, 1, NULL, 0);
 }
 
 void loop()
