@@ -57,6 +57,9 @@
 // Hysteresis filter: maximum allowed change (in mm) between successive filtered readings.
 #define MAX_DELTA 1.0f
 
+// Minimum value filter: discard data lower than this (gauge is not in use)
+#define MIN_VAL 0.6f
+
 // BLE-related Constants
 #define WHC06_MANUFACTURER_ID 256
 #define WEIGHT_OFFSET         32  // Offset in manufacturer data for weight
@@ -87,6 +90,7 @@ struct GaugeTaskParams
 	int clock_pin;     // Input pin for the clock signal
 	int data_pin;      // Input pin for the data signal
 };
+
 
 // BLE Advertisement Callback
 class WHC06AdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
@@ -229,8 +233,11 @@ void gauge_task(void *param)
 		float value = parse_gauge_packet(packet);
 
         // Timeout or garbage data
-		if (value < -10.0f)
+		if (value < MIN_VAL)
+        {
+            last_value = 0;
             continue;
+        }
 
         // Hysteresis filter: if the change is too large or too small, assume noise and discard update.
         float delta_value = (fabs(value - last_value));
