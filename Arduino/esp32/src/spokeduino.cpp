@@ -46,6 +46,7 @@
 #define PIN_BTN_FUNC2  14
 
 // Gauge clock and data pins
+// For gauges with a MicroUSB connector the pinout is white (D-) = clock, green (D+) = data
 #define GAUGE1_CLOCK   34
 #define GAUGE1_DATA    35
 #define GAUGE2_CLOCK   32
@@ -56,9 +57,13 @@
 // BLE-related Constants
 #define WHC06_MANUFACTURER_ID 256
 #define WEIGHT_OFFSET         10  // Offset in manufacturer data for weight
+
 const int bleScanTime = 5;         // BLE scan time in seconds
 
 // Global Objects and Types
+
+// Global BLEScan pointer
+BLEScan* pBLEScan = nullptr;
 
 // Bluetooth Serial (SPP) instance for dual serial output
 BluetoothSerial SerialBT;
@@ -79,9 +84,6 @@ struct GaugeTaskParams
 	int clock_pin;     // Input pin for the clock signal
 	int data_pin;      // Input pin for the data signal
 };
-
-// Global BLEScan pointer
-BLEScan* pBLEScan = nullptr;
 
 // BLE Advertisement Callback
 class WHC06AdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
