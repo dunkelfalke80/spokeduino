@@ -23,7 +23,7 @@
 // SOFTWARE.
 
 #include <Arduino.h>
-#include "BluetoothSerial.h"
+#include <BluetoothSerial.h>
 #include <math.h>
 #include <BLEDevice.h>
 #include <BLEScan.h>
@@ -36,7 +36,7 @@
 // #define USE_TRANSISTOR
 
 // Configuration constants
-#define ADC_THRESHOLD       800          // Only used in analog mode
+#define ADC_THRESHOLD       1100         // Only used in analog mode
 #define BIT_READ_TIMEOUT    100          // Timeout for a single bit (ms)
 #define PACKET_READ_TIMEOUT 250          // Overall timeout for a 24-bit packet (ms)
 
@@ -54,9 +54,12 @@
 #define GAUGE3_CLOCK   25
 #define GAUGE3_DATA    26
 
+// Hysteresis filter: maximum allowed change (in mm) between successive filtered readings.
+#define MAX_DELTA 1.0f
+
 // BLE-related Constants
 #define WHC06_MANUFACTURER_ID 256
-#define WEIGHT_OFFSET         10  // Offset in manufacturer data for weight
+#define WEIGHT_OFFSET         32  // Offset in manufacturer data for weight
 
 const int bleScanTime = 5;         // BLE scan time in seconds
 
@@ -123,37 +126,34 @@ class WHC06AdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
  */
 int get_gauge_bit(int clock_pin, int data_pin)
 {
+    unsigned long timeout = millis() + BIT_READ_TIMEOUT;
 #ifdef USE_TRANSISTOR
-	// Digital mode: assume transistor inverts the signal.
-	unsigned long timeout = millis() + BIT_READ_TIMEOUT;
 	// Wait for clock to go HIGH (which is the inverted equivalent of a falling edge).
 	while (digitalRead(clock_pin) == LOW)
+#else
+	// Analog mode: use analogRead() with a threshold.
+	while (analogRead(clock_pin) > ADC_THRESHOLD)
+#endif
 	{
 		if (millis() > timeout)
 			return -1;
 	}
+#ifdef USE_TRANSISTOR
 	// Then wait for clock to go LOW.
 	while (digitalRead(clock_pin) == HIGH)
+#else
+    while (analogRead(clock_pin) < ADC_THRESHOLD)
+#endif
 	{
-		if (millis() > readTimeout)
+		if (millis() > timeout)
 			return -1;
 	}
+#ifdef USE_TRANSISTOR
 	// Read the data pin and invert the result: HIGH becomes 0, LOW becomes 1.
 	int data = digitalRead(data_pin);
 	return (data == HIGH) ? 0 : 1;
 #else
 	// Analog mode: use analogRead() with a threshold.
-	unsigned long timeout = millis() + BIT_READ_TIMEOUT;
-	while (analogRead(clock_pin) > ADC_THRESHOLD)
-	{
-        if (millis() > timeout)
-			return -1;
-	}
-	while (analogRead(clock_pin) < ADC_THRESHOLD)
-	{
-        if (millis() > timeout)
-			return -1;
-	}
 	int data = (analogRead(data_pin) > ADC_THRESHOLD) ? 1 : 0;
 	return data;
 #endif
@@ -217,27 +217,31 @@ float parse_gauge_packet(long packet)
 void gauge_task(void *param)
 {
 	GaugeTaskParams *p = (GaugeTaskParams*) param;
-	float last_value = 0.0f;
+    float last_value = 0.0f;      // Stores the last accepted value
 #ifdef USE_TRANSISTOR
 	pinMode(p->clock_pin, INPUT);
 	pinMode(p->data_pin, INPUT);
 #endif
 	while (true)
 	{
-		long packet = get_gauge_packet(p->clock_pin, p->data_pin);
+        vTaskDelay(50 / portTICK_PERIOD_MS);
+        long packet = get_gauge_packet(p->clock_pin, p->data_pin);
 		float value = parse_gauge_packet(packet);
-		if (value < -10.0f || fabs(value - last_value) < 0.001)
-		{
-			// No significant update.
-		}
-		else
-		{
-			last_value = value;
-			Message msg;
-			snprintf(msg.message, sizeof(msg.message), "gauge,%d,%.2f", p->gauge_number, value);
-			xQueueSend(sendQueue, &msg, portMAX_DELAY);
-		}
-		vTaskDelay(50 / portTICK_PERIOD_MS);
+
+        // Timeout or garbage data
+		if (value < -10.0f)
+            continue;
+
+        // Hysteresis filter: if the change is too large or too small, assume noise and discard update.
+        float delta_value = (fabs(value - last_value));
+        last_value = value;
+        if ((delta_value < 0.01) || (delta_value > MAX_DELTA))
+            continue;
+
+        last_value = value;
+        Message msg;
+		snprintf(msg.message, sizeof(msg.message), "gauge,%d,%.2f", p->gauge_number, value);
+		xQueueSend(sendQueue, &msg, portMAX_DELAY);
 	}
 }
 
