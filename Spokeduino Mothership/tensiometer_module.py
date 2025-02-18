@@ -10,6 +10,7 @@ from helpers import Messagebox
 from database_module import DatabaseModule
 from ui import Ui_mainWindow
 
+
 class TensiometerModule:
 
     def __init__(self,
@@ -70,23 +71,29 @@ class TensiometerModule:
             if isinstance(model, QStandardItemModel):
                 # Multi-tensiometer mode: return all checked tensiometers
                 for row in range(model.rowCount()):
-                    item: QStandardItem = model.item(row)  # Safely access item()
+                    item: QStandardItem = model.item(row)
                     if item and item.checkState() == Qt.CheckState.Checked:
                         tensiometer_id = item.data(Qt.ItemDataRole.UserRole)
                         tensiometer_name = item.text()
-                        selected_tensiometers.append((tensiometer_id, tensiometer_name))
+                        selected_tensiometers.append(
+                            (tensiometer_id, tensiometer_name))
             else:
-                self.messagebox.err("Model is not a QStandardItemModel; cannot retrieve selected items.")
+                self.messagebox.err("Model is not a QStandardItemModel; "
+                                    "cannot retrieve selected items.")
         else:
             # Single-tensiometer mode: return the currently selected one
             current_index: int = self.ui.comboBoxTensiometer.currentIndex()
             if current_index != -1:
-                tensiometer_id = self.ui.comboBoxTensiometer.itemData(current_index)
-                tensiometer_name: str = self.ui.comboBoxTensiometer.currentText()
-                selected_tensiometers.append((tensiometer_id, tensiometer_name))
+                tensiometer_id = self.ui.comboBoxTensiometer.itemData(
+                    current_index)
+                tensiometer_name: str = \
+                    self.ui.comboBoxTensiometer.currentText()
+                selected_tensiometers.append(
+                    (tensiometer_id, tensiometer_name))
 
         # Reorder tensiometers to place the primary one first
-        selected_tensiometers.sort(key=lambda x: x[0] != primary_tensiometer_id)
+        selected_tensiometers.sort(
+            key=lambda x: x[0] != primary_tensiometer_id)
 
         return selected_tensiometers
 
@@ -112,10 +119,11 @@ class TensiometerModule:
             self.ui.comboBoxTensiometer.setModel(model)  # Set the model early
 
             for tensiometer in self.db.execute_select(
-                query=SQLQueries.GET_TENSIOMETERS,
-                params=None):
+                    query=SQLQueries.GET_TENSIOMETERS, params=None):
                 item = QStandardItem(tensiometer[1])
-                item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
+                item.setFlags(
+                    Qt.ItemFlag.ItemIsEnabled |
+                    Qt.ItemFlag.ItemIsUserCheckable)
                 item.setCheckState(Qt.CheckState.Unchecked)
                 item.setData(tensiometer[0], Qt.ItemDataRole.UserRole)
                 model.appendRow(item)
@@ -160,7 +168,7 @@ class TensiometerModule:
             self.ui.comboBoxTensiometer.setCurrentIndex(index)
 
     def save_tensiometer(self) -> None:
-        if self.__multi_tensiometer_enabled: # Runtime only
+        if self.__multi_tensiometer_enabled:  # Runtime only
             return
 
         current_index: int = self.ui.comboBoxTensiometer.currentIndex()
@@ -171,4 +179,3 @@ class TensiometerModule:
         self.setup_module.save_setting(
             key="tensiometer_id",
             value=str(tensiometer_id))
-

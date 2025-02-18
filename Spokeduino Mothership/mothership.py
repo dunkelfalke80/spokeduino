@@ -25,6 +25,7 @@ from helpers import Messagebox
 from calculation_module import TensionDeflectionFitter
 from visualisation_module import PyQtGraphCanvas, VisualisationModule
 
+
 class Spokeduino(QMainWindow):
     """
     Main application class for Spokeduino Mothership.
@@ -42,8 +43,10 @@ class Spokeduino(QMainWindow):
         self.db_path: str = f"{self.current_path}/spokeduino.sqlite"
 
         # Initialize database
-        schema_file: str = os.path.join(self.current_path, "sql", "init_schema.sql")
-        data_file: str = os.path.join(self.current_path, "sql", "spoke_data.sql")
+        schema_file: str = os.path.join(
+            self.current_path, "sql", "init_schema.sql")
+        data_file: str = os.path.join(
+            self.current_path, "sql", "spoke_data.sql")
         self.db = DatabaseModule(self.db_path)
         self.db.initialize_database(schema_file, data_file)
 
@@ -60,8 +63,10 @@ class Spokeduino(QMainWindow):
         # Visualisation
         self.measurement_canvas = PyQtGraphCanvas()
         self.tensioning_canvas = PyQtGraphCanvas()
-        self.ui.verticalLayoutMeasurementRight.addWidget(self.measurement_canvas)
-        self.ui.verticalLayoutWheelDiagram.addWidget(self.tensioning_canvas)
+        self.ui.verticalLayoutMeasurementRight.addWidget(
+            self.measurement_canvas)
+        self.ui.verticalLayoutWheelDiagram.addWidget(
+            self.tensioning_canvas)
 
         self.unit_module = UnitModule(self.ui)
         self.setup_module = SetupModule(
@@ -113,7 +118,7 @@ class Spokeduino(QMainWindow):
         # Replace the tableWidgetMeasurements with the custom widget
         custom_table = CustomTableWidget(
             parent=self,
-            move_to_next_cell_callback=self.measurement_module.move_to_next_cell)
+            move_to_next_cell_callback=self.measurement_module.next_cell)
 
         # Set the same object name so the rest of the code works seamlessly
         custom_table.setObjectName("tableWidgetMeasurements")
@@ -132,10 +137,8 @@ class Spokeduino(QMainWindow):
 
         # Replace the tableWidgetTensionsLeft with the custom widget
         custom_tension_table_left = CustomTableWidget(
-            parent=self,
-            move_to_next_cell_callback=
+            self,
             self.tensioning_module.next_cell_callback_left,
-            move_to_previous_cell_callback=
             self.tensioning_module.previous_cell_callback_left)
 
         # Set the same object name so the rest of the code works seamlessly
@@ -155,11 +158,9 @@ class Spokeduino(QMainWindow):
 
         # Replace the tableWidgetTensionsRight with the custom widget
         custom_tension_table_right = CustomTableWidget(
-            parent=self,
-            move_to_next_cell_callback=
+            self,
             self.tensioning_module.next_cell_callback_right,
-            move_to_previous_cell_callback=self.
-            tensioning_module.previous_cell_callback_right)
+            self.tensioning_module.previous_cell_callback_right)
 
         # Set the same object name so the rest of the code works seamlessly
         custom_tension_table_right.setObjectName("tableWidgetTensionsRight")
@@ -312,16 +313,17 @@ class Spokeduino(QMainWindow):
         self.ui.tableWidgetMeasurements.currentCellChanged.connect(
             self.measurement_module.update_measurement_button_states)
         self.ui.pushButtonPreviousMeasurement.clicked.connect(
-        self.ui.tableWidgetMeasurements.move_to_previous_cell)
+            self.ui.tableWidgetMeasurements.move_to_previous_cell)
         self.ui.pushButtonNextMeasurement.clicked.connect(
             lambda: self.ui.tableWidgetMeasurements.move_to_next_cell(False))
         self.ui.pushButtonSaveMeasurement.clicked.connect(
-        lambda: self.spokeduino_module.set_state(
-            SpokeduinoState.WAITING))
+            lambda: self.spokeduino_module.set_state(
+                SpokeduinoState.WAITING))
         self.ui.pushButtonSaveMeasurement.clicked.connect(
             self.measurement_module.save_measurements)
         self.ui.tableWidgetMeasurements.onCellChanged.connect(
-            lambda row, column, value: self.measurement_module.on_cell_changing(
+            lambda row, column,
+            value: self.measurement_module.on_cell_changing(
                 row=row, column=column, value=value))
 
         # Language selection
@@ -506,7 +508,9 @@ class Spokeduino(QMainWindow):
     def update_statusbar_unit(self) -> None:
         self.status_label_unit.setText(
             f"Unit: {self.unit_module.get_unit().value}")
-        self.setup_module.save_setting("unit", self.unit_module.get_unit().value)
+        self.setup_module.save_setting(
+            "unit",
+            self.unit_module.get_unit().value)
 
     def update_statusbar_fit(self) -> None:
         _, description = self.measurement_module.get_fit()
@@ -526,9 +530,11 @@ class Spokeduino(QMainWindow):
         self.status_label_port.setText(
             f"Spokeduino: {spokeduino_status}")
 
+
 def trace_calls(frame, event, arg):
     if event == "call":
-        print(f"Calling {frame.f_code.co_name} at {frame.f_lineno} in {frame.f_code.co_filename}")
+        print(f"Calling {frame.f_code.co_name} at "
+              f"{frame.f_lineno} in {frame.f_code.co_filename}")
     return trace_calls
 
 
@@ -538,7 +544,7 @@ def main() -> None:
 
     Initializes the QApplication and the main application window.
     """
-    #sys.settrace(trace_calls)
+    # sys.settrace(trace_calls)
 
     app = QApplication(sys.argv)
     window = Spokeduino()

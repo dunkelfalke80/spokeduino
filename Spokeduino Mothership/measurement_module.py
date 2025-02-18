@@ -100,7 +100,7 @@ class MeasurementModule:
         Each row corresponds to a measurement set with:
         - The first column as a comment
         - The second as the timestamp (up to minutes)
-        - Subsequent columns displaying tension:deflection pairs with unit conversion.
+        - Subsequent columns displaying tension:deflection pairs
         """
         if spoke_id is None:
             spoke_id = Generics.get_selected_row_id(
@@ -128,8 +128,9 @@ class MeasurementModule:
 
         # Fetch all measurements linked to the retrieved measurement sets
         set_ids: list[Any] = [ms[0] for ms in measurement_sets]
-        query_string: str = f"{SQLQueries.GET_MEASUREMENTS} " \
-                            f"({', '.join('?' for _ in set_ids)}) ORDER BY tension ASC"
+        query_string: str = (f"{SQLQueries.GET_MEASUREMENTS} "
+                             f"({', '.join('?' for _ in set_ids)})"
+                             "ORDER BY tension ASC")
         measurements: list[Any] = self.db.execute_select(
             query=query_string,
             params=set_ids
@@ -157,14 +158,18 @@ class MeasurementModule:
                 grouped_measurements[set_id] = []
             # Convert the tension to the selected unit
             converted_tensions: tuple[float, float, float] = \
-                self.unit_module.convert_units(value=tension, source=UnitEnum.NEWTON)
+                self.unit_module.convert_units(
+                    value=tension, source=UnitEnum.NEWTON)
             tension_converted: str = {
                 UnitEnum.NEWTON: f"{converted_tensions[0]:.0f} N",
-                UnitEnum.KGF: TextChecker.check_text(f"{converted_tensions[1]:.1f}", True) + " kgF",
-                UnitEnum.LBF: TextChecker.check_text(f"{converted_tensions[2]:.1f}", True) + " lbF"
+                UnitEnum.KGF: TextChecker.check_text(
+                    f"{converted_tensions[1]:.1f}", True) + " kgF",
+                UnitEnum.LBF: TextChecker.check_text(
+                    f"{converted_tensions[2]:.1f}", True) + " lbF"
             }[unit]
             # Add the tension-deflection pair to the set's measurements
-            grouped_measurements[set_id].append((tension, f"{tension_converted}: {deflection:.2f} mm"))
+            grouped_measurements[set_id].append((
+                tension, f"{tension_converted}: {deflection:.2f} mm"))
 
         # Build rows for each set, with measurements sorted by tension
         for set_id, measurements_list in grouped_measurements.items():
@@ -176,7 +181,7 @@ class MeasurementModule:
         # Update the table
         view.clearContents()
         view.setRowCount(len(data))
-        view.setColumnCount(max(len(row[1]) for row in data))  # Ensure enough columns
+        view.setColumnCount(max(len(row[1]) for row in data))
 
         for row_idx, (row_id, row_data) in enumerate(data):
             for col_idx, cell_data in enumerate(row_data):
@@ -198,7 +203,8 @@ class MeasurementModule:
     def delete_measurement(self) -> None:
         """
         Delete the currently selected measurement from the measurements list.
-        Deletes only if a valid measurement row is selected or if there's only one measurement.
+        Deletes only if a valid measurement row is selected
+        or if there's only one measurement.
         """
         view: QTableWidget = self.ui.tableWidgetMeasurementList
         measurement_id: int = Generics.get_selected_row_id(view)
@@ -236,7 +242,7 @@ class MeasurementModule:
         - If self.__edit_mode is False and self.__custom_mode is False:
             Populate with editable tension values and tensiometers.
         - If self.__edit_mode is True:
-            Populate with tension:deflection pairs for the selected measurement.
+            Populate with tension:deflection pairs for the selected measurement
         - If self.__edit_mode is False and self.__custom_mode is True:
             Prepare an empty table with one editable row for custom entries.
         """
@@ -290,8 +296,7 @@ class MeasurementModule:
                 f"{tensions_newton[row]} {unit.value}"
                 if unit == UnitEnum.NEWTON
                 else f"{TextChecker.check_text(
-                    f'{tensions_converted[row]:.1f}'
-                    , True)} {unit.value}")
+                    f'{tensions_converted[row]:.1f}', True)} {unit.value}")
             header_item = QTableWidgetItem(header_text)
             header_item.setData(Qt.ItemDataRole.UserRole, tensions_newton[row])
             view.setVerticalHeaderItem(row, header_item)
@@ -302,7 +307,7 @@ class MeasurementModule:
         view.setColumnCount(len(tensiometers))
         for column, (
             tensiometer_id,
-            tensiometer_name) in enumerate(tensiometers):
+                tensiometer_name) in enumerate(tensiometers):
 
             item = QTableWidgetItem(tensiometer_name)
             item.setData(Qt.ItemDataRole.UserRole, tensiometer_id)
@@ -317,7 +322,7 @@ class MeasurementModule:
                 view.setItem(row, column, item)
 
         # Move focus to the first cell
-        view.move_to_specific_cell(0, 0)
+        view.move_to_cell(0, 0)
 
     def populate_measurements_table_edit_mode(
             self,
@@ -383,15 +388,17 @@ class MeasurementModule:
             unit_index: int = unit_index_map[unit]
 
             for row, (_, tension, deflection) in enumerate(
-                filtered_measurements):
+                 filtered_measurements):
                 # Convert tension to the selected unit
                 converted_tension: float = self.unit_module.convert_units(
                     tension,
                     UnitEnum.NEWTON)[unit_index]
 
                 # Format numbers according to locale
-                tension_text: str = TextChecker.check_text(f"{converted_tension:.2f}", True)
-                deflection_text: str = TextChecker.check_text(str(deflection), True)
+                tension_text: str = TextChecker.check_text(
+                    f"{converted_tension:.2f}", True)
+                deflection_text: str = TextChecker.check_text(
+                    str(deflection), True)
 
                 tension_item = NumericTableWidgetItem(tension_text)
                 tension_item.setFlags(
@@ -408,7 +415,8 @@ class MeasurementModule:
                     tension_item.setData(Qt.ItemDataRole.UserRole, None)
 
                 try:
-                    deflection_item.setData(Qt.ItemDataRole.UserRole, deflection)
+                    deflection_item.setData(
+                        Qt.ItemDataRole.UserRole, deflection)
                 except ValueError:
                     logging.error(f"Invalid value '{deflection}' at 1:{row}")
                     deflection_item.setData(Qt.ItemDataRole.UserRole, None)
@@ -438,7 +446,7 @@ class MeasurementModule:
         view.insertRow(row)
         row_headers: list[str] = ["+"] * view.rowCount()
         view.setVerticalHeaderLabels(row_headers)
-        view.move_to_specific_cell(row, 0)
+        view.move_to_cell(row, 0)
 
     def on_cell_changing(self, row: int, column: int, value: str) -> None:
         if self.__mode == MeasurementModeEnum.DEFAULT:
@@ -454,14 +462,15 @@ class MeasurementModule:
 
         if column == 0:
             converted_tensions: tuple[float, float, float] = \
-            self.unit_module.convert_units(
+             self.unit_module.convert_units(
                 value=parsed_val,
                 source=self.unit_module.get_unit())
             tension_item = NumericTableWidgetItem(value)
             tension_item.setFlags(
                 Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
             try:
-                tension_item.setData(Qt.ItemDataRole.UserRole, converted_tensions[0])
+                tension_item.setData(
+                    Qt.ItemDataRole.UserRole, converted_tensions[0])
             except ValueError:
                 logging.error(f"Invalid value '{value}' at {column}:{row}")
                 tension_item.setData(Qt.ItemDataRole.UserRole, None)
@@ -477,7 +486,7 @@ class MeasurementModule:
                 deflection_item.setData(Qt.ItemDataRole.UserRole, None)
             view.setItem(row, 1, deflection_item)
 
-    def move_to_next_cell(self, no_delay: bool) -> None:
+    def next_cell(self, no_delay: bool) -> None:
         """
         Callback for moving to the next cell in the table.
         Moves to the cell below if possible, otherwise to the first cell
@@ -507,10 +516,9 @@ class MeasurementModule:
 
         # Delay to ensure Qt's focus/selection state is updated
         if no_delay:
-            view.move_to_specific_cell(row, column)
+            view.move_to_cell(row, column)
         else:
-            QTimer.singleShot(50,
-                lambda: view.move_to_specific_cell(
+            QTimer.singleShot(50, lambda: view.move_to_cell(
                     row=row, column=column))
 
     def save_measurements(self) -> None:
@@ -544,30 +552,38 @@ class MeasurementModule:
         self.load_measurements(None, None, False)
 
     def __save_default_mode_measurements(
-            self, view: CustomTableWidget, spoke_id: int, comment: str) -> None:
+            self,
+            view: CustomTableWidget,
+            spoke_id: int,
+            comment: str) -> None:
         """
         Save measurements in DEFAULT mode with multiple tensiometers.
         """
         for column in range(view.columnCount()):
             # Fetch the tensiometer ID for the column
-            header_item: QTableWidgetItem | None = view.horizontalHeaderItem(column)
+            header_item: QTableWidgetItem | None = \
+                view.horizontalHeaderItem(column)
             if header_item is None:
                 self.messagebox.err(f"Column {column + 1}: Missing header")
                 return
 
             tensiometer_id = header_item.data(Qt.ItemDataRole.UserRole)
             if tensiometer_id is None:
-                self.messagebox.err(f"Column {column + 1}: Missing tensiometer ID")
+                self.messagebox.err(
+                    f"Column {column + 1}: Missing tensiometer ID")
                 return
 
             # Validate and gather tension-deflection data
             data: list[tuple[float, float]] = []
             for row in range(view.rowCount()):
-                tension_item: QTableWidgetItem | None = view.verticalHeaderItem(row)
-                deflection_item: QTableWidgetItem | None = view.item(row, column)
+                tension_item: QTableWidgetItem | None = \
+                    view.verticalHeaderItem(row)
+                deflection_item: QTableWidgetItem | None = \
+                    view.item(row, column)
 
                 if tension_item is None or deflection_item is None:
-                    self.messagebox.err(f"Row {row + 1}: Missing data in column {column + 1}")
+                    self.messagebox.err(
+                        f"Row {row + 1}: Missing data in column {column + 1}")
                     return
 
                 try:
@@ -578,12 +594,15 @@ class MeasurementModule:
                         float,
                         deflection_item.data(Qt.ItemDataRole.UserRole))
                     if tension is None or deflection is None:
-                        self.messagebox.err(f"Row {row + 1}, Column {column + 1}: Invalid data")
+                        self.messagebox.err(
+                            f"Row {row + 1}, "
+                            f"Column {column + 1}: Invalid data")
                         return
 
                     data.append((tension, deflection))
                 except ValueError:
-                    self.messagebox.err(f"Row {row + 1}, Column {column + 1}: Invalid data")
+                    self.messagebox.err(
+                        f"Row {row + 1}, Column {column + 1}: Invalid data")
                     return
 
             # Save the data to the database
@@ -594,12 +613,16 @@ class MeasurementModule:
                 comment=comment)
 
     def __save_custom_mode_measurements(
-                self, view: CustomTableWidget, spoke_id: int, comment: str) -> None:
+                self,
+                view: CustomTableWidget,
+                spoke_id: int,
+                comment: str) -> None:
         """
         Save measurements in EDIT or CUSTOM mode.
-        In EDIT mode, delete the existing measurement set before saving new data.
+        In EDIT mode, delete the existing measurement set
+        before saving new data.
         """
-        # Fetch the tensiometer ID for the column (assumes a single tensiometer)
+        # Fetch the tensiometer ID for the column
         tensiometer_id = self.tensiometer_module.get_primary_tensiometer()
         if tensiometer_id < 0:
             self.messagebox.err("No tensiometer selected")
@@ -633,7 +656,8 @@ class MeasurementModule:
         # Handle EDIT mode: Delete the existing measurement set
         if self.__mode == MeasurementModeEnum.EDIT:
             # Get the current measurement set ID
-            measurement_id: int = Generics.get_selected_row_id(self.ui.tableWidgetMeasurementList)
+            measurement_id: int = Generics.get_selected_row_id(
+                self.ui.tableWidgetMeasurementList)
             if measurement_id < 0:
                 self.messagebox.err("No measurement set selected to overwrite")
                 return
@@ -645,7 +669,8 @@ class MeasurementModule:
                     params=(measurement_id,)
                 )
             except Exception as ex:
-                self.messagebox.err(f"Failed to delete previous measurement set: {str(ex)}")
+                self.messagebox.err(
+                    f"Failed to delete previous measurement set: {str(ex)}")
                 return
 
         # Save the new data
@@ -688,11 +713,12 @@ class MeasurementModule:
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
         row_count: int = view.rowCount()
         if row_count < 3:
-            return # Too few measurements to draw a plot
+            return  # Too few measurements to draw a plot
         data = []
         for row in range(row_count):
             if self.__mode == MeasurementModeEnum.DEFAULT:
-                tension_item: QTableWidgetItem | None = view.verticalHeaderItem(row)
+                tension_item: QTableWidgetItem | None = \
+                    view.verticalHeaderItem(row)
                 deflection_item: QTableWidgetItem | None = view.item(row, 0)
             else:
                 tension_item: QTableWidgetItem | None = view.item(row, 0)
@@ -748,4 +774,3 @@ class MeasurementModule:
         if self.ui.radioButtonFitPowerLaw.isChecked():
             return FitType.POWER_LAW, "Power law"
         return FitType.LINEAR, "Linear"
-

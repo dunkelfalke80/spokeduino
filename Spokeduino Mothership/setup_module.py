@@ -11,6 +11,7 @@ from database_module import DatabaseModule
 from sql_queries import SQLQueries
 from ui import Ui_mainWindow
 
+
 class SetupModule:
 
     def __init__(self,
@@ -145,9 +146,12 @@ class SetupModule:
                 self.ui.radioButtonLbF.setChecked(True)
 
         # Load measurement type
-        measurement_custom: str = settings_dict.get("measaurement_custom", "0")
-        self.ui.radioButtonMeasurementDefault.setChecked(measurement_custom == "0")
-        self.ui.radioButtonMeasurementCustom.setChecked(measurement_custom == "1")
+        measurement_custom: str = settings_dict.get(
+            "measaurement_custom", "0")
+        self.ui.radioButtonMeasurementDefault.setChecked(
+            measurement_custom == "0")
+        self.ui.radioButtonMeasurementCustom.setChecked(
+            measurement_custom == "1")
         self.ui.pushButtonMultipleTensiometers.setEnabled(
             self.ui.radioButtonMeasurementDefault.isChecked())
 

@@ -1,9 +1,9 @@
-from typing import Any
 from enum import Enum
 from ui import Ui_mainWindow
 
+
 class UnitEnum(Enum):
-    NEWTON  = "Newton"
+    NEWTON = "Newton"
     KGF = "kgF"
     LBF = "lbF"
 
@@ -16,7 +16,9 @@ class UnitModule:
         self.ui: Ui_mainWindow = ui
 
     @staticmethod
-    def convert_units(value: float, source: UnitEnum) -> tuple[float, float, float]:
+    def convert_units(
+            value: float,
+            source: UnitEnum) -> tuple[float, float, float]:
         """
         Convert units
         :param value: The value to be converted.

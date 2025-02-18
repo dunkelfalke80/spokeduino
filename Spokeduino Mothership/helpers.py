@@ -18,10 +18,10 @@ class Messagebox:
 
     def err(self, text: str) -> None:
         QMessageBox.critical(self.main_window,
-                            "Error",
-                            text,
-                            QMessageBox.StandardButton.Discard,
-                            QMessageBox.StandardButton.Discard)
+                             "Error",
+                             text,
+                             QMessageBox.StandardButton.Discard,
+                             QMessageBox.StandardButton.Discard)
 
 
 class TextChecker:

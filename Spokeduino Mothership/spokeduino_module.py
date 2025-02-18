@@ -11,8 +11,9 @@ from helpers import Messagebox
 from sql_queries import SQLQueries
 from ui import Ui_mainWindow
 
+
 class SpokeduinoState(Enum):
-    WAITING  = 1
+    WAITING = 1
     MEASURING = 2
     TENSIONING = 3
 
@@ -50,7 +51,8 @@ class SpokeduinoModule:
         try:
             if self.get_spokeduino_enabled():
                 self.close_serial_port()
-                self.update_spokeduino_state(self.first_start, self.first_start)
+                self.update_spokeduino_state(
+                    self.first_start, self.first_start)
                 if self.first_start:
                     self.first_start = False
                 self.reinitialize_serial_port()
@@ -97,7 +99,7 @@ class SpokeduinoModule:
         """
         new_state = self.ui.checkBoxSpokeduinoEnabled.isChecked()
         if force or current_state != new_state:
-                self.setup_module.save_setting(
+            self.setup_module.save_setting(
                     key="spokeduino_enabled",
                     value="1" if new_state
                     else "0"
@@ -191,8 +193,10 @@ class SpokeduinoModule:
                 try:
                     table = self.ui.tableWidgetMeasurements
                     item = QTableWidgetItem(str(data))
-                    item.setFlags(Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
-                    table.setItem(table.currentRow(), table.currentColumn(), item)
+                    item.setFlags(
+                        Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
+                    table.setItem(
+                        table.currentRow(), table.currentColumn(), item)
                 except ValueError:
                     print(f"Invalid measurement data: {data}")
             case SpokeduinoState.TENSIONING:

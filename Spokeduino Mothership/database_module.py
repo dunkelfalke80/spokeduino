@@ -72,7 +72,9 @@ class DatabaseModule:
         except (sqlite3.Error, IOError) as e:
             logging.error(f"Failed to recreate the database: {e}")
 
-    def execute_select(self, query: str, params: tuple | list[Any] | None) -> list[Any]:
+    def execute_select(self,
+                       query: str,
+                       params: tuple | list[Any] | None) -> list[Any]:
         """
         Execute a SELECT query and return all results.
         """
@@ -86,7 +88,7 @@ class DatabaseModule:
                     cursor.execute(query, params)
                 return cursor.fetchall()
         except sqlite3.Error as e:
-            logging.error(f"{self._get_line_info()}: " \
+            logging.error(f"{self._get_line_info()}: "
                           f"SQL error: {e}\nQuery: {query}")
             return []
 
@@ -103,7 +105,7 @@ class DatabaseModule:
                 self.db_changed = True
                 return cursor.lastrowid
         except sqlite3.Error as e:
-            logging.error(f"{self._get_line_info()}: " \
+            logging.error(f"{self._get_line_info()}: "
                           f"SQL error: {e}\nQuery: {query}")
             return None
 

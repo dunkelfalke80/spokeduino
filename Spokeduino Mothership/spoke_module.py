@@ -56,7 +56,8 @@ class SpokeModule:
             self.ui.lineEditSpokeComment.setText(str(spoke[5]))
             self.main_window.status_label_spoke.setText(
                 f"{self.ui.comboBoxManufacturer.currentText()} "
-                f"{self.ui.lineEditName.text()} {self.ui.lineEditDimension.text()}")
+                f"{self.ui.lineEditName.text()} "
+                f"{self.ui.lineEditDimension.text()}")
         else:
             self.clear_spoke_details()
 
@@ -164,7 +165,7 @@ class SpokeModule:
         for row_idx, (spoke_id, spoke_data) in enumerate(self.current_spokes):
             for col_idx, cell_data in enumerate(spoke_data):
                 item = QTableWidgetItem(str(cell_data))
-                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Read-only
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 if col_idx == 0:  # Store the spoke ID in the first column
                     item.setData(Qt.ItemDataRole.UserRole, spoke_id)
                 view.setItem(row_idx, col_idx, item)
@@ -189,8 +190,8 @@ class SpokeModule:
         self.load_spoke_details()
         self.toggle_spoke_related_buttons()
         # Delay to ensure Qt's focus/selection state is updated
-        QTimer.singleShot(50,
-            self.align_filters_with_table)
+        QTimer.singleShot(
+            50, self.align_filters_with_table)
         view.setFocus()
 
     def populate_filter_type(self) -> None:
@@ -244,7 +245,7 @@ class SpokeModule:
         for row_idx, (spoke_id, spoke_data) in enumerate(filtered_spokes):
             for col_idx, cell_data in enumerate(spoke_data):
                 item = QTableWidgetItem(str(cell_data))
-                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # Make read-only
+                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                 if col_idx == 0:  # Store the spoke ID in the first column
                     item.setData(Qt.ItemDataRole.UserRole, spoke_id)
                 view.setItem(row_idx, col_idx, item)
@@ -348,7 +349,8 @@ class SpokeModule:
         """
         Insert a new spoke into the spokes table for the selected manufacturer.
         """
-        manufacturer_id: int | None = self.ui.comboBoxManufacturer.currentData()
+        manufacturer_id: int | None = \
+            self.ui.comboBoxManufacturer.currentData()
 
         if manufacturer_id is None:
             return
@@ -422,4 +424,5 @@ class SpokeModule:
             current_measurement_row >= 0)
         self.ui.measurementTab.setEnabled(current_spoke_row >= 0)
         self.ui.pushButtonNewMeasurement.setEnabled(current_spoke_row >= 0)
-        self.ui.pushButtonEditMeasurement.setEnabled(current_measurement_row >= 0)
+        self.ui.pushButtonEditMeasurement.setEnabled(
+            current_measurement_row >= 0)

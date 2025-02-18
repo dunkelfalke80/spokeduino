@@ -1,5 +1,4 @@
 import numpy as np
-import inspect
 from typing import TYPE_CHECKING, Any
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QTimer
@@ -72,10 +71,12 @@ class TensioningModule:
         self.__unit = self.unit_module.get_unit()
         # Select the appropriate UI elements
         if is_left:
-            line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountLeft
+            line_edit_spoke_amount: QLineEdit = \
+                self.ui.lineEditSpokeAmountLeft
             view: CustomTableWidget = self.ui.tableWidgetTensioningLeft
         else:
-            line_edit_spoke_amount: QLineEdit = self.ui.lineEditSpokeAmountRight
+            line_edit_spoke_amount: QLineEdit = \
+                self.ui.lineEditSpokeAmountRight
             view: CustomTableWidget = self.ui.tableWidgetTensioningRight
 
         # Get spoke amount and target tension
@@ -110,7 +111,8 @@ class TensioningModule:
         for row in range(spoke_amount):
             # Create editable cell for "mm" column
             mm_item = NumericTableWidgetItem("")
-            mm_item.setFlags(Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
+            mm_item.setFlags(
+                Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
             view.setItem(row, 0, mm_item)
 
             # Create non-editable cell for tension column
@@ -119,14 +121,16 @@ class TensioningModule:
             view.setItem(row, 1, tension_item)
 
         # Resize columns to fit within the table
-        view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        view.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.Stretch)
         view.resize_table_font()
         view_enabled: bool = (
             self.__spoke_amount_left > 0 and
             self.__spoke_amount_right > 0)
         self.set_tension(is_left)
 
-        self.chart.init_radar_plot(plot_widget=self.canvas.plot_widget, clockwise=True)
+        self.chart.init_radar_plot(
+            plot_widget=self.canvas.plot_widget, clockwise=True)
         if view_enabled:
             # Draw the empty radar plot
             self.chart.draw_radar_plot(
@@ -183,7 +187,7 @@ class TensioningModule:
 
     def start_tensioning(self) -> None:
         if self.ui.tableWidgetTensioningLeft.isEnabled() and \
-            self.ui.tableWidgetTensioningLeft.isEnabled():
+         self.ui.tableWidgetTensioningLeft.isEnabled():
             self.ui.pushButtonStartTensioning.setText("Start")
             self.ui.tableWidgetTensioningLeft.setEnabled(False)
             self.ui.tableWidgetTensioningRight.setEnabled(False)
@@ -194,19 +198,22 @@ class TensioningModule:
         self.ui.tableWidgetTensioningRight.setEnabled(True)
 
         if self.ui.radioButtonLeftRight.isChecked():
-            QTimer.singleShot(50,
-                lambda: self.ui.tableWidgetTensioningLeft.move_to_specific_cell(
+            QTimer.singleShot(
+                50,
+                lambda: self.ui.tableWidgetTensioningLeft.move_to_cell(
                     row=0,
                     column=0))
         # Starting on the left
         elif self.ui.radioButtonRightLeft.isChecked():
-            QTimer.singleShot(50,
-                lambda: self.ui.tableWidgetTensioningRight.move_to_specific_cell(
+            QTimer.singleShot(
+                50,
+                lambda: self.ui.tableWidgetTensioningRight.move_to_cell(
                     row=0,
                     column=0))
         else:  # Starting and staying on the right until the side is finished
-            QTimer.singleShot(50,
-                lambda: self.ui.tableWidgetTensioningRight.move_to_specific_cell(
+            QTimer.singleShot(
+                50,
+                lambda: self.ui.tableWidgetTensioningRight.move_to_cell(
                     row=0,
                     column=0))
 
@@ -232,7 +239,7 @@ class TensioningModule:
         other_count: int = other_view.rowCount()
 
         if self.__left_right:
-            if other_row == other_count -1:
+            if other_row == other_count - 1:
                 this_row = 0
             else:
                 this_row = other_row + 1
@@ -246,9 +253,9 @@ class TensioningModule:
 
         QTimer.singleShot(
             50,
-            lambda: other_view.move_to_specific_cell(
-            row=this_row,
-            column=0))
+            lambda: other_view.move_to_cell(
+                row=this_row,
+                column=0))
 
     def previous_cell_callback_left(self) -> None:
         self.previous_cell_callback(is_left=True)
@@ -289,9 +296,13 @@ class TensioningModule:
             deflection: float = 0.0
 
         if is_left:
-            tension: float = self.calculate_tension(fit_model=self.__fit_left, deflection=deflection)
+            tension: float = self.calculate_tension(
+                fit_model=self.__fit_left,
+                deflection=deflection)
         else:
-            tension: float = self.calculate_tension(fit_model=self.__fit_right, deflection=deflection)
+            tension: float = self.calculate_tension(
+                fit_model=self.__fit_right,
+                deflection=deflection)
 
         _, kgf, lbf = self.unit_module.convert_units(
             value=tension,
@@ -322,11 +333,11 @@ class TensioningModule:
             self.__tensions_right[spoke_no - 1] = tension
         self.plot_spoke_tensions()
 
-
     def use_spoke(self, is_left: bool) -> None:
         """
         Write the selected spoke details to plainTextEditSelectedSpoke
-        and save the formula for the spoke based on the selected or first measurement.
+        and save the formula for the spoke based
+        on the selected or first measurement.
         """
         view: QTableWidget = self.ui.tableWidgetSpokesDatabase
         spoke_id: int = Generics.get_selected_row_id(view)
@@ -360,11 +371,13 @@ class TensioningModule:
 
         if is_left:
             self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
-            self.main_window.status_label_spoke_left.setText(f"<- {spoke_name} {self.ui.lineEditDimension.text()}")
+            self.main_window.status_label_spoke_left.setText(
+                f"<- {spoke_name} {self.ui.lineEditDimension.text()}")
             self.__fit_left = fit_model
         else:
             self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
-            self.main_window.status_label_spoke_right.setText(f"{spoke_name} {self.ui.lineEditDimension.text()} ->")
+            self.main_window.status_label_spoke_right.setText(
+                f"{spoke_name} {self.ui.lineEditDimension.text()} ->")
             self.__fit_right = fit_model
 
         if self.__fit_left is not None and self.__fit_right is not None:

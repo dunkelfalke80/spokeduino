@@ -45,7 +45,8 @@ class NumericTableWidgetItem(QTableWidgetItem):
         else:
             # Both have no UserRole, compare text
             try:
-                return float(self.text().replace(",", ".")) < float(other.text().replace(",", "."))
+                return float(self.text().replace(",", ".")) \
+                    < float(other.text().replace(",", "."))
             except ValueError:
                 # If either text is non-numeric, fall back to string comparison
                 return self.text() < other.text()
@@ -58,11 +59,10 @@ class CustomTableWidget(QTableWidget):
     """
     onCellChanged = Signal(int, int, str)  # row, column, value
 
-    def __init__(self,
-                 move_to_next_cell_callback:
-                    Callable[[bool], None] | None = None,
-                 move_to_previous_cell_callback:
-                    Callable[[], None] | None = None,
+    def __init__(self, move_to_next_cell_callback: Callable[[bool], None] |
+                 None = None,
+                 move_to_previous_cell_callback: Callable[[], None] |
+                 None = None,
                  *args,
                  **kwargs) -> None:
         """
@@ -110,7 +110,7 @@ class CustomTableWidget(QTableWidget):
         self.onCellChanged.emit(self.currentRow(), self.currentColumn(), value)
         if (self.__stop_sorting_enabled
             and self.__old_sorting_enabled
-            and self.currentColumn() < self.columnCount() - 1):
+                and self.currentColumn() < self.columnCount() - 1):
             self.setSortingEnabled(False)
 
     @override
@@ -118,8 +118,8 @@ class CustomTableWidget(QTableWidget):
         """
         Handle key press events.
 
-        Supports Enter/Return for moving to the next cell and Ctrl+V/Shift+Insert
-        for pasting clipboard data.
+        Supports Enter/Return for moving to the next cell
+        and Ctrl+V/Shift+Insert for pasting clipboard data.
 
         :param event: The key press event to handle.
         """
@@ -131,7 +131,8 @@ class CustomTableWidget(QTableWidget):
             super().keyPressEvent(event)
             self.move_to_next_cell(False)
             if self.__stop_sorting_enabled and self.__old_sorting_enabled:
-                self.setSortingEnabled(self.currentColumn() == self.columnCount() - 1)
+                self.setSortingEnabled(
+                    self.currentColumn() == self.columnCount() - 1)
         else:
             super().keyPressEvent(event)
 
@@ -140,27 +141,28 @@ class CustomTableWidget(QTableWidget):
         self.__old_sorting_enabled = self.isSortingEnabled()
 
     def paste_row(self) -> None:
-            """
-            Paste data from the clipboard into the currently selected column,
-            starting at the selected cell. If the clipboard data is multi-line,
-            automatically moves to next cell for each line, wrapping around columns
-            if required.
-            """
-            clipboard: QClipboard = QApplication.clipboard()
-            clipboard_data: str = clipboard.text()
+        """
+        Paste data from the clipboard into the currently selected column,
+        starting at the selected cell. If the clipboard data is multi-line,
+        automatically moves to next cell for each line, wrapping around columns
+        if required.
+        """
+        clipboard: QClipboard = QApplication.clipboard()
+        clipboard_data: str = clipboard.text()
 
-            # Split clipboard data into individual rows
-            rows: list[str] = clipboard_data.strip().split("\n")
-            for entry in rows:
-                text: str = TextChecker.check_text(entry, True)
-                if text in ["", ","]:
-                    continue
-                self.currentItem().setText(entry)
-                self.move_to_next_cell(True)
+        # Split clipboard data into individual rows
+        rows: list[str] = clipboard_data.strip().split("\n")
+        for entry in rows:
+            text: str = TextChecker.check_text(entry, True)
+            if text in ["", ","]:
+                continue
+            self.currentItem().setText(entry)
+            self.move_to_next_cell(True)
 
     def refocus(self, zero: bool) -> None:
         """
-        Refocus the table, either on the first cell or the currently active cell.
+        Refocus the table, either on the first cell
+        or the currently active cell.
 
         :param zero: If True, refocus on the first cell (0, 0).
                      Otherwise, refocus on the currently active cell.
@@ -172,7 +174,7 @@ class CustomTableWidget(QTableWidget):
             return
         item.setSelected(True)
 
-    def move_to_specific_cell(self, row: int, column: int) -> None:
+    def move_to_cell(self, row: int, column: int) -> None:
         """
         Move focus to a specific cell and activate editing.
 
@@ -210,11 +212,11 @@ class CustomTableWidget(QTableWidget):
 
         # Delay to ensure Qt's focus/selection state is updated
         if no_delay:
-            self.move_to_specific_cell(row, column)
+            self.move_to_cell(row, column)
         else:
             QTimer.singleShot(50,
-                lambda: self.move_to_specific_cell(
-                    row=row, column=column))
+                              lambda: self.move_to_cell(
+                                row=row, column=column))
 
     def __move_to_previous_cell_default(self) -> None:
         """
@@ -235,9 +237,9 @@ class CustomTableWidget(QTableWidget):
 
         # Delay to ensure Qt's focus/selection state is updated
         QTimer.singleShot(50,
-                lambda: self.move_to_specific_cell(
-                row=row,
-                column=column))
+                          lambda: self.move_to_cell(
+                           row=row,
+                           column=column))
 
     def resize_table_font(self) -> None:
         """
@@ -288,7 +290,8 @@ class CustomDoubleValidator(QDoubleValidator):
     """
     def __init__(self, parent: QObject | None) -> None:
         super().__init__(parent)
-        self.__parent_table: CustomTableWidget = cast(CustomTableWidget, parent)
+        self.__parent_table: CustomTableWidget = cast(
+            CustomTableWidget, parent)
 
     @override
     def validate(self, arg__1, arg__2):
@@ -321,7 +324,8 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
     """
     def __init__(self, parent: QObject) -> None:
         super().__init__(parent)
-        self.__parent_table: CustomTableWidget = cast(CustomTableWidget, parent)
+        self.__parent_table: CustomTableWidget = cast(
+            CustomTableWidget, parent)
 
     def createEditor(self,
                      parent: QWidget,
@@ -365,9 +369,9 @@ class CustomTableWidgetItemDelegate(QStyledItemDelegate):
 
     @override
     def setModelData(self,
-                    editor: QWidget,
-                    model: QAbstractItemModel,
-                    index: QModelIndex | QPersistentModelIndex) -> None:
+                     editor: QWidget,
+                     model: QAbstractItemModel,
+                     index: QModelIndex | QPersistentModelIndex) -> None:
         """
         Finalize editing by setting the data in the model.
         Removes trailing decimal separators before saving.

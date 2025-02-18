@@ -1,9 +1,9 @@
 import numpy as np
 from enum import Enum
 from typing import Any, cast
-from numpy.polynomial.chebyshev import Chebyshev
 from scipy.interpolate import CubicSpline
 from scipy.optimize import curve_fit, brentq
+
 
 class FitType(Enum):
     """
@@ -17,7 +17,6 @@ class FitType(Enum):
     EXPONENTIAL = 6    # y = a * exp(b * x)
     LOGARITHMIC = 7    # y = a + b * ln(x)
     POWER_LAW = 8      # y = a * x^b
-    CHEBYSHEV = 9      # Chebyshev polynomial (converted to standard poly)
 
 
 class TensionDeflectionFitter:
@@ -39,16 +38,16 @@ class TensionDeflectionFitter:
         """
         self.extrapolation_factor = extrapolation_factor
 
-
-    def fit_data(self, data: list[tuple[float, float]], fit_type: FitType) -> dict:
+    def fit_data(self,
+                 data: list[tuple[float, float]], fit_type: FitType) -> dict:
         """
         Fit the provided tension–deflection data with the given model type.
 
         :param data:
-            A list of (tension, deflection) pairs, e.g. [(12.0, 0.3), (50.0, 0.8), ...].
+            A list of (tension, deflection) pairs
         :type data: list[tuple[float, float]]
         :param fit_type:
-            The type of model to use for fitting (e.g. FitType.LINEAR, FitType.SPLINE).
+            The type of model to use for fitting
         :type fit_type: FitType
         :return:
             A dictionary encapsulating the fitted model and metadata:
@@ -64,7 +63,8 @@ class TensionDeflectionFitter:
         :rtype: dict
         """
         # Sort by ascending tension for internal consistency
-        data_sorted: list[tuple[float, float]] = sorted(data, key=lambda x: x[0])
+        data_sorted: list[tuple[float, float]] = sorted(
+            data, key=lambda x: x[0])
         tensions = np.array([pt[0] for pt in data_sorted], dtype=float)
         deflections = np.array([pt[1] for pt in data_sorted], dtype=float)
 
@@ -84,9 +84,9 @@ class TensionDeflectionFitter:
         }
 
         match fit_type:
-            case (FitType.LINEAR|
-                  FitType.QUADRATIC|
-                  FitType.CUBIC|
+            case (FitType.LINEAR |
+                  FitType.QUADRATIC |
+                  FitType.CUBIC |
                   FitType.QUARTIC):
                 # np.polyfit => standard polynomial coefficients
                 coefs = np.polyfit(tensions, deflections, fit_type.value)
@@ -120,25 +120,12 @@ class TensionDeflectionFitter:
                 a = np.exp(log_a)
                 fit_model["model"] = (a, b)
 
-            case FitType.CHEBYSHEV:
-                # Chebyshev polynomial fit,
-                # then convert to standard polynomial
-                # Map tension from [t_min, t_max] -> [-1, 1]
-                normalized_t = 2.0 * (tensions - t_min) / (t_max - t_min) - 1.0
-                # We'll assume a cubic Chebyshev.
-                # If you want a different degree, you can parameterize that.
-                cheb_poly = Chebyshev.fit(normalized_t, deflections, FitType.CUBIC.value)
-                poly_converted = cheb_poly.convert().coef
-                fit_model["model"] = poly_converted
-                fit_model["scaling_params"] = (t_min, t_max)
-
             case _:
                 raise ValueError(f"Unsupported FitType: {fit_type}")
-
         return fit_model
 
-
-    def calculate_tension(self, fit_model: dict, deflection: float) -> float | None:
+    def calculate_tension(self,
+                          fit_model: dict, deflection: float) -> float | None:
         """
         Given a fitted model (from fit_data) and a desired deflection,
         return the predicted tension. Extrapolates beyond the deflection
@@ -175,9 +162,9 @@ class TensionDeflectionFitter:
 
         match fit_type:
             # Polynomial models (LINEAR, QUADRATIC, CUBIC, QUARTIC)
-            case (FitType.LINEAR|
-                  FitType.QUADRATIC|
-                  FitType.CUBIC|
+            case (FitType.LINEAR |
+                  FitType.QUADRATIC |
+                  FitType.CUBIC |
                   FitType.QUARTIC):
                 coefs = model  # np.polyfit(...) => array of coefficients
                 poly = np.poly1d(coefs) - deflection
@@ -188,8 +175,13 @@ class TensionDeflectionFitter:
                 t_upper = t_max + self.extrapolation_factor * t_range
 
                 # Filter real solutions in [t_lower, t_upper]
-                real_candidates = [r.real for r in roots if abs(r.imag) < 1e-14]
-                valid_tensions = [t for t in real_candidates if t_lower <= t <= t_upper]
+                real_candidates = [r.real
+                                   for r in roots
+                                   if abs(r.imag) < 1e-14]
+                valid_tensions = [t
+                                  for t
+                                  in real_candidates
+                                  if t_lower <= t <= t_upper]
 
                 if valid_tensions:
                     # If multiple are valid, pick the first
@@ -277,26 +269,5 @@ class TensionDeflectionFitter:
                     return tension
                 else:
                     return None
-
-            # Chebyshev polynomial
-            case FitType.CHEBYSHEV:
-                coefs = model  # standard polynomial coefficients
-                scaling_params = fit_model["scaling_params"]
-                if scaling_params is None:
-                    return None
-
-                poly = np.poly1d(coefs) - deflection
-                orig_t_min, orig_t_max = scaling_params
-
-                t_range = orig_t_max - orig_t_min
-                t_lower = orig_t_min - self.extrapolation_factor * t_range
-                t_upper = orig_t_max + self.extrapolation_factor * t_range
-
-                roots = np.roots(poly)
-                real_candidates = [r.real for r in roots if abs(r.imag) < 1e-14]
-                valid_tensions = [t for t in real_candidates if t_lower <= t <= t_upper]
-
-                return valid_tensions[0] if valid_tensions else None
-
             case _:
                 return None
