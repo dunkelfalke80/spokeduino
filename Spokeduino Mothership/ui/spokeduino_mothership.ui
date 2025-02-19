@@ -707,8 +707,23 @@
            <string>Rims</string>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="3,1">
+           <property name="spacing">
+            <number>3</number>
+           </property>
+           <property name="leftMargin">
+            <number>6</number>
+           </property>
+           <property name="topMargin">
+            <number>6</number>
+           </property>
+           <property name="rightMargin">
+            <number>6</number>
+           </property>
+           <property name="bottomMargin">
+            <number>6</number>
+           </property>
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,1,0,10">
+            <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,0,10">
              <item>
               <widget class="QGroupBox" name="groupBoxRimManufacturer">
                <property name="title">
@@ -759,22 +774,69 @@
               </widget>
              </item>
              <item>
-              <spacer name="verticalSpacer_3">
-               <property name="orientation">
-                <enum>Qt::Orientation::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="horizontalLayoutFilterRim" stretch="0,0,0">
+              <layout class="QHBoxLayout" name="horizontalLayoutFilterRim" stretch="0,0,0,0,0,0,0,0">
+               <item>
+                <widget class="QComboBox" name="comboBoxRimFilter">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="lineEditRimFilterDiameterMetric">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="lineEditRimFilterDiameterInch">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="lineEditRimFilterDiameterWidth">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                </widget>
+               </item>
                <item>
                 <widget class="QLineEdit" name="lineEditRimFilterName">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="lineEditRimFilterWeight">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="lineEditRimFilterERD">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                    <horstretch>0</horstretch>
@@ -796,16 +858,6 @@
                  </property>
                 </spacer>
                </item>
-               <item>
-                <widget class="QComboBox" name="comboBoxRimFilter">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                </widget>
-               </item>
               </layout>
              </item>
              <item>
@@ -826,6 +878,21 @@
               <string>Rim</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayoutSelectSpokeConfigWheel">
+              <property name="spacing">
+               <number>3</number>
+              </property>
+              <property name="leftMargin">
+               <number>6</number>
+              </property>
+              <property name="topMargin">
+               <number>6</number>
+              </property>
+              <property name="rightMargin">
+               <number>6</number>
+              </property>
+              <property name="bottomMargin">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QGroupBox" name="groupBoxRimName">
                 <property name="enabled">
@@ -835,6 +902,21 @@
                  <string>Name</string>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayoutEditNewSpokeName_2">
+                 <property name="spacing">
+                  <number>3</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>6</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>6</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>6</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>6</number>
+                 </property>
                  <item>
                   <widget class="QLineEdit" name="lineEditRimName">
                    <property name="sizePolicy">
@@ -849,7 +931,10 @@
                </widget>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayoutSpokeDefinitionsConfigWheel" stretch="0,0,0">
+               <layout class="QHBoxLayout" name="horizontalLayoutRimConfigTop" stretch="3,1,1">
+                <property name="spacing">
+                 <number>3</number>
+                </property>
                 <item>
                  <widget class="QGroupBox" name="groupBoxRimType">
                   <property name="sizePolicy">
@@ -882,17 +967,29 @@
                  </widget>
                 </item>
                 <item>
-                 <spacer name="horizontalSpacerTypeConfigWheel">
-                  <property name="orientation">
-                   <enum>Qt::Orientation::Horizontal</enum>
+                 <widget class="QGroupBox" name="groupBoxRimERD">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
                   </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
+                  <property name="title">
+                   <string>ERD</string>
                   </property>
-                 </spacer>
+                  <layout class="QVBoxLayout" name="verticalLayoutWeightConfigWheel_3">
+                   <item>
+                    <widget class="QLineEdit" name="lineEditRimERD">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
                 </item>
                 <item>
                  <widget class="QGroupBox" name="groupBoxRimWeight">
@@ -907,7 +1004,7 @@
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayoutWeightConfigWheel">
                    <item>
-                    <widget class="QLineEdit" name="lineEditWeight_2">
+                    <widget class="QLineEdit" name="lineEditRimWeight">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                        <horstretch>0</horstretch>
@@ -922,42 +1019,58 @@
                </layout>
               </item>
               <item>
-               <widget class="QGroupBox" name="groupBoxRimDimension">
-                <property name="title">
-                 <string>Dimension</string>
+               <layout class="QHBoxLayout" name="horizontalLayoutHubConfigBottom" stretch="1,3">
+                <property name="spacing">
+                 <number>3</number>
                 </property>
-                <layout class="QVBoxLayout" name="verticalLayoutDimension_2">
-                 <item>
-                  <widget class="QLineEdit" name="lineEditRimDimension">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="groupBoxRimComment">
-                <property name="title">
-                 <string>Comment</string>
-                </property>
-                <layout class="QVBoxLayout" name="verticalLayoutCommentConfigWheel">
-                 <item>
-                  <widget class="QLineEdit" name="lineEditRimComment">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
+                <item>
+                 <widget class="QGroupBox" name="groupBoxRimETRTO">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="title">
+                   <string>ETRTO (xx-xxx)</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayoutTypeConfigWheel_3">
+                   <item>
+                    <widget class="QLineEdit" name="lineEditRimETRTO">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                     <property name="text">
+                      <string/>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QGroupBox" name="groupBoxRimComment">
+                  <property name="title">
+                   <string>Comment</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayoutCommentConfigWheel">
+                   <item>
+                    <widget class="QLineEdit" name="lineEditRimComment">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
                <spacer name="verticalSpacer_4">
@@ -1047,28 +1160,30 @@
          </widget>
         </item>
         <item>
-         <spacer name="verticalSpacer_6">
-          <property name="orientation">
-           <enum>Qt::Orientation::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>274</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QGroupBox" name="groupBoxRims_2">
+         <widget class="QGroupBox" name="groupBoxHubs">
           <property name="title">
-           <string>Rims</string>
+           <string>Hubs</string>
           </property>
           <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="3,1">
+           <property name="spacing">
+            <number>3</number>
+           </property>
+           <property name="leftMargin">
+            <number>6</number>
+           </property>
+           <property name="topMargin">
+            <number>6</number>
+           </property>
+           <property name="rightMargin">
+            <number>6</number>
+           </property>
+           <property name="bottomMargin">
+            <number>6</number>
+           </property>
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_9" stretch="1,1,0,10">
+            <layout class="QVBoxLayout" name="verticalLayout_9" stretch="1,0,10">
              <item>
-              <widget class="QGroupBox" name="groupBoxRimManufacturer_4">
+              <widget class="QGroupBox" name="groupBoxHubManufacturer">
                <property name="title">
                 <string>Manufacturer</string>
                </property>
@@ -1076,7 +1191,7 @@
                 <item>
                  <layout class="QHBoxLayout" name="horizontalLayoutFilterRim_5" stretch="0,0,0">
                   <item>
-                   <widget class="QComboBox" name="comboBoxRimManufacturer_4">
+                   <widget class="QComboBox" name="comboBoxHubManufacturer">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
                       <horstretch>0</horstretch>
@@ -1086,7 +1201,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QLineEdit" name="lineEditNewRimManufacturer_4">
+                   <widget class="QLineEdit" name="lineEditNewHubManufacturer">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                       <horstretch>0</horstretch>
@@ -1096,7 +1211,7 @@
                    </widget>
                   </item>
                   <item>
-                   <widget class="QPushButton" name="pushButtonSaveAsRimManufacturer_4">
+                   <widget class="QPushButton" name="pushButtonSaveAsHubManufacturer">
                     <property name="sizePolicy">
                      <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
                       <horstretch>0</horstretch>
@@ -1117,22 +1232,19 @@
               </widget>
              </item>
              <item>
-              <spacer name="verticalSpacer_9">
-               <property name="orientation">
-                <enum>Qt::Orientation::Vertical</enum>
-               </property>
-               <property name="sizeHint" stdset="0">
-                <size>
-                 <width>20</width>
-                 <height>40</height>
-                </size>
-               </property>
-              </spacer>
-             </item>
-             <item>
               <layout class="QHBoxLayout" name="horizontalLayoutFilterRim_6" stretch="0,0,0">
                <item>
-                <widget class="QLineEdit" name="lineEditRimFilterName_4">
+                <widget class="QComboBox" name="comboBoxHubFilterType">
+                 <property name="sizePolicy">
+                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                   <horstretch>0</horstretch>
+                   <verstretch>0</verstretch>
+                  </sizepolicy>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLineEdit" name="lineEditHubFilterName">
                  <property name="sizePolicy">
                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                    <horstretch>0</horstretch>
@@ -1154,16 +1266,6 @@
                  </property>
                 </spacer>
                </item>
-               <item>
-                <widget class="QComboBox" name="comboBoxRimFilter_4">
-                 <property name="sizePolicy">
-                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                   <horstretch>0</horstretch>
-                   <verstretch>0</verstretch>
-                  </sizepolicy>
-                 </property>
-                </widget>
-               </item>
               </layout>
              </item>
              <item>
@@ -1179,11 +1281,26 @@
             </layout>
            </item>
            <item>
-            <widget class="QGroupBox" name="groupBoxRimData_4">
+            <widget class="QGroupBox" name="groupBoxHubData">
              <property name="title">
-              <string>Rim</string>
+              <string>Hub</string>
              </property>
              <layout class="QVBoxLayout" name="verticalLayoutSelectSpokeConfigWheel_4">
+              <property name="spacing">
+               <number>3</number>
+              </property>
+              <property name="leftMargin">
+               <number>6</number>
+              </property>
+              <property name="topMargin">
+               <number>6</number>
+              </property>
+              <property name="rightMargin">
+               <number>6</number>
+              </property>
+              <property name="bottomMargin">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QGroupBox" name="groupBoxRimName_4">
                 <property name="enabled">
@@ -1207,9 +1324,12 @@
                </widget>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayoutSpokeDefinitionsConfigWheel_4" stretch="0,0,0">
+               <layout class="QHBoxLayout" name="horizontalLayoutHubConfigTop" stretch="0,0,0">
+                <property name="spacing">
+                 <number>3</number>
+                </property>
                 <item>
-                 <widget class="QGroupBox" name="groupBoxRimType_4">
+                 <widget class="QGroupBox" name="groupBoxHubType">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                     <horstretch>0</horstretch>
@@ -1227,7 +1347,7 @@
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayoutTypeConfigWheel_4">
                    <item>
-                    <widget class="QComboBox" name="comboBoxRimType_4">
+                    <widget class="QComboBox" name="comboBoxHubType">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="MinimumExpanding" vsizetype="Maximum">
                        <horstretch>0</horstretch>
@@ -1240,20 +1360,32 @@
                  </widget>
                 </item>
                 <item>
-                 <spacer name="horizontalSpacerTypeConfigWheel_4">
-                  <property name="orientation">
-                   <enum>Qt::Orientation::Horizontal</enum>
+                 <widget class="QGroupBox" name="groupBoxHubOLD">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
                   </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
+                  <property name="title">
+                   <string>OLD</string>
                   </property>
-                 </spacer>
+                  <layout class="QVBoxLayout" name="verticalLayoutWeightConfigWheel_7">
+                   <item>
+                    <widget class="QLineEdit" name="lineEditHubOLD">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
                 </item>
                 <item>
-                 <widget class="QGroupBox" name="groupBoxRimWeight_4">
+                 <widget class="QGroupBox" name="groupBoxHubWeight">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                     <horstretch>0</horstretch>
@@ -1265,7 +1397,7 @@
                   </property>
                   <layout class="QVBoxLayout" name="verticalLayoutWeightConfigWheel_4">
                    <item>
-                    <widget class="QLineEdit" name="lineEditWeight_5">
+                    <widget class="QLineEdit" name="lineEditHubWeight">
                      <property name="sizePolicy">
                       <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                        <horstretch>0</horstretch>
@@ -1280,32 +1412,70 @@
                </layout>
               </item>
               <item>
-               <widget class="QGroupBox" name="groupBoxRimDimension_4">
-                <property name="title">
-                 <string>Dimension</string>
+               <layout class="QHBoxLayout" name="horizontalLayoutHubConfigTop_2" stretch="0,0">
+                <property name="spacing">
+                 <number>3</number>
                 </property>
-                <layout class="QVBoxLayout" name="verticalLayoutDimension_5">
-                 <item>
-                  <widget class="QLineEdit" name="lineEditRimDimension_4">
-                   <property name="sizePolicy">
-                    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                     <horstretch>0</horstretch>
-                     <verstretch>0</verstretch>
-                    </sizepolicy>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
+                <item>
+                 <widget class="QGroupBox" name="groupBoxHubPCDLeft">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="title">
+                   <string>PCD left</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayoutWeightConfigWheel_8">
+                   <item>
+                    <widget class="QLineEdit" name="lineEditHubPCDLeft">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QGroupBox" name="groupBoxHubWeight_2">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="title">
+                   <string>Weight</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayoutWeightConfigWheel_9">
+                   <item>
+                    <widget class="QLineEdit" name="lineEditHubWeight_3">
+                     <property name="sizePolicy">
+                      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                       <horstretch>0</horstretch>
+                       <verstretch>0</verstretch>
+                      </sizepolicy>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
               </item>
               <item>
-               <widget class="QGroupBox" name="groupBoxRimComment_4">
+               <widget class="QGroupBox" name="groupBoxHubComment">
                 <property name="title">
                  <string>Comment</string>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayoutCommentConfigWheel_4">
                  <item>
-                  <widget class="QLineEdit" name="lineEditRimComment_4">
+                  <widget class="QLineEdit" name="lineEditHubComment">
                    <property name="sizePolicy">
                     <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                      <horstretch>0</horstretch>
@@ -1331,9 +1501,9 @@
                </spacer>
               </item>
               <item>
-               <layout class="QHBoxLayout" name="horizontalLayoutRimButtons_4">
+               <layout class="QHBoxLayout" name="horizontalLayoutHubButtons">
                 <item>
-                 <widget class="QPushButton" name="pushButtonRimUpdate_4">
+                 <widget class="QPushButton" name="pushButtonHubUpdate">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
                     <horstretch>0</horstretch>
@@ -1349,7 +1519,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="pushButtonRimSaveAs_4">
+                 <widget class="QPushButton" name="pushButtonHubSaveAs">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
                     <horstretch>0</horstretch>
@@ -1365,7 +1535,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="pushButtonRimClear_4">
+                 <widget class="QPushButton" name="pushButtonHubClear">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
                     <horstretch>0</horstretch>
@@ -1381,7 +1551,7 @@
                  </widget>
                 </item>
                 <item>
-                 <widget class="QPushButton" name="pushButtonRimDelete_4">
+                 <widget class="QPushButton" name="pushButtonHubDelete">
                   <property name="sizePolicy">
                    <sizepolicy hsizetype="Maximum" vsizetype="Maximum">
                     <horstretch>0</horstretch>
@@ -2554,7 +2724,7 @@
      <x>0</x>
      <y>0</y>
      <width>1100</width>
-     <height>22</height>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuHelp">
