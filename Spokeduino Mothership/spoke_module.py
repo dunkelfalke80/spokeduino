@@ -103,7 +103,7 @@ class SpokeModule:
         """
         # Load manufacturers
         manufacturers: list[Any] = self.db.execute_select(
-            query=SQLQueries.GET_MANUFACTURERS, params=None)
+            query=SQLQueries.GET_SPOKE_MANUFACTURERS, params=None)
         if not manufacturers:
             return
 
@@ -114,7 +114,7 @@ class SpokeModule:
 
         # Load types
         spoke_types: list[Any] = self.db.execute_select(
-            query=SQLQueries.GET_TYPES, params=None)
+            query=SQLQueries.GET_SPOKE_TYPES, params=None)
         if not spoke_types:
             return
 
@@ -205,7 +205,7 @@ class SpokeModule:
             for spoke in self.current_spokes}
 
         # Fetch all types from the database
-        types: list[Any] = self.db.execute_select(SQLQueries.GET_TYPES, None)
+        types: list[Any] = self.db.execute_select(SQLQueries.GET_SPOKE_TYPES, None)
         if not types:
             return
         combo: QComboBox = self.ui.comboBoxFilterType
@@ -380,7 +380,7 @@ class SpokeModule:
             return
 
         new_manufacturer_id: int | None = self.db.execute_query(
-            query=SQLQueries.ADD_MANUFACTURER,
+            query=SQLQueries.ADD_SPOKE_MANUFACTURER,
             params=(manufacturer_name,),
         )
 

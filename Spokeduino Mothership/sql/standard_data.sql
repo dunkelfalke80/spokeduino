@@ -1,6 +1,44 @@
 PRAGMA foreign_keys = ON;
 
-INSERT INTO manufacturers (id, name) VALUES
+INSERT INTO boost_classifications (id, name) VALUES
+(0, 'Non-Boost'),
+(1, 'Boost'),
+(2, 'Superboost');
+
+INSERT INTO axle_types (id, name) VALUES
+(0, 'Bolt-on'),
+(1, '9mm'),
+(2, '10mm'),
+(3, '12mm'),
+(4, '15mm'),
+(5, '20mm');
+
+INSERT INTO etrto_description (etrto_bsd, name, is_default) VALUES
+(406, '20', TRUE)
+(451, '20', FALSE),
+(507, '24', TRUE),
+(520, '24', FALSE),
+(540, '24', FALSE),
+(540, '600A', TRUE),
+(559, '26', TRUE),
+(571, '26', FALSE),
+(571, '650C', FALSE),
+(584, '27.5', TRUE),
+(584, '650B', FALSE),
+(590, '27', FALSE),
+(590, '650A', TRUE),
+(622, '28', FALSE),
+(622, '29', TRUE),
+(622, '700C', FALSE),
+(686, '32', TRUE),
+(787, '26', TRUE);
+
+INSERT INTO tensiometers (id, name) VALUES
+(0, 'Toopre TL-P3'),
+(1, 'Toopre TL-P11'),
+(2, 'ZTTO TC-02');
+
+INSERT INTO spoke_manufacturers (id, name) VALUES
 (0, 'Custom'),
 (1, 'Sapim'),
 (2, 'DT Swiss'),
@@ -10,12 +48,7 @@ INSERT INTO manufacturers (id, name) VALUES
 (6, 'Wheelsmith'),
 (7, 'Berd');
 
-INSERT INTO tensiometers (id, name) VALUES
-(0, 'Toopre TL-P3'),
-(1, 'Toopre TL-P11'),
-(2, 'ZTTO TC-02');
-
-INSERT INTO types (id, type) VALUES
+INSERT INTO spoke_types (id, type) VALUES
 (0, 'Straight gauge'),
 (1, 'Single-butted'),
 (2, 'Double-butted'),

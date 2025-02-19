@@ -1,28 +1,24 @@
 PRAGMA foreign_keys = ON;
 
--- Manufacturers table
-CREATE TABLE manufacturers
-(
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL UNIQUE
-);
-
--- Tensiometer table
 CREATE TABLE tensiometers
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL UNIQUE
 );
 
--- Spoke types table
-CREATE TABLE types
+CREATE TABLE spoke_manufacturers
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE spoke_types
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     type TEXT NOT NULL UNIQUE
 );
 
--- Spokes table
-CREATE TABLE spokes
+CREATE TABLE spoke_models
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     manufacturer_id INTEGER NOT NULL,
@@ -33,15 +29,14 @@ CREATE TABLE spokes
     dimensions TEXT NOT NULL,
     comment TEXT DEFAULT '',
     FOREIGN KEY (manufacturer_id)
-        REFERENCES manufacturers(id)
+        REFERENCES spoke_manufacturers(id)
         ON DELETE CASCADE,
     FOREIGN KEY (type_id)
         REFERENCES types(id)
         ON DELETE CASCADE
 );
 
--- Measurement sets table
-CREATE TABLE measurement_sets
+CREATE TABLE spoke_measurement_sets
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     spoke_id INTEGER NOT NULL,
@@ -56,8 +51,7 @@ CREATE TABLE measurement_sets
         ON DELETE CASCADE
 );
 
--- Measurements table
-CREATE TABLE measurements
+CREATE TABLE spoke_measurements
 (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     set_id INTEGER NOT NULL,
@@ -68,7 +62,79 @@ CREATE TABLE measurements
         ON DELETE CASCADE
 );
 
--- Settings table
+CREATE TABLE hub_manufacturers
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE axle_types
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE boost_classifications
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE hub_models
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    manufacturer_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    axle_type_id INTEGER NOT NULL, -- FK to axle_types
+    old INTEGER NOT NULL, -- Over Locknut Dimension
+    pcd_left DECIMAL(5, 2) NOT NULL, -- Pitch Circle Diameter (Left)
+    pcd_right DECIMAL(5, 2) NOT NULL, -- Pitch Circle Diameter (Right)
+    wl DECIMAL(5, 2), -- Flange distance to center (Left)
+    wr DECIMAL(5, 2), -- Flange distance to center (Right)
+    spoke_hole_diameter_left DECIMAL(3, 2) DEFAULT 2.5, -- Defaults to 2.5mm
+    spoke_hole_diameter_right DECIMAL(3, 2) DEFAULT 2.5,
+    boost_classification_id INTEGER NOT NULL DEFAULT 0, -- FK to boost_classifications
+    is_front BOOLEAN NOT NULL DEFAULT True, -- True = Front Hub, False = Rear Hub
+    is_disc BOOLEAN NOT NULL DEFAULT True, -- True = Disc Brake, False = Rim Brake
+    is_centerlock BOOLEAN NOT NULL DEFAULT True, -- True = Center Lock, False = 6-Bolt
+    is_jbend BOOLEAN NOT NULL, -- True = J-Bend, False = Straightpull
+    comment TEXT DEFAULT '',
+    FOREIGN KEY (manufacturer_id) REFERENCES hub_manufacturers(id) ON DELETE CASCADE,
+    FOREIGN KEY (axle_type_id) REFERENCES axle_types(id) ON DELETE CASCADE,
+    FOREIGN KEY (boost_classification_id) REFERENCES boost_classifications(id) ON DELETE CASCADE
+);
+
+CREATE TABLE rim_manufacturers
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL UNIQUE
+);
+
+CREATE TABLE rim_models
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    manufacturer_id INTEGER NOT NULL,
+    name TEXT NOT NULL,
+    etrto_bsd INTEGER NOT NULL, -- Bead Seat Diameter (622, 584, etc.)
+    etrto_width INTEGER NOT NULL, -- Internal width (19, 21, etc.)
+    outer_width DECIMAL(5, 2), -- External rim width
+    erd DECIMAL(5, 2) NOT NULL, -- Effective Rim Diameter
+    nipple_offset_left DECIMAL(5, 2) DEFAULT 0.00, -- Left side offset
+    nipple_offset_right DECIMAL(5, 2) DEFAULT 0.00, -- Right side offset
+    rim_depth DECIMAL(5, 2) NOT NULL, -- Needed for deep-section spoke calculations
+    is_disc BOOLEAN NOT NULL DEFAULT True, -- True = Disc Brake, False = Rim Brake
+    comment TEXT DEFAULT '',
+    FOREIGN KEY (manufacturer_id) REFERENCES rim_manufacturers(id) ON DELETE CASCADE  
+);
+
+CREATE TABLE etrto_description
+(
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    etrto_bsd INTEGER NOT NULL, -- Bead Seat Diameter (559, 584, 622)
+    name TEXT NOT NULL, -- "26", "27.5", "29", etc.    
+    is_default BOOLEAN DEFAULT FALSE -- Marks the most common description
+);
+
 CREATE TABLE settings
 (
 	key TEXT PRIMARY KEY,
