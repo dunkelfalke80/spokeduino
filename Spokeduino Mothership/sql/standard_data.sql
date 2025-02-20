@@ -1,17 +1,20 @@
 PRAGMA foreign_keys = ON;
 
-INSERT INTO boost_classifications (id, name) VALUES
-(0, 'Non-Boost'),
-(1, 'Boost'),
-(2, 'Superboost');
-
 INSERT INTO axle_types (id, name) VALUES
 (0, 'Bolt-on'),
-(1, '9mm'),
-(2, '10mm'),
+(1, 'QR'),
+(2, 'QR fatbike'),
 (3, '12mm'),
-(4, '15mm'),
-(5, '20mm');
+(4, '12mm boost'),
+(5, '12mm superboost'),
+(6, '12mm fatbike'),
+(7, '15mm'),
+(8, '15mm boost'),
+(9, '15mm superboost'),
+(10, '15mm fatbike'),
+(11, '20mm'),
+(12, '20mm boost'),
+(13, '20mm superboost');
 
 INSERT INTO etrto_description (etrto_bsd, name, is_default) VALUES
 (406, '20', TRUE)

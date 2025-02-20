@@ -92,16 +92,14 @@ CREATE TABLE hub_models
     wl DECIMAL(5, 2), -- Flange distance to center (Left)
     wr DECIMAL(5, 2), -- Flange distance to center (Right)
     spoke_hole_diameter_left DECIMAL(3, 2) DEFAULT 2.5, -- Defaults to 2.5mm
-    spoke_hole_diameter_right DECIMAL(3, 2) DEFAULT 2.5,
-    boost_classification_id INTEGER NOT NULL DEFAULT 0, -- FK to boost_classifications
+    spoke_hole_diameter_right DECIMAL(3, 2) DEFAULT 2.5,    
     is_front BOOLEAN NOT NULL DEFAULT True, -- True = Front Hub, False = Rear Hub
     is_disc BOOLEAN NOT NULL DEFAULT True, -- True = Disc Brake, False = Rim Brake
     is_centerlock BOOLEAN NOT NULL DEFAULT True, -- True = Center Lock, False = 6-Bolt
     is_jbend BOOLEAN NOT NULL, -- True = J-Bend, False = Straightpull
     comment TEXT DEFAULT '',
     FOREIGN KEY (manufacturer_id) REFERENCES hub_manufacturers(id) ON DELETE CASCADE,
-    FOREIGN KEY (axle_type_id) REFERENCES axle_types(id) ON DELETE CASCADE,
-    FOREIGN KEY (boost_classification_id) REFERENCES boost_classifications(id) ON DELETE CASCADE
+    FOREIGN KEY (axle_type_id) REFERENCES axle_types(id) ON DELETE CASCADE    
 );
 
 CREATE TABLE rim_manufacturers
