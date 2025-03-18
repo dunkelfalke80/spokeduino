@@ -32,7 +32,7 @@ CREATE TABLE spoke_models
         REFERENCES spoke_manufacturers(id)
         ON DELETE CASCADE,
     FOREIGN KEY (type_id)
-        REFERENCES types(id)
+        REFERENCES spoke_types(id)
         ON DELETE CASCADE
 );
 

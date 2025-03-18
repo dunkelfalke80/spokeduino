@@ -46,7 +46,7 @@ class Spokeduino(QMainWindow):
         schema_file: str = os.path.join(
             self.current_path, "sql", "init_schema.sql")
         data_file: str = os.path.join(
-            self.current_path, "sql", "spoke_data.sql")
+            self.current_path, "sql", "standard_data.sql")
         self.db = DatabaseModule(self.db_path)
         self.db.initialize_database(schema_file, data_file)
 
@@ -137,7 +137,6 @@ class Spokeduino(QMainWindow):
 
         # Replace the tableWidgetTensionsLeft with the custom widget
         custom_tension_table_left = CustomTableWidget(
-            self,
             self.tensioning_module.next_cell_callback_left,
             self.tensioning_module.previous_cell_callback_left)
 
@@ -158,7 +157,6 @@ class Spokeduino(QMainWindow):
 
         # Replace the tableWidgetTensionsRight with the custom widget
         custom_tension_table_right = CustomTableWidget(
-            self,
             self.tensioning_module.next_cell_callback_right,
             self.tensioning_module.previous_cell_callback_right)
 

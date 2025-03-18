@@ -151,13 +151,12 @@ class SpokeduinoModule:
         if not self.serial_port:
             return
 
-        return
-
         gauge_handlers = {
             0: self.process_tension_gauge,
             1: self.process_lateral_gauge,
             2: self.process_radial_gauge,
             6: self.process_pedal,
+            9: self.process_scale,
         }
 
         while self.serial_port.is_open:
@@ -223,6 +222,16 @@ class SpokeduinoModule:
                 print("TBD")
 
     def process_pedal(self, data: int) -> None:
+        """
+        Process serial data for the tension gauge.
+        """
+        match self.spokeduino_state:
+            case SpokeduinoState.MEASURING:
+                print("TBD")
+            case SpokeduinoState.TENSIONING:
+                print("TBD")
+
+    def process_scale(self, data: float) -> None:
         """
         Process serial data for the tension gauge.
         """

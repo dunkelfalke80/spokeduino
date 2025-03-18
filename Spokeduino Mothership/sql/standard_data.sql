@@ -17,7 +17,7 @@ INSERT INTO axle_types (id, name) VALUES
 (13, '20mm superboost');
 
 INSERT INTO etrto_description (etrto_bsd, name, is_default) VALUES
-(406, '20', TRUE)
+(406, '20', TRUE),
 (451, '20', FALSE),
 (507, '24', TRUE),
 (520, '24', FALSE),
@@ -63,7 +63,7 @@ INSERT INTO spoke_types (id, type) VALUES
 (8, 'Flexible'),
 (9, 'Alloy');
 
-INSERT INTO spokes (manufacturer_id, type_id, gauge, weight, name, dimensions) VALUES
+INSERT INTO spoke_models (manufacturer_id, type_id, gauge, weight, name, dimensions) VALUES
 
 -- Generic --------------------------------------------
 --  Straight gauge

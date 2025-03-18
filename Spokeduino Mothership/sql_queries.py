@@ -35,7 +35,7 @@ class SQLQueries:
                     s.id, s.name, t.type, s.gauge,
                     s.weight, s.dimensions, s.comment
                 FROM
-                    spokes s
+                    spoke_models s
                 JOIN
                     spoke_types t
                 ON
