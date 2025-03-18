@@ -30,28 +30,27 @@
 #include <BLEAdvertisedDevice.h>
 
 // Configuration constants
-#define ADC_THRESHOLD       1100         // Only used in analog mode
-#define BIT_READ_TIMEOUT    100          // Timeout for a single bit (ms)
-#define PACKET_READ_TIMEOUT 250          // Overall timeout for a 24-bit packet (ms)
+#define ADC_THRESHOLD       1100  // Depends on the resolution and attentuation
+#define BIT_READ_TIMEOUT     100  // Timeout for a single bit (ms)
+#define PACKET_READ_TIMEOUT  250  // Overall timeout for a 24-bit packet (ms)
 
 // Digital input pins for pedals
-#define PIN_PEDAL      13
+#define PIN_PEDAL             13
 
 // Gauge clock and data pins
 // For the gauges with a MicroUSB connector the pinout is white (D-) = clock, green (D+) = data
-#define PIN_GAUGE1_CLOCK   14
-#define PIN_GAUGE1_DATA    12
-#define PIN_GAUGE2_CLOCK   32
-#define PIN_GAUGE2_DATA    33
-#define PIN_GAUGE3_CLOCK   25
-#define PIN_GAUGE3_DATA    26
+#define PIN_GAUGE1_CLOCK      14
+#define PIN_GAUGE1_DATA       12
+#define PIN_GAUGE2_CLOCK      32
+#define PIN_GAUGE2_DATA       33
+#define PIN_GAUGE3_CLOCK      25
+#define PIN_GAUGE3_DATA       26
 
 // Minimum value filter: discard data lower than this (gauge is not in use)
 #define MIN_VAL 0.6f
 
 // BLE-related Constants
 #define WHC06_MANUFACTURER_ID 256
-#define WEIGHT_OFFSET         32  // Offset in manufacturer data for weight
 
 const int ble_scan_time = 5;         // BLE scan time in seconds
 
@@ -85,10 +84,10 @@ class WHC06AdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
             {
                 // Big-endian bytes [12] and [13] absolute value
                 uint16_t weight_raw = ((uint8_t)manufacturer_data[12] << 8) | (uint8_t)manufacturer_data[13];
-                float weightKg = weight_raw / 100.0f;
+                float weight_kg = weight_raw / 100.0f;
 
                 Message msg;
-                snprintf(msg.message, sizeof(msg.message), "9:%.2f", weight_raw);
+                snprintf(msg.message, sizeof(msg.message), "9:%.2f", weight_kg);
                 xQueueSend(send_queue, &msg, portMAX_DELAY);
             }
 		}
@@ -240,7 +239,7 @@ void process_pin(const uint8_t pin_number, int& old_value, bool& toggle_value)
     {
         toggle_value = false;
         Message msg;
-		snprintf(msg.message, sizeof(msg.message), "6:%.2f", value);
+		strncpy(msg.message, "6:1", sizeof(msg.message));
 		xQueueSend(send_queue, &msg, portMAX_DELAY);
     }
     else
