@@ -22,7 +22,7 @@ void gaugeSimulatorTask(void* pvParameters)
     while (true)
     {
         float value = randomFloat(2.55f, 3.12f);
-        snprintf(buffer, sizeof(buffer), "1:%.2f", value);
+        snprintf(buffer, sizeof(buffer), "0:%.2f", value);
         Serial.println(buffer);
         vTaskDelay(pdMS_TO_TICKS(1000));
     }

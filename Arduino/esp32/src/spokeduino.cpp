@@ -79,11 +79,11 @@ class WHC06AdvertisedDeviceCallbacks : public BLEAdvertisedDeviceCallbacks
 		if (advertisedDevice.haveManufacturerData())
 		{
 			String manufacturer_data = advertisedDevice.getManufacturerData();
-            uint16_t company_id = ((uint8_t)manufacturer_data[1] << 8) | (uint8_t)manufacturer_data[0];
+            uint16_t company_id = (static_cast<uint8_t>(manufacturer_data[1]) << 8) | static_cast<uint8_t>(manufacturer_data[0]);
             if (manufacturer_data.length() >= 2 && company_id == WHC06_MANUFACTURER_ID)
             {
                 // Big-endian bytes [12] and [13] absolute value
-                uint16_t weight_raw = ((uint8_t)manufacturer_data[12] << 8) | (uint8_t)manufacturer_data[13];
+                uint16_t weight_raw = (static_cast<uint8_t>(manufacturer_data[12]) << 8) | static_cast<uint8_t>(manufacturer_data[13]);
                 float weight_kg = weight_raw / 100.0f;
 
                 Message msg;
@@ -253,9 +253,9 @@ void process_pin(const uint8_t pin_number, int& old_value, bool& toggle_value)
  *
  * Continuously reads from digital inputs (pedals, buttons) and posts updates if the value changes.
  *
- * @param *pvParameters  Standard FreeRTOS task parameters.
+ * @param *param Standard FreeRTOS task parameters.
  */
-void input_task(void *pvParameters)
+void input_task(void *param)
 {
     // Save the old values to reduce the data transfer over the serial port
     int pedal_value_old = 0;
@@ -271,9 +271,16 @@ void input_task(void *pvParameters)
     }
 }
 
-// BLE scanner task: continuously scans for BLE advertisements from the WH-C06 scale,
-// extracts weight data, and posts it to the send queue.
-void bleScannerTask(void *param)
+
+/**
+ * @brief BLE scanner task
+ *
+ * Continuously scans for BLE advertisements from the WH-C06 scale,
+ * extracts its weight data, and posts it to the send queue.
+ *
+ * @param *param Standard FreeRTOS task parameters.
+ */
+void ble_scanner_task(void *param)
 {
 	// Initialize BLE and configure the scan.
 	BLEDevice::init("");
@@ -288,8 +295,14 @@ void bleScannerTask(void *param)
 	}
 }
 
-// Sender task: waits for messages from the queue and sends them out via Serial and Bluetooth.
-void senderTask(void *param)
+/**
+ * @brief Sender task
+ *
+ * Waits for messages in the queue and sends them out via Serial and Bluetooth. 
+ *
+ * @param *param Standard FreeRTOS task parameters.
+ */
+void sender_task(void *param)
 {
 	Message msg;
 	while (true)
@@ -305,30 +318,17 @@ void senderTask(void *param)
 void setup()
 {
 	Serial.begin(115200);
-	SerialBT.begin("Spokeduino");
-	// Only used in analog mode.
+	SerialBT.begin("Spokeduino");	
 	analogReadResolution(11);
-	analogSetAttenuation(ADC_6db);
-
-	// Create a FreeRTOS queue for outgoing messages (holds up to 20 messages).
+	analogSetAttenuation(ADC_6db);	
 	send_queue = xQueueCreate(20, sizeof(Message));
-
-	xTaskCreatePinnedToCore(gauge_task, "Gauge1Task", 2048, NULL, 1, NULL, 1);
-	//xTaskCreatePinnedToCore(gauge_task, "Gauge2Task", 2048, &gauge2Params, 1, NULL, 1);
-	//xTaskCreatePinnedToCore(gauge_task, "Gauge3Task", 2048, &gauge3Params, 1, NULL, 1);
-
-	// Set up the digital inputs task.
-	xTaskCreatePinnedToCore(input_task, "InputTask", 2048, NULL, 1, NULL, 1);
-
-	// Set up the sender task (runs on core 0).
-	xTaskCreatePinnedToCore(senderTask, "SenderTask", 2048, NULL, 1, NULL, 0);
-
-	// Set up the BLE scanner task (runs on core 0).
-	xTaskCreatePinnedToCore(bleScannerTask, "BLEScannerTask", 4096, NULL, 1, NULL, 0);
+	xTaskCreatePinnedToCore(gauge_task, "GaugeTask", 2048, NULL, 1, NULL, 1);	
+	xTaskCreatePinnedToCore(input_task, "InputTask", 2048, NULL, 1, NULL, 1);	
+	xTaskCreatePinnedToCore(sender_task, "SenderTask", 2048, NULL, 1, NULL, 0);	
+	xTaskCreatePinnedToCore(ble_scanner_task, "BLEScannerTask", 4096, NULL, 1, NULL, 0);
 }
 
 void loop()
-{
-	// Main loop is unused; all work is done in tasks.
-	vTaskDelay(1000 / portTICK_PERIOD_MS);
+{	
+	vTaskDelay(1000 / portTICK_PERIOD_MS); // Main loop is unused
 }

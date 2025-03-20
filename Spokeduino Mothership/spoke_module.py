@@ -205,7 +205,8 @@ class SpokeModule:
             for spoke in self.current_spokes}
 
         # Fetch all types from the database
-        types: list[Any] = self.db.execute_select(SQLQueries.GET_SPOKE_TYPES, None)
+        types: list[Any] = self.db.execute_select(
+            SQLQueries.GET_SPOKE_TYPES, None)
         if not types:
             return
         combo: QComboBox = self.ui.comboBoxFilterType

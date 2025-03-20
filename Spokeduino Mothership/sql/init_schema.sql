@@ -47,7 +47,7 @@ CREATE TABLE spoke_measurement_sets
         REFERENCES tensiometers(id)
         ON DELETE CASCADE,
     FOREIGN KEY (spoke_id)
-        REFERENCES spokes(id)
+        REFERENCES spoke_models(id)
         ON DELETE CASCADE
 );
 
@@ -58,7 +58,7 @@ CREATE TABLE spoke_measurements
     tension DECIMAL(5, 2) NOT NULL,
     deflection DECIMAL(5, 2) NOT NULL,
     FOREIGN KEY (set_id)
-        REFERENCES measurement_sets(id)
+        REFERENCES spoke_measurement_sets(id)
         ON DELETE CASCADE
 );
 

@@ -10,16 +10,14 @@ from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QLabel
 from ui import Ui_mainWindow
-from spokeduino_module import SpokeduinoState
-from spokeduino_module import SpokeduinoModule
+from spokeduino_module import SpokeduinoModule, SpokeduinoState
 from database_module import DatabaseModule
 from setup_module import SetupModule
 from spoke_module import SpokeModule
 from tensiometer_module import TensiometerModule
 from tensioning_module import TensioningModule
 from measurement_module import MeasurementModule, MeasurementModeEnum
-from unit_module import UnitModule
-from unit_module import UnitEnum
+from unit_module import UnitModule, UnitEnum
 from customtablewidget import CustomTableWidget
 from helpers import Messagebox
 from calculation_module import TensionDeflectionFitter
@@ -95,6 +93,8 @@ class Spokeduino(QMainWindow):
             ui=self.ui,
             db=self.db,
             setup_module=self.setup_module,
+            unit_module=self.unit_module,
+            measurement_module=self.measurement_module,
             messagebox=self.messagebox)
         self.spoke_module = SpokeModule(
             main_window=self,
@@ -334,12 +334,7 @@ class Spokeduino(QMainWindow):
 
         # Spokeduino port selection
         self.ui.comboBoxSpokeduinoPort.currentTextChanged.connect(
-            lambda port: self.setup_module.save_setting(
-                "spokeduino_port", port))
-        self.ui.comboBoxSpokeduinoPort.currentTextChanged.connect(
-            self.spokeduino_module.restart_spokeduino_port)
-        self.ui.checkBoxSpokeduinoEnabled.checkStateChanged.connect(
-            self.spokeduino_module.restart_spokeduino_port)
+            self.update_statusbar_spokeduino)
         self.ui.checkBoxSpokeduinoEnabled.checkStateChanged.connect(
             self.update_statusbar_spokeduino)
 
@@ -465,6 +460,7 @@ class Spokeduino(QMainWindow):
             case self.ui.measurementTab:
                 self.measurement_module.setup_measurements_table()
                 self.ui.tableWidgetMeasurements.stop_sorting()
+                self.spokeduino_module.set_state(SpokeduinoState.MEASURING)
             case self.ui.tensioningTab:
                 self.chart.clear_fit_plot(self.measurement_canvas.plot_widget)
                 self.measurement_module.set_mode(
@@ -475,6 +471,7 @@ class Spokeduino(QMainWindow):
                 self.tensioning_module.setup_table(True)
                 self.tensioning_module.setup_table(False)
             case self.ui.databaseTab:
+                self.spokeduino_module.set_state(SpokeduinoState.WAITING)
                 self.chart.clear_fit_plot(self.measurement_canvas.plot_widget)
                 self.measurement_module.set_mode(
                     MeasurementModeEnum.DEFAULT)
@@ -483,6 +480,7 @@ class Spokeduino(QMainWindow):
                     50,
                     self.spoke_module.align_filters_with_table)
             case self.ui.setupTab:
+                self.spokeduino_module.set_state(SpokeduinoState.WAITING)
                 self.chart.clear_fit_plot(self.measurement_canvas.plot_widget)
                 self.measurement_module.set_mode(
                     MeasurementModeEnum.DEFAULT)
@@ -521,10 +519,18 @@ class Spokeduino(QMainWindow):
             f"Tensiometer: {self.ui.comboBoxTensiometer.currentText()}")
 
     def update_statusbar_spokeduino(self) -> None:
-        spokeduino_status: str = (
-            self.ui.comboBoxSpokeduinoPort.currentText()
-            if self.ui.checkBoxSpokeduinoEnabled.isChecked()
-            else "Not connected")
+        if self.ui.checkBoxSpokeduinoEnabled.isChecked():
+            spokeduino_status: str =\
+                self.ui.comboBoxSpokeduinoPort.currentText()
+            self.setup_module.save_setting(
+                "spokeduino_port",
+                self.ui.comboBoxSpokeduinoPort.currentText())
+            self.setup_module.save_setting("spokeduino_enabled", 1)
+            self.spokeduino_module.restart_spokeduino_port()
+        else:
+            spokeduino_status: str = "Not connected"
+            self.setup_module.save_setting("spokeduino_enabled", 0)
+            self.spokeduino_module.close_serial_port()
         self.status_label_port.setText(
             f"Spokeduino: {spokeduino_status}")
 

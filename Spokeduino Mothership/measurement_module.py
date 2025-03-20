@@ -58,10 +58,13 @@ class MeasurementModule:
                 mode = MeasurementModeEnum.CUSTOM
         self.__mode = mode
 
+    def get_mode(self) -> MeasurementModeEnum:
+        return self.__mode
+
     def __check_row_data(self, row: int) -> bool:
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
         for column in range(view.columnCount()):
-            item: QTableWidgetItem | None = view.item(row, column)
+            item: NumericTableWidgetItem | None = view.item(row, column)
             if item is None:
                 return False
             else:
@@ -88,6 +91,7 @@ class MeasurementModule:
             enable_button = self.__check_row_data(0)
 
         self.ui.pushButtonSaveMeasurement.setEnabled(enable_button)
+        self.plot_measurements()
 
     def load_measurements(
             self,
@@ -212,10 +216,12 @@ class MeasurementModule:
             return
         # Execute the deletion query
         try:
-            self.db.execute_query(
+            if self.db.execute_query(
                 query=SQLQueries.DELETE_MEASUREMENT_SET,
                 params=(measurement_id,)
-            )
+            ) is None:
+                self.messagebox.err("Failed to delete measurement")
+                return
         except Exception as e:
             self.messagebox.err(f"Failed to delete measurement: {str(e)}")
             return
@@ -496,7 +502,6 @@ class MeasurementModule:
         :param no_delay: If True, immediately move to the next cell.
                         Otherwise, introduce a slight delay.
         """
-        self.plot_measurements()
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
         row: int = view.currentRow()
         column: int = view.currentColumn()
@@ -542,20 +547,23 @@ class MeasurementModule:
         match self.__mode:
             case MeasurementModeEnum.DEFAULT:
                 # Save default mode measurements
-                self.__save_default_mode_measurements(view, spoke_id, comment)
+                res: bool = self.__save_default_mode_measurements(
+                    view, spoke_id, comment)
             case MeasurementModeEnum.EDIT | MeasurementModeEnum.CUSTOM:
                 # Save edit or custom mode measurements
-                self.__save_custom_mode_measurements(view, spoke_id, comment)
+                res: bool = self.__save_custom_mode_measurements(
+                    view, spoke_id, comment)
 
         # Notify the user
-        self.messagebox.info("Measurements saved successfully")
-        self.load_measurements(None, None, False)
+        if res:
+            self.messagebox.info("Measurements saved successfully")
+            self.load_measurements(None, None, False)
 
     def __save_default_mode_measurements(
             self,
             view: CustomTableWidget,
             spoke_id: int,
-            comment: str) -> None:
+            comment: str) -> bool:
         """
         Save measurements in DEFAULT mode with multiple tensiometers.
         """
@@ -565,13 +573,13 @@ class MeasurementModule:
                 view.horizontalHeaderItem(column)
             if header_item is None:
                 self.messagebox.err(f"Column {column + 1}: Missing header")
-                return
+                return False
 
             tensiometer_id = header_item.data(Qt.ItemDataRole.UserRole)
             if tensiometer_id is None:
                 self.messagebox.err(
                     f"Column {column + 1}: Missing tensiometer ID")
-                return
+                return False
 
             # Validate and gather tension-deflection data
             data: list[tuple[float, float]] = []
@@ -584,7 +592,7 @@ class MeasurementModule:
                 if tension_item is None or deflection_item is None:
                     self.messagebox.err(
                         f"Row {row + 1}: Missing data in column {column + 1}")
-                    return
+                    return False
 
                 try:
                     tension: float = cast(
@@ -594,19 +602,20 @@ class MeasurementModule:
                         float,
                         deflection_item.data(Qt.ItemDataRole.UserRole))
                     if tension is None or deflection is None:
-                        self.messagebox.err(
+                        print(
                             f"Row {row + 1}, "
-                            f"Column {column + 1}: Invalid data")
-                        return
+                            f"Column {column + 1}: Invalid data "
+                            f"tension {tension} deflection {deflection}")
+                        continue
 
                     data.append((tension, deflection))
                 except ValueError:
                     self.messagebox.err(
                         f"Row {row + 1}, Column {column + 1}: Invalid data")
-                    return
+                    return False
 
             # Save the data to the database
-            self.__save_measurement_set(
+            return self.__save_measurement_set(
                 spoke_id=spoke_id,
                 tensiometer_id=tensiometer_id,
                 data=data,
@@ -616,7 +625,7 @@ class MeasurementModule:
                 self,
                 view: CustomTableWidget,
                 spoke_id: int,
-                comment: str) -> None:
+                comment: str) -> bool:
         """
         Save measurements in EDIT or CUSTOM mode.
         In EDIT mode, delete the existing measurement set
@@ -651,7 +660,7 @@ class MeasurementModule:
                 continue  # Ignore rows with invalid data
 
         if not data:
-            return
+            return False
 
         # Handle EDIT mode: Delete the existing measurement set
         if self.__mode == MeasurementModeEnum.EDIT:
@@ -660,28 +669,32 @@ class MeasurementModule:
                 self.ui.tableWidgetMeasurementList)
             if measurement_id < 0:
                 self.messagebox.err("No measurement set selected to overwrite")
-                return
+                return False
 
             # Delete the existing measurement set
             try:
-                self.db.execute_query(
+                if self.db.execute_query(
                     query=SQLQueries.DELETE_MEASUREMENT_SET,
                     params=(measurement_id,)
-                )
+                ) is None:
+                    self.messagebox.err(
+                        "Failed to delete previous measurement set:")
+                    return False
             except Exception as ex:
                 self.messagebox.err(
                     f"Failed to delete previous measurement set: {str(ex)}")
-                return
+                return False
 
         # Save the new data
-        self.__save_measurement_set(spoke_id, tensiometer_id, data, comment)
+        return self.__save_measurement_set(
+            spoke_id, tensiometer_id, data, comment)
 
     def __save_measurement_set(
             self,
             spoke_id: int,
             tensiometer_id: int,
             data: list[tuple[float, float]],
-            comment: str) -> None:
+            comment: str) -> bool:
         """
         Save a single measurement set and its associated measurements.
         """
@@ -692,17 +705,22 @@ class MeasurementModule:
         )
         if set_id is None:
             self.messagebox.err("Failed to save measurement set")
-            return
+            return False
 
         # Save each measurement
         for tension, deflection in data:
             try:
-                self.db.execute_query(
+                if self.db.execute_query(
                     query=SQLQueries.ADD_MEASUREMENT,
                     params=(set_id, tension, deflection)
-                )
+                ) is None:
+                    self.messagebox.err("Failed to save measurement")
+                    return False
+
             except Exception as ex:
                 self.messagebox.err(f"Failed to save measurement: {str(ex)}")
+                return False
+        return True
 
     def plot_measurements(self) -> None:
         """
@@ -743,6 +761,9 @@ class MeasurementModule:
 
         if not data:
             print("No valid tension/deflection data found.")
+            return
+
+        if len(data) < 3:  # not enough entries for a meaningful plot
             return
 
         data.sort(key=lambda pair: pair[0])

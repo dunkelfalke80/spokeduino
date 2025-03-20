@@ -53,7 +53,8 @@ class TensiometerModule:
             params=("tensiometer_id",)
         )
         if primary_tensiometer is None or not primary_tensiometer:
-            return -1
+            self.save_tensiometer()
+            return 0
         return int(primary_tensiometer[0][0])
 
     def get_selected_tensiometers(self) -> list[tuple[int, str]]:
