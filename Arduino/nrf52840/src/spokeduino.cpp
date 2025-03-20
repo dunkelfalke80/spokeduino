@@ -7,7 +7,6 @@
 #include <Arduino.h>
 #include <FreeRTOS.h>
 
-// Digital pins used for the short detection test
 #define PIN_DIGITAL_1  PIN_009
 #define PIN_DIGITAL_2  PIN_010
 
@@ -25,11 +24,10 @@ void gaugeSimulatorTask(void* pvParameters)
         float value = randomFloat(2.55f, 3.12f);
         snprintf(buffer, sizeof(buffer), "1:%.2f", value);
         Serial.println(buffer);
-        vTaskDelay(pdMS_TO_TICKS(1000));  // Delay for 1 second
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
-// Task: Every 5 seconds, send a "9:" message with a random value between 90.22 and 100.53.
 void bleSimulatorTask(void* pvParameters)
 {
     char buffer[64];
@@ -38,7 +36,7 @@ void bleSimulatorTask(void* pvParameters)
         float value = randomFloat(90.22f, 100.53f);
         snprintf(buffer, sizeof(buffer), "9:%.2f", value);
         Serial.println(buffer);
-        vTaskDelay(pdMS_TO_TICKS(5000));  // Delay for 5 seconds
+        vTaskDelay(pdMS_TO_TICKS(5000));
     }
 }
 
