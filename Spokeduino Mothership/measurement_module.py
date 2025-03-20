@@ -9,8 +9,8 @@ from PySide6.QtWidgets import QTableWidget
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtWidgets import QHeaderView
 from ui import Ui_mainWindow
-from enum import Enum
 from setup_module import SetupModule
+from spokeduino_module import SpokeduinoModule, MeasurementMode, SpokeduinoState
 from helpers import Messagebox, Generics, TextChecker
 from customtablewidget import CustomTableWidget, NumericTableWidgetItem
 from sql_queries import SQLQueries
@@ -21,12 +21,6 @@ from visualisation_module import PyQtGraphCanvas, VisualisationModule
 from calculation_module import TensionDeflectionFitter, FitType
 
 
-class MeasurementModeEnum(Enum):
-    DEFAULT = 0
-    EDIT = 1
-    CUSTOM = 2
-
-
 class MeasurementModule:
 
     def __init__(self,
@@ -34,6 +28,7 @@ class MeasurementModule:
                  ui: Ui_mainWindow,
                  unit_module: UnitModule,
                  tensiometer_module: TensiometerModule,
+                 spokeduino_module: SpokeduinoModule,
                  messagebox: Messagebox,
                  db: DatabaseModule,
                  fitter: TensionDeflectionFitter,
@@ -43,28 +38,20 @@ class MeasurementModule:
         self.unit_module: UnitModule = unit_module
         self.main_window: QMainWindow = main_window
         self.setup_module = SetupModule
+        self.spokeduino_module: SpokeduinoModule = spokeduino_module
         self.messagebox: Messagebox = messagebox
         self.tensiometer_module: TensiometerModule = tensiometer_module
         self.db: DatabaseModule = db
         self.fitter: TensionDeflectionFitter = fitter
         self.canvas: PyQtGraphCanvas = canvas
         self.chart: VisualisationModule = chart
-        self.__mode: MeasurementModeEnum = MeasurementModeEnum.DEFAULT
         self.__add_row_signal_connected = False
 
-    def set_mode(self, mode: MeasurementModeEnum) -> None:
-        if mode == MeasurementModeEnum.DEFAULT:
-            if self.ui.radioButtonMeasurementCustom.isChecked():
-                mode = MeasurementModeEnum.CUSTOM
-        self.__mode = mode
-
-    def get_mode(self) -> MeasurementModeEnum:
-        return self.__mode
 
     def __check_row_data(self, row: int) -> bool:
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
         for column in range(view.columnCount()):
-            item: NumericTableWidgetItem | None = view.item(row, column)
+            item: QTableWidgetItem | None= view.item(row, column)
             if item is None:
                 return False
             else:
@@ -257,12 +244,12 @@ class MeasurementModule:
         view.setRowCount(0)
         view.setColumnCount(0)
 
-        match self.__mode:
-            case MeasurementModeEnum.DEFAULT:
+        match self.spokeduino_module.get_mode():
+            case MeasurementMode.DEFAULT:
                 self.populate_measurements_table_default(view)
-            case MeasurementModeEnum.EDIT:
+            case MeasurementMode.EDIT:
                 self.populate_measurements_table_edit_mode(view, False)
-            case MeasurementModeEnum.CUSTOM:
+            case MeasurementMode.CUSTOM:
                 self.populate_measurements_table_edit_mode(view, True)
 
     def populate_measurements_table_default(
@@ -455,7 +442,7 @@ class MeasurementModule:
         view.move_to_cell(row, 0)
 
     def on_cell_changing(self, row: int, column: int, value: str) -> None:
-        if self.__mode == MeasurementModeEnum.DEFAULT:
+        if self.spokeduino_module.get_mode() == MeasurementMode.DEFAULT:
             return
 
         try:
@@ -512,7 +499,8 @@ class MeasurementModule:
             column = 0
             row += 1
         else:
-            if self.__mode == MeasurementModeEnum.DEFAULT:
+            if self.spokeduino_module.get_mode() == MeasurementMode.DEFAULT:
+                self.spokeduino_module.set_state(SpokeduinoState.WAITING)
                 return  # Already at the last cell
             time.sleep(0.05)
             self.insert_empty_row_below(row)
@@ -544,12 +532,12 @@ class MeasurementModule:
         comment: str = self.ui.lineEditMeasurementComment.text().strip()
 
         # Check the mode and handle accordingly
-        match self.__mode:
-            case MeasurementModeEnum.DEFAULT:
+        match self.spokeduino_module.get_mode():
+            case MeasurementMode.DEFAULT:
                 # Save default mode measurements
                 res: bool = self.__save_default_mode_measurements(
                     view, spoke_id, comment)
-            case MeasurementModeEnum.EDIT | MeasurementModeEnum.CUSTOM:
+            case MeasurementMode.EDIT | MeasurementMode.CUSTOM:
                 # Save edit or custom mode measurements
                 res: bool = self.__save_custom_mode_measurements(
                     view, spoke_id, comment)
@@ -620,6 +608,7 @@ class MeasurementModule:
                 tensiometer_id=tensiometer_id,
                 data=data,
                 comment=comment)
+        return False
 
     def __save_custom_mode_measurements(
                 self,
@@ -632,10 +621,10 @@ class MeasurementModule:
         before saving new data.
         """
         # Fetch the tensiometer ID for the column
-        tensiometer_id = self.tensiometer_module.get_primary_tensiometer()
+        tensiometer_id: int = self.tensiometer_module.get_primary_tensiometer()
         if tensiometer_id < 0:
             self.messagebox.err("No tensiometer selected")
-            return
+            return False
 
         # Validate and gather tension-deflection data
         data: list[tuple[float, float]] = []
@@ -663,7 +652,7 @@ class MeasurementModule:
             return False
 
         # Handle EDIT mode: Delete the existing measurement set
-        if self.__mode == MeasurementModeEnum.EDIT:
+        if self.spokeduino_module.get_mode() == MeasurementMode.EDIT:
             # Get the current measurement set ID
             measurement_id: int = Generics.get_selected_row_id(
                 self.ui.tableWidgetMeasurementList)
@@ -699,7 +688,7 @@ class MeasurementModule:
         Save a single measurement set and its associated measurements.
         """
         # Save the measurement set
-        set_id = self.db.execute_query(
+        set_id: int | None = self.db.execute_query(
             query=SQLQueries.ADD_MEASUREMENT_SET,
             params=(spoke_id, tensiometer_id, comment)
         )
@@ -734,7 +723,7 @@ class MeasurementModule:
             return  # Too few measurements to draw a plot
         data = []
         for row in range(row_count):
-            if self.__mode == MeasurementModeEnum.DEFAULT:
+            if self.spokeduino_module.get_mode() == MeasurementMode.DEFAULT:
                 tension_item: QTableWidgetItem | None = \
                     view.verticalHeaderItem(row)
                 deflection_item: QTableWidgetItem | None = view.item(row, 0)
@@ -760,7 +749,6 @@ class MeasurementModule:
                 continue
 
         if not data:
-            print("No valid tension/deflection data found.")
             return
 
         if len(data) < 3:  # not enough entries for a meaningful plot

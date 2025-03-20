@@ -1,12 +1,12 @@
 import threading
 import serial
+import inspect
 from enum import Enum
 from typing import Any
 from PySide6.QtCore import Qt
 from customtablewidget import CustomTableWidget, NumericTableWidgetItem
 from database_module import DatabaseModule
 from setup_module import SetupModule
-from measurement_module import MeasurementModule, MeasurementModeEnum
 from helpers import Messagebox, TextChecker
 from sql_queries import SQLQueries
 from unit_module import UnitEnum, UnitModule
@@ -19,6 +19,12 @@ class SpokeduinoState(Enum):
     TENSIONING = 3
 
 
+class MeasurementMode(Enum):
+    DEFAULT = 0
+    EDIT = 1
+    CUSTOM = 2
+
+
 class SpokeduinoModule:
     def __init__(
             self,
@@ -26,7 +32,6 @@ class SpokeduinoModule:
             db: DatabaseModule,
             setup_module: SetupModule,
             unit_module: UnitModule,
-            measurement_module: MeasurementModule,
             messagebox: Messagebox) -> None:
         """
         Initialize the Spokeduino communication module.
@@ -43,13 +48,25 @@ class SpokeduinoModule:
         self.db: DatabaseModule = db
         self.setup_module: SetupModule = setup_module
         self.unit_module: UnitModule = unit_module
-        self.measurement_module: MeasurementModule = measurement_module
         self.messagebox: Messagebox = messagebox
-        self.spokeduino_state: SpokeduinoState = SpokeduinoState.WAITING
         self.waiting_event = threading.Event()
         self.th_spokeduino = None
         self.serial_port = serial.Serial()
         self.first_start: bool = True
+        self.__spokeduino_state: SpokeduinoState = SpokeduinoState.WAITING
+        self.__mode: MeasurementMode = MeasurementMode.DEFAULT
+
+    def set_mode(self, mode: MeasurementMode) -> None:
+        if mode == MeasurementMode.DEFAULT:
+            if self.ui.radioButtonMeasurementCustom.isChecked():
+                mode = MeasurementMode.CUSTOM
+        self.__mode = mode
+        stack = inspect.stack()
+        caller_frame = stack[1]
+        print(f"This function was called by: {caller_frame.function}")
+
+    def get_mode(self) -> MeasurementMode:
+        return self.__mode
 
     def restart_spokeduino_port(self) -> None:
         """
@@ -59,14 +76,14 @@ class SpokeduinoModule:
             if self.get_spokeduino_enabled():
                 self.waiting_event.set()
                 self.close_serial_port()
-                self.update_spokeduino_state(
+                self.update_spokeduino_enabled(
                     self.first_start, self.first_start)
                 if self.first_start:
                     self.first_start = False
                 self.reinitialize_serial_port()
                 return
 
-            self.update_spokeduino_state(True, False)
+            self.update_spokeduino_enabled(True, False)
             self.reinitialize_serial_port()
         except Exception as ex:
             print(f"Error restarting Spokeduino port: {ex}")
@@ -75,13 +92,16 @@ class SpokeduinoModule:
         """
         Update the Spokeduino state and control the waiting_event.
         """
-        self.spokeduino_state = state
-        print(f"State machine switched to {self.spokeduino_state}")
+        self.__spokeduino_state = state
+        print(f"State machine switched to {self.get_state()}")
 
         if state == SpokeduinoState.WAITING:
             self.waiting_event.clear()  # Block the thread
         else:
             self.waiting_event.set()  # Allow the thread to proceed
+
+    def get_state(self) -> SpokeduinoState:
+        return self.__spokeduino_state
 
     def get_spokeduino_enabled(self) -> bool:
         """
@@ -98,7 +118,7 @@ class SpokeduinoModule:
             return False
         return setting[0][0] == "1"
 
-    def update_spokeduino_state(self,
+    def update_spokeduino_enabled(self,
                                 current_state: bool,
                                 force: bool) -> bool:
         """
@@ -201,6 +221,9 @@ class SpokeduinoModule:
 
     def insert_measurement(
             self, data: float, role: float, target: int) -> None:
+        if self.get_state() == SpokeduinoState.WAITING:
+            print("we are waiting")
+            return
         try:
             table: CustomTableWidget = self.ui.tableWidgetMeasurements
             column: int = table.currentColumn()
@@ -222,10 +245,9 @@ class SpokeduinoModule:
         Process serial data for the tension gauge.
         """
 
-        match self.spokeduino_state:
+        match self.get_state():
             case SpokeduinoState.MEASURING:
-                if (self.measurement_module.get_mode() ==
-                        MeasurementModeEnum.DEFAULT):
+                if (self.get_mode() == MeasurementMode.DEFAULT):
                     self.insert_measurement(data, data, 0)
                 else:
                     self.insert_measurement(data, data, 1)
@@ -236,7 +258,7 @@ class SpokeduinoModule:
         """
         Process serial data for the tension gauge.
         """
-        match self.spokeduino_state:
+        match self.get_state():
             case SpokeduinoState.MEASURING:
                 print("TBD")
             case SpokeduinoState.TENSIONING:
@@ -246,7 +268,7 @@ class SpokeduinoModule:
         """
         Process serial data for the tension gauge.
         """
-        match self.spokeduino_state:
+        match self.get_state():
             case SpokeduinoState.MEASURING:
                 print("TBD")
             case SpokeduinoState.TENSIONING:
@@ -256,7 +278,7 @@ class SpokeduinoModule:
         """
         Process serial data for the tension gauge.
         """
-        match self.spokeduino_state:
+        match self.get_state():
             case SpokeduinoState.MEASURING:
                 self.ui.pushButtonNextMeasurement.click()
             case SpokeduinoState.TENSIONING:
@@ -267,9 +289,9 @@ class SpokeduinoModule:
         Process serial data for the tension gauge.
         """
         unit: UnitEnum = self.unit_module.get_unit()
-        if self.spokeduino_state is not SpokeduinoState.MEASURING:
+        if self.get_state() is not SpokeduinoState.MEASURING:
             return
-        if self.measurement_module.get_mode() == MeasurementModeEnum.DEFAULT:
+        if self.get_mode() == MeasurementMode.DEFAULT:
             return
         converted_tensions: tuple[float, float, float] = \
             self.unit_module.convert_units(

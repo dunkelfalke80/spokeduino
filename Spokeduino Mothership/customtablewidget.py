@@ -19,6 +19,7 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtWidgets import QAbstractItemView
 from PySide6.QtWidgets import QTableWidget
 from PySide6.QtWidgets import QTableWidgetItem
+from PySide6.QtWidgets import QAbstractItemDelegate
 from PySide6.QtWidgets import QStyledItemDelegate
 from PySide6.QtWidgets import QStyleOptionViewItem
 from PySide6.QtWidgets import QLineEdit
@@ -184,6 +185,12 @@ class CustomTableWidget(QTableWidget):
         index: QModelIndex = self.model().index(row, column)
         if not index.isValid():
             return
+        current_index: QModelIndex = self.currentIndex()
+        if current_index.isValid():
+            self.closeEditor(
+                self.indexWidget(current_index),
+                QAbstractItemDelegate.EndEditHint.SubmitModelCache)
+
         # Ensures the first cell becomes active
         if row == 0 and column == 0:
             self.refocus(True)
