@@ -61,6 +61,7 @@ class TensioningModule:
         self.__cell_changed_signal_connected = False
         self.__clockwise: bool = True
         self.__left_right: bool = False
+        self.__is_left: bool = False
 
     def setup_table(self, is_left: bool) -> None:
         """
@@ -198,6 +199,7 @@ class TensioningModule:
         self.ui.tableWidgetTensioningRight.setEnabled(True)
 
         if self.ui.radioButtonLeftRight.isChecked():
+            self.__is_left = True
             QTimer.singleShot(
                 50,
                 lambda: self.ui.tableWidgetTensioningLeft.move_to_cell(
@@ -205,28 +207,24 @@ class TensioningModule:
                     column=0))
         # Starting on the left
         elif self.ui.radioButtonRightLeft.isChecked():
+            self.__is_left = False
             QTimer.singleShot(
                 50,
                 lambda: self.ui.tableWidgetTensioningRight.move_to_cell(
                     row=0,
                     column=0))
         else:  # Starting and staying on the right until the side is finished
+            self.__is_left = False
             QTimer.singleShot(
                 50,
                 lambda: self.ui.tableWidgetTensioningRight.move_to_cell(
                     row=0,
                     column=0))
 
-    def next_cell_callback_left(self, no_delay: bool = False) -> None:
-        self.next_cell_callback(True)
-
-    def next_cell_callback_right(self, no_delay: bool = False) -> None:
-        self.next_cell_callback(False)
-
-    def next_cell_callback(self, is_left: bool) -> None:
+    def next_cell(self, no_delay: bool) -> None:
         this_view: CustomTableWidget
         other_view: CustomTableWidget
-        if is_left:
+        if self.__is_left:
             this_view = self.ui.tableWidgetTensioningLeft
             other_view = self.ui.tableWidgetTensioningRight
         else:
@@ -249,7 +247,14 @@ class TensioningModule:
                 this_view = other_view
                 this_row = 0
             else:
+                other_view = this_view
                 this_row += 1
+
+        self.__is_left = other_view == self.ui.tableWidgetTensioningLeft
+        if self.__is_left:
+            print("going left")
+        else:
+            print("going right")
 
         QTimer.singleShot(
             50,
@@ -257,14 +262,8 @@ class TensioningModule:
                 row=this_row,
                 column=0))
 
-    def previous_cell_callback_left(self) -> None:
-        self.previous_cell_callback(is_left=True)
-
-    def previous_cell_callback_right(self) -> None:
-        self.previous_cell_callback(is_left=False)
-
-    def previous_cell_callback(self, is_left: bool) -> None:
-        if is_left:
+    def previous_cell(self) -> None:
+        if self.__is_left:
             print("Previous cell left")
         else:
             print("Previous cell right")

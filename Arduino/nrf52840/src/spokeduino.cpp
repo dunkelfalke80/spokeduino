@@ -42,28 +42,18 @@ void bleSimulatorTask(void* pvParameters)
 
 void digitalInputSimulatorTask(void *pvParameters)
 {
-    bool previously_shorted = false;    
     while (true)
     {
-        int reading = digitalRead(PIN_DIGITAL_2);
-        bool currently_shorted = (reading == HIGH);
-        if (currently_shorted && !previously_shorted)
-        {
+        if (digitalRead(PIN_DIGITAL_2) == HIGH)
             Serial.println("6:1");
-            previously_shorted = true;
-        }
-        else if (!currently_shorted)
-        {
-            previously_shorted = false;
-        }
-        vTaskDelay(pdMS_TO_TICKS(50));
+        vTaskDelay(pdMS_TO_TICKS(1000));
     }
 }
 
 void setup()
 {
-    Serial.begin(115200);    
-    randomSeed(analogRead(PIN_031));    
+    Serial.begin(115200);
+    randomSeed(analogRead(PIN_031));
     pinMode(PIN_DIGITAL_1, OUTPUT);
     pinMode(PIN_DIGITAL_2, INPUT_PULLDOWN);
     digitalWrite(PIN_DIGITAL_1, HIGH);
@@ -73,6 +63,6 @@ void setup()
 }
 
 void loop()
-{    
+{
     vTaskDelay(pdMS_TO_TICKS(1000));
 }

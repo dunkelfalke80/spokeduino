@@ -1,10 +1,10 @@
-INSERT INTO measurement_sets (spoke_id, tensiometer_id, comment) 
+INSERT INTO spoke_measurement_sets (spoke_id, tensiometer_id, comment) 
 VALUES 
 (1, 1, 'Gute Daten'),
 (1, 1, 'Falsche Daten'),
 (1, 1, 'Schlechte daten');
 
-INSERT INTO measurements (set_id, tension, deflection) 
+INSERT INTO spoke_measurements (set_id, tension, deflection) 
 VALUES 
 (1, 1500, 3.10), 
 (1, 1400, 3.05),
@@ -19,7 +19,7 @@ VALUES
 (1, 500, 2.34),
 (1, 400, 2.20);
 
-INSERT INTO measurements (set_id, tension, deflection) 
+INSERT INTO spoke_measurements (set_id, tension, deflection) 
 VALUES 
 (2, 1500, 3.14), 
 (2, 1400, 3.10),
@@ -35,7 +35,7 @@ VALUES
 (2, 400, 2.28);
 
 
-INSERT INTO measurements (set_id, tension, deflection) 
+INSERT INTO spoke_measurements (set_id, tension, deflection) 
 VALUES 
 (3, 1500, 3.18), 
 (3, 1400, 3.14),

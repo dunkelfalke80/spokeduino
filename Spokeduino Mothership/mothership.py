@@ -137,8 +137,8 @@ class Spokeduino(QMainWindow):
 
         # Replace the tableWidgetTensionsLeft with the custom widget
         custom_tension_table_left = CustomTableWidget(
-            self.tensioning_module.next_cell_callback_left,
-            self.tensioning_module.previous_cell_callback_left)
+            self.tensioning_module.next_cell,
+            self.tensioning_module.previous_cell)
 
         # Set the same object name so the rest of the code works seamlessly
         custom_tension_table_left.setObjectName("tableWidgetTensionsLeft")
@@ -157,8 +157,8 @@ class Spokeduino(QMainWindow):
 
         # Replace the tableWidgetTensionsRight with the custom widget
         custom_tension_table_right = CustomTableWidget(
-            self.tensioning_module.next_cell_callback_right,
-            self.tensioning_module.previous_cell_callback_right)
+            self.tensioning_module.next_cell,
+            self.tensioning_module.previous_cell)
 
         # Set the same object name so the rest of the code works seamlessly
         custom_tension_table_right.setObjectName("tableWidgetTensionsRight")
@@ -418,6 +418,10 @@ class Spokeduino(QMainWindow):
         # Tensioning related signals
         self.ui.pushButtonStartTensioning.clicked.connect(
             self.tensioning_module.start_tensioning)
+        self.ui.pushButtonPreviousSpoke.clicked.connect(
+            self.ui.tableWidgetMeasurements.move_to_previous_cell)
+        self.ui.pushButtonNextSpoke.clicked.connect(
+            lambda: self.ui.tableWidgetMeasurements.move_to_next_cell(False))
 
         # Left tensioning table
         self.ui.pushButtonUseLeft.clicked.connect(
