@@ -54,7 +54,6 @@ class TensioningModule:
         self.__fit_right: dict[Any, Any] | None = None
         self.__cell_changed_signal_connected = False
         self.__clockwise: bool = True
-        self.__left_right: bool = False
         self.__is_left: bool = False
         self.__ui.tableWidgetTensioningLeft.setEnabled(False)
         self.__ui.tableWidgetTensioningRight.setEnabled(False)
@@ -143,9 +142,6 @@ class TensioningModule:
                 target_tension_right=self.__target_right
             )
             self.plot_spoke_tensions()
-            self.__left_right = (
-                self.__ui.radioButtonLeftRight.isChecked() or
-                self.__ui.radioButtonRightLeft.isChecked())
 
             # Connect the signal for realtime tension and chart update
             if not self.__cell_changed_signal_connected:
@@ -239,7 +235,8 @@ class TensioningModule:
         this_count: int = this_view.rowCount()
         other_count: int = other_view.rowCount()
 
-        if self.__left_right:
+        if (self.__ui.radioButtonLeftRight.isChecked() or
+            self.__ui.radioButtonRightLeft.isChecked()):
             if other_row == other_count - 1:
                 this_row = 0
             else:
@@ -262,10 +259,48 @@ class TensioningModule:
                 column=0))
 
     def previous_cell(self) -> None:
+        this_view: CustomTableWidget
+        other_view: CustomTableWidget
         if self.__is_left:
-            print("Previous cell left")
+            this_view = self.__ui.tableWidgetTensioningLeft
+            other_view = self.__ui.tableWidgetTensioningRight
         else:
-            print("Previous cell right")
+            this_view = self.__ui.tableWidgetTensioningRight
+            other_view = self.__ui.tableWidgetTensioningLeft
+
+        this_row: int = this_view.currentRow()
+        this_count: int = this_view.rowCount()
+        other_count: int = other_view.rowCount()
+
+        if self.__ui.radioButtonLeftRight.isChecked():
+            if self.__is_left:
+                if this_row == 0:
+                    this_row = other_count - 1
+                else:
+                    this_row -= 1
+            this_view = other_view
+        elif self.__ui.radioButtonRightLeft.isChecked():
+            if not self.__is_left:
+                if this_row == 0:
+                    this_row = other_count - 1
+                else:
+                    this_row -= 1
+            this_view = other_view
+        else:
+            if this_row == 0:
+                this_view = other_view
+                this_row = this_count - 1
+            else:
+                other_view = this_view
+                this_row -= 1
+
+        self.__is_left = other_view == self.__ui.tableWidgetTensioningLeft
+
+        QTimer.singleShot(
+            50,
+            lambda: other_view.move_to_cell(
+                row=this_row,
+                column=0))
 
     def on_cell_changing(
             self,
