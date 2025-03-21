@@ -42,10 +42,11 @@ class VisualisationModule:
         Store or instantiate a TensionDeflectionFitter here.
         """
         self.fitter: TensionDeflectionFitter = fitter
-        self.__legend_added = False
+        self.__radar_legend_added = False
+        self.__fit_legend_added = False
         self.__clockwise: bool = True
         self.__deviation_viewbox: pg.ViewBox
-        self.__legend: pg.LegendItem
+        self.__dynamic_items: list = []
 
     def __predict_deflection(
         self,
@@ -159,6 +160,10 @@ class VisualisationModule:
             raise RuntimeError("No default ViewBox found in the PlotItem.")
         self.__deviation_viewbox.setXLink(main_vb)
 
+        if not self.__fit_legend_added:
+            self.__fit_legend_added = True
+            plot_item.addLegend(offset=(10, 10))
+
         # Extract fit_model info
         t_min = fit_model["t_min"]
         t_max = fit_model["t_max"]
@@ -217,9 +222,6 @@ class VisualisationModule:
         plot_item.setLabel("left", "Deflection (mm)", color="blue")
         plot_item.setLabel("bottom", "Tension (N)", color="black")
         plot_item.setTitle(header, color="black", size="12pt")
-
-        if not hasattr(self, "__legend"):
-            self.__legend = plot_item.addLegend(offset=(10, 10))
 
         # Sync second ViewBox with main ViewBox
         def update_views():
@@ -313,7 +315,7 @@ class VisualisationModule:
             else:
                 color = "blue"
                 name = "Right target tension"
-            circle_item = plot_widget.plot(
+            plot_widget.plot(
                 circle_x, circle_y,
                 pen=pg.mkPen(
                     color=color,
@@ -321,14 +323,12 @@ class VisualisationModule:
                     width=2,
                     name=name))
         else:
-            circle_item = plot_widget.plot(
+            plot_widget.plot(
                 circle_x, circle_y,
                 pen=pg.mkPen(
                     color="black",
                     style=Qt.PenStyle.SolidLine,
                     width=1))
-
-        circle_item._static_element = True
 
     # Helper to draw spokes and numbers
     def __draw_spokes(
@@ -344,7 +344,7 @@ class VisualisationModule:
             y = np.sin(angle) * radius
 
             # Draw spoke lines
-            line_item = plot_widget.plot(
+            plot_widget.plot(
                 [0, x + offset_x], [0, y + offset_y],
                 pen=pg.mkPen(
                     color="gray",
@@ -352,7 +352,6 @@ class VisualisationModule:
                     width=1),
                 name=None,  # Do not add spoke lines to the legend
             )
-            line_item._static_element = True  # Tag as static
 
             # Draw spoke numbers
             text_item = pg.TextItem(
@@ -374,14 +373,13 @@ class VisualisationModule:
             # Close the polygon by appending the first point
             x_coords = np.append(x_coords, x_coords[0])
             y_coords = np.append(y_coords, y_coords[0])
-            polygon_item = plot_widget.plot(
+            plot_widget.plot(
                 x_coords, y_coords,
                 pen=pg.mkPen(
                     color=color,
                     style=Qt.PenStyle.DashLine,
                     width=1),
             )
-            polygon_item._static_element = True  # Tag as static
 
     def init_radar_plot(
             self,
@@ -446,7 +444,7 @@ class VisualisationModule:
                 self.__clockwise)
 
         # Ensure the legend is created once
-        if not self.__legend_added:
+        if not self.__radar_legend_added:
             legend = plot_widget.addLegend(offset=(10, 10))
             # Add target tension items manually
             legend.addItem(
@@ -459,7 +457,7 @@ class VisualisationModule:
                     color="blue",
                     style=Qt.PenStyle.DashLine)),
                 "Right Target Tension",)
-            self.__legend_added = True
+            self.__radar_legend_added = True
 
         # Draw spokes and numbers
         if left_spokes == right_spokes:
@@ -511,9 +509,9 @@ class VisualisationModule:
         Respects the direction specified by the `clockwise` attribute.
         """
         # Remove only dynamic elements
-        for item in plot_widget.listDataItems():
-            if not hasattr(item, "_static_element"):
-                plot_widget.removeItem(item)
+        for item in self.__dynamic_items:
+            plot_widget.removeItem(item)
+        self.__dynamic_items.clear()
 
         # Initialize angles
         angles_left = np.array([])
@@ -544,6 +542,7 @@ class VisualisationModule:
                 symbolBrush='red'
             )
             plot_widget.addItem(left_tensions_plot)
+            self.__dynamic_items.append(left_tensions_plot)
 
         if right_spokes > 0:
             right_x = np.cos(angles_right) * tensions_right_closed
@@ -557,3 +556,4 @@ class VisualisationModule:
                 symbolBrush='blue'
             )
             plot_widget.addItem(right_tensions_plot)
+            self.__dynamic_items.append(right_tensions_plot)
