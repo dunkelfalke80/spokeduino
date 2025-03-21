@@ -1,6 +1,6 @@
-import numpy as np
 from enum import Enum
 from typing import Any, cast
+import numpy as np
 from scipy.interpolate import CubicSpline
 from scipy.optimize import curve_fit, brentq
 

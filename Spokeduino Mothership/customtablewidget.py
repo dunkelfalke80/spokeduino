@@ -39,18 +39,17 @@ class NumericTableWidgetItem(QTableWidgetItem):
 
         if self_value is not None and other_value is not None:
             return float(self_value) < float(other_value)
-        elif self_value is not None:
+        if self_value is not None:
             return True  # self has data, other does not
-        elif other_value is not None:
+        if other_value is not None:
             return False  # other has data, self does not
-        else:
-            # Both have no UserRole, compare text
-            try:
-                return float(self.text().replace(",", ".")) \
-                    < float(other.text().replace(",", "."))
-            except ValueError:
-                # If either text is non-numeric, fall back to string comparison
-                return self.text() < other.text()
+        # Both have no UserRole, compare text
+        try:
+            return float(self.text().replace(",", ".")) \
+                < float(other.text().replace(",", "."))
+        except ValueError:
+            # If either text is non-numeric, fall back to string comparison
+            return self.text() < other.text()
 
 
 class CustomTableWidget(QTableWidget):
@@ -78,7 +77,6 @@ class CustomTableWidget(QTableWidget):
                                                Defaults to the internal
                                                __move_to_previous_cell_default.
         """
-        ...
         super().__init__(*args, **kwargs)
         # Configure table behavior
         self.__select_rows: QAbstractItemView.SelectionBehavior = \
@@ -269,13 +267,13 @@ class CustomTableWidget(QTableWidget):
 
         # Estimate row height and font size
         row_height: int = layout_height // row_count
-        font_size = row_height // 3  # Adjust font size relative to row height
+        font_size: int = row_height // 3  # Adjust font size relative to row height
 
         # Ensure minimum font size
-        font_size: int = max(font_size, 8)
+        font_size = max(font_size, 8)
 
         # Ensure maximum font size
-        font_size: int = min(font_size, 12)
+        font_size = min(font_size, 12)
 
         # Set font for the table
         font: QFont = self.font()

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 ################################################################################
-## Form generated from reading UI file 'spokeduino_mothershipBvGeQg.ui'
+## Form generated from reading UI file 'spokeduino_mothershipKYDGgl.ui'
 ##
-## Created by: Qt User Interface Compiler version 6.8.1
+## Created by: Qt User Interface Compiler version 6.8.2
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -49,77 +49,77 @@ class Ui_mainWindow(object):
         self.tabWidget = QTabWidget(self.centralwidget)
         self.tabWidget.setObjectName(u"tabWidget")
         self.tabWidget.setEnabled(True)
-        self.databaseTab = QWidget()
-        self.databaseTab.setObjectName(u"databaseTab")
-        self.horizontalLayoutDatabaseTop = QHBoxLayout(self.databaseTab)
+        self.spokeTab = QWidget()
+        self.spokeTab.setObjectName(u"spokeTab")
+        self.horizontalLayoutDatabaseTop = QHBoxLayout(self.spokeTab)
         self.horizontalLayoutDatabaseTop.setObjectName(u"horizontalLayoutDatabaseTop")
         self.horizontalLayoutDatabase = QHBoxLayout()
         self.horizontalLayoutDatabase.setObjectName(u"horizontalLayoutDatabase")
         self.verticalLayoutDatabaseLeft = QVBoxLayout()
         self.verticalLayoutDatabaseLeft.setObjectName(u"verticalLayoutDatabaseLeft")
-        self.groupBoxListSpokesDatabase = QGroupBox(self.databaseTab)
-        self.groupBoxListSpokesDatabase.setObjectName(u"groupBoxListSpokesDatabase")
-        self.verticalLayoutFilterDatabase = QVBoxLayout(self.groupBoxListSpokesDatabase)
+        self.groupBoxListSpoke = QGroupBox(self.spokeTab)
+        self.groupBoxListSpoke.setObjectName(u"groupBoxListSpoke")
+        self.verticalLayoutFilterDatabase = QVBoxLayout(self.groupBoxListSpoke)
         self.verticalLayoutFilterDatabase.setObjectName(u"verticalLayoutFilterDatabase")
         self.horizontalLayoutFilterDatabase = QHBoxLayout()
         self.horizontalLayoutFilterDatabase.setObjectName(u"horizontalLayoutFilterDatabase")
-        self.lineEditFilterName = QLineEdit(self.groupBoxListSpokesDatabase)
-        self.lineEditFilterName.setObjectName(u"lineEditFilterName")
+        self.lineEditFilterSpokeName = QLineEdit(self.groupBoxListSpoke)
+        self.lineEditFilterSpokeName.setObjectName(u"lineEditFilterSpokeName")
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
         sizePolicy1.setHorizontalStretch(0)
         sizePolicy1.setVerticalStretch(0)
-        sizePolicy1.setHeightForWidth(self.lineEditFilterName.sizePolicy().hasHeightForWidth())
-        self.lineEditFilterName.setSizePolicy(sizePolicy1)
+        sizePolicy1.setHeightForWidth(self.lineEditFilterSpokeName.sizePolicy().hasHeightForWidth())
+        self.lineEditFilterSpokeName.setSizePolicy(sizePolicy1)
 
-        self.horizontalLayoutFilterDatabase.addWidget(self.lineEditFilterName)
+        self.horizontalLayoutFilterDatabase.addWidget(self.lineEditFilterSpokeName)
 
-        self.comboBoxFilterType = QComboBox(self.groupBoxListSpokesDatabase)
-        self.comboBoxFilterType.setObjectName(u"comboBoxFilterType")
-        sizePolicy1.setHeightForWidth(self.comboBoxFilterType.sizePolicy().hasHeightForWidth())
-        self.comboBoxFilterType.setSizePolicy(sizePolicy1)
+        self.comboBoxFilterSpokeType = QComboBox(self.groupBoxListSpoke)
+        self.comboBoxFilterSpokeType.setObjectName(u"comboBoxFilterSpokeType")
+        sizePolicy1.setHeightForWidth(self.comboBoxFilterSpokeType.sizePolicy().hasHeightForWidth())
+        self.comboBoxFilterSpokeType.setSizePolicy(sizePolicy1)
 
-        self.horizontalLayoutFilterDatabase.addWidget(self.comboBoxFilterType)
+        self.horizontalLayoutFilterDatabase.addWidget(self.comboBoxFilterSpokeType)
 
         self.horizontalSpacerFilter = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayoutFilterDatabase.addItem(self.horizontalSpacerFilter)
 
-        self.lineEditFilterGauge = QLineEdit(self.groupBoxListSpokesDatabase)
-        self.lineEditFilterGauge.setObjectName(u"lineEditFilterGauge")
-        sizePolicy1.setHeightForWidth(self.lineEditFilterGauge.sizePolicy().hasHeightForWidth())
-        self.lineEditFilterGauge.setSizePolicy(sizePolicy1)
+        self.lineEditFilterSpokeGauge = QLineEdit(self.groupBoxListSpoke)
+        self.lineEditFilterSpokeGauge.setObjectName(u"lineEditFilterSpokeGauge")
+        sizePolicy1.setHeightForWidth(self.lineEditFilterSpokeGauge.sizePolicy().hasHeightForWidth())
+        self.lineEditFilterSpokeGauge.setSizePolicy(sizePolicy1)
 
-        self.horizontalLayoutFilterDatabase.addWidget(self.lineEditFilterGauge)
+        self.horizontalLayoutFilterDatabase.addWidget(self.lineEditFilterSpokeGauge)
 
         self.horizontalLayoutFilterDatabase.setStretch(3, 1)
 
         self.verticalLayoutFilterDatabase.addLayout(self.horizontalLayoutFilterDatabase)
 
-        self.tableWidgetSpokesDatabase = QTableWidget(self.groupBoxListSpokesDatabase)
-        self.tableWidgetSpokesDatabase.setObjectName(u"tableWidgetSpokesDatabase")
-        sizePolicy1.setHeightForWidth(self.tableWidgetSpokesDatabase.sizePolicy().hasHeightForWidth())
-        self.tableWidgetSpokesDatabase.setSizePolicy(sizePolicy1)
+        self.tableWidgetSpokeSelection = QTableWidget(self.groupBoxListSpoke)
+        self.tableWidgetSpokeSelection.setObjectName(u"tableWidgetSpokeSelection")
+        sizePolicy1.setHeightForWidth(self.tableWidgetSpokeSelection.sizePolicy().hasHeightForWidth())
+        self.tableWidgetSpokeSelection.setSizePolicy(sizePolicy1)
 
-        self.verticalLayoutFilterDatabase.addWidget(self.tableWidgetSpokesDatabase)
+        self.verticalLayoutFilterDatabase.addWidget(self.tableWidgetSpokeSelection)
 
         self.verticalLayoutFilterDatabase.setStretch(1, 1)
 
-        self.verticalLayoutDatabaseLeft.addWidget(self.groupBoxListSpokesDatabase)
+        self.verticalLayoutDatabaseLeft.addWidget(self.groupBoxListSpoke)
 
-        self.groupBoxListMeasurementsDatabase = QGroupBox(self.databaseTab)
-        self.groupBoxListMeasurementsDatabase.setObjectName(u"groupBoxListMeasurementsDatabase")
-        self.horizontalLayout_4 = QHBoxLayout(self.groupBoxListMeasurementsDatabase)
+        self.groupBoxListSpokeMeasurements = QGroupBox(self.spokeTab)
+        self.groupBoxListSpokeMeasurements.setObjectName(u"groupBoxListSpokeMeasurements")
+        self.horizontalLayout_4 = QHBoxLayout(self.groupBoxListSpokeMeasurements)
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
         self.verticalLayout_4 = QVBoxLayout()
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
         self.horizontalLayoutSpokeDefinitionsDatabase_4 = QHBoxLayout()
         self.horizontalLayoutSpokeDefinitionsDatabase_4.setObjectName(u"horizontalLayoutSpokeDefinitionsDatabase_4")
-        self.tableWidgetMeasurementList = QTableWidget(self.groupBoxListMeasurementsDatabase)
-        self.tableWidgetMeasurementList.setObjectName(u"tableWidgetMeasurementList")
-        sizePolicy1.setHeightForWidth(self.tableWidgetMeasurementList.sizePolicy().hasHeightForWidth())
-        self.tableWidgetMeasurementList.setSizePolicy(sizePolicy1)
+        self.tableWidgetSpokeMeasurements = QTableWidget(self.groupBoxListSpokeMeasurements)
+        self.tableWidgetSpokeMeasurements.setObjectName(u"tableWidgetSpokeMeasurements")
+        sizePolicy1.setHeightForWidth(self.tableWidgetSpokeMeasurements.sizePolicy().hasHeightForWidth())
+        self.tableWidgetSpokeMeasurements.setSizePolicy(sizePolicy1)
 
-        self.horizontalLayoutSpokeDefinitionsDatabase_4.addWidget(self.tableWidgetMeasurementList)
+        self.horizontalLayoutSpokeDefinitionsDatabase_4.addWidget(self.tableWidgetSpokeMeasurements)
 
 
         self.verticalLayout_4.addLayout(self.horizontalLayoutSpokeDefinitionsDatabase_4)
@@ -128,7 +128,7 @@ class Ui_mainWindow(object):
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
         self.horizontalLayoutSpokeDefinitionsDatabase_6 = QHBoxLayout()
         self.horizontalLayoutSpokeDefinitionsDatabase_6.setObjectName(u"horizontalLayoutSpokeDefinitionsDatabase_6")
-        self.pushButtonUseLeft = QPushButton(self.groupBoxListMeasurementsDatabase)
+        self.pushButtonUseLeft = QPushButton(self.groupBoxListSpokeMeasurements)
         self.pushButtonUseLeft.setObjectName(u"pushButtonUseLeft")
         sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Maximum)
         sizePolicy2.setHorizontalStretch(0)
@@ -140,7 +140,7 @@ class Ui_mainWindow(object):
 
         self.horizontalLayoutSpokeDefinitionsDatabase_6.addWidget(self.pushButtonUseLeft)
 
-        self.pushButtonUseRight = QPushButton(self.groupBoxListMeasurementsDatabase)
+        self.pushButtonUseRight = QPushButton(self.groupBoxListSpokeMeasurements)
         self.pushButtonUseRight.setObjectName(u"pushButtonUseRight")
         sizePolicy2.setHeightForWidth(self.pushButtonUseRight.sizePolicy().hasHeightForWidth())
         self.pushButtonUseRight.setSizePolicy(sizePolicy2)
@@ -153,7 +153,7 @@ class Ui_mainWindow(object):
 
         self.horizontalLayoutSpokeDefinitionsDatabase_6.addItem(self.horizontalSpacerTypeDatabase_6)
 
-        self.pushButtonNewMeasurement = QPushButton(self.groupBoxListMeasurementsDatabase)
+        self.pushButtonNewMeasurement = QPushButton(self.groupBoxListSpokeMeasurements)
         self.pushButtonNewMeasurement.setObjectName(u"pushButtonNewMeasurement")
         sizePolicy2.setHeightForWidth(self.pushButtonNewMeasurement.sizePolicy().hasHeightForWidth())
         self.pushButtonNewMeasurement.setSizePolicy(sizePolicy2)
@@ -162,7 +162,7 @@ class Ui_mainWindow(object):
 
         self.horizontalLayoutSpokeDefinitionsDatabase_6.addWidget(self.pushButtonNewMeasurement)
 
-        self.pushButtonEditMeasurement = QPushButton(self.groupBoxListMeasurementsDatabase)
+        self.pushButtonEditMeasurement = QPushButton(self.groupBoxListSpokeMeasurements)
         self.pushButtonEditMeasurement.setObjectName(u"pushButtonEditMeasurement")
         sizePolicy2.setHeightForWidth(self.pushButtonEditMeasurement.sizePolicy().hasHeightForWidth())
         self.pushButtonEditMeasurement.setSizePolicy(sizePolicy2)
@@ -171,7 +171,7 @@ class Ui_mainWindow(object):
 
         self.horizontalLayoutSpokeDefinitionsDatabase_6.addWidget(self.pushButtonEditMeasurement)
 
-        self.pushButtonDeleteMeasurement = QPushButton(self.groupBoxListMeasurementsDatabase)
+        self.pushButtonDeleteMeasurement = QPushButton(self.groupBoxListSpokeMeasurements)
         self.pushButtonDeleteMeasurement.setObjectName(u"pushButtonDeleteMeasurement")
         sizePolicy2.setHeightForWidth(self.pushButtonDeleteMeasurement.sizePolicy().hasHeightForWidth())
         self.pushButtonDeleteMeasurement.setSizePolicy(sizePolicy2)
@@ -190,61 +190,57 @@ class Ui_mainWindow(object):
         self.horizontalLayout_4.addLayout(self.verticalLayout_4)
 
 
-        self.verticalLayoutDatabaseLeft.addWidget(self.groupBoxListMeasurementsDatabase)
+        self.verticalLayoutDatabaseLeft.addWidget(self.groupBoxListSpokeMeasurements)
 
         self.verticalLayoutDatabaseLeft.setStretch(0, 3)
 
         self.horizontalLayoutDatabase.addLayout(self.verticalLayoutDatabaseLeft)
 
-        self.horizontalSpacerDatabaseCenter = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayoutDatabase.addItem(self.horizontalSpacerDatabaseCenter)
-
-        self.groupBoxSpokeDatabase = QGroupBox(self.databaseTab)
-        self.groupBoxSpokeDatabase.setObjectName(u"groupBoxSpokeDatabase")
-        self.verticalLayoutSpokeDatabase = QVBoxLayout(self.groupBoxSpokeDatabase)
+        self.groupBoxCreateSpoke = QGroupBox(self.spokeTab)
+        self.groupBoxCreateSpoke.setObjectName(u"groupBoxCreateSpoke")
+        self.verticalLayoutSpokeDatabase = QVBoxLayout(self.groupBoxCreateSpoke)
         self.verticalLayoutSpokeDatabase.setObjectName(u"verticalLayoutSpokeDatabase")
-        self.groupBoxManufacturer = QGroupBox(self.groupBoxSpokeDatabase)
-        self.groupBoxManufacturer.setObjectName(u"groupBoxManufacturer")
-        self.verticalLayoutManufacturerDatabase = QVBoxLayout(self.groupBoxManufacturer)
+        self.groupBoxSpokeManufacturer = QGroupBox(self.groupBoxCreateSpoke)
+        self.groupBoxSpokeManufacturer.setObjectName(u"groupBoxSpokeManufacturer")
+        self.verticalLayoutManufacturerDatabase = QVBoxLayout(self.groupBoxSpokeManufacturer)
         self.verticalLayoutManufacturerDatabase.setObjectName(u"verticalLayoutManufacturerDatabase")
-        self.comboBoxManufacturer = QComboBox(self.groupBoxManufacturer)
-        self.comboBoxManufacturer.setObjectName(u"comboBoxManufacturer")
-        sizePolicy1.setHeightForWidth(self.comboBoxManufacturer.sizePolicy().hasHeightForWidth())
-        self.comboBoxManufacturer.setSizePolicy(sizePolicy1)
+        self.comboBoxSpokeManufacturer = QComboBox(self.groupBoxSpokeManufacturer)
+        self.comboBoxSpokeManufacturer.setObjectName(u"comboBoxSpokeManufacturer")
+        sizePolicy1.setHeightForWidth(self.comboBoxSpokeManufacturer.sizePolicy().hasHeightForWidth())
+        self.comboBoxSpokeManufacturer.setSizePolicy(sizePolicy1)
 
-        self.verticalLayoutManufacturerDatabase.addWidget(self.comboBoxManufacturer)
+        self.verticalLayoutManufacturerDatabase.addWidget(self.comboBoxSpokeManufacturer)
 
         self.horizontalLayoutDatabaseLeft = QHBoxLayout()
         self.horizontalLayoutDatabaseLeft.setObjectName(u"horizontalLayoutDatabaseLeft")
         self.horizontalLayoutDatabaseLeft.setSizeConstraint(QLayout.SizeConstraint.SetDefaultConstraint)
-        self.groupBoxNewManufacturer = QGroupBox(self.groupBoxManufacturer)
-        self.groupBoxNewManufacturer.setObjectName(u"groupBoxNewManufacturer")
-        sizePolicy1.setHeightForWidth(self.groupBoxNewManufacturer.sizePolicy().hasHeightForWidth())
-        self.groupBoxNewManufacturer.setSizePolicy(sizePolicy1)
-        self.verticalLayoutNewManufacturerDatabase = QVBoxLayout(self.groupBoxNewManufacturer)
+        self.groupBoxNewSpokeManufacturer = QGroupBox(self.groupBoxSpokeManufacturer)
+        self.groupBoxNewSpokeManufacturer.setObjectName(u"groupBoxNewSpokeManufacturer")
+        sizePolicy1.setHeightForWidth(self.groupBoxNewSpokeManufacturer.sizePolicy().hasHeightForWidth())
+        self.groupBoxNewSpokeManufacturer.setSizePolicy(sizePolicy1)
+        self.verticalLayoutNewManufacturerDatabase = QVBoxLayout(self.groupBoxNewSpokeManufacturer)
         self.verticalLayoutNewManufacturerDatabase.setObjectName(u"verticalLayoutNewManufacturerDatabase")
-        self.lineEditNewManufacturer = QLineEdit(self.groupBoxNewManufacturer)
-        self.lineEditNewManufacturer.setObjectName(u"lineEditNewManufacturer")
-        sizePolicy1.setHeightForWidth(self.lineEditNewManufacturer.sizePolicy().hasHeightForWidth())
-        self.lineEditNewManufacturer.setSizePolicy(sizePolicy1)
+        self.lineEditNewSpokeManufacturer = QLineEdit(self.groupBoxNewSpokeManufacturer)
+        self.lineEditNewSpokeManufacturer.setObjectName(u"lineEditNewSpokeManufacturer")
+        sizePolicy1.setHeightForWidth(self.lineEditNewSpokeManufacturer.sizePolicy().hasHeightForWidth())
+        self.lineEditNewSpokeManufacturer.setSizePolicy(sizePolicy1)
 
-        self.verticalLayoutNewManufacturerDatabase.addWidget(self.lineEditNewManufacturer)
+        self.verticalLayoutNewManufacturerDatabase.addWidget(self.lineEditNewSpokeManufacturer)
 
 
-        self.horizontalLayoutDatabaseLeft.addWidget(self.groupBoxNewManufacturer)
+        self.horizontalLayoutDatabaseLeft.addWidget(self.groupBoxNewSpokeManufacturer)
 
-        self.pushButtonSaveAsManufacturer = QPushButton(self.groupBoxManufacturer)
-        self.pushButtonSaveAsManufacturer.setObjectName(u"pushButtonSaveAsManufacturer")
+        self.pushButtonSaveAsSpokeManufacturer = QPushButton(self.groupBoxSpokeManufacturer)
+        self.pushButtonSaveAsSpokeManufacturer.setObjectName(u"pushButtonSaveAsSpokeManufacturer")
         sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Maximum)
         sizePolicy3.setHorizontalStretch(0)
         sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.pushButtonSaveAsManufacturer.sizePolicy().hasHeightForWidth())
-        self.pushButtonSaveAsManufacturer.setSizePolicy(sizePolicy3)
+        sizePolicy3.setHeightForWidth(self.pushButtonSaveAsSpokeManufacturer.sizePolicy().hasHeightForWidth())
+        self.pushButtonSaveAsSpokeManufacturer.setSizePolicy(sizePolicy3)
         icon5 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentSaveAs))
-        self.pushButtonSaveAsManufacturer.setIcon(icon5)
+        self.pushButtonSaveAsSpokeManufacturer.setIcon(icon5)
 
-        self.horizontalLayoutDatabaseLeft.addWidget(self.pushButtonSaveAsManufacturer)
+        self.horizontalLayoutDatabaseLeft.addWidget(self.pushButtonSaveAsSpokeManufacturer)
 
         self.horizontalLayoutDatabaseLeft.setStretch(0, 3)
         self.horizontalLayoutDatabaseLeft.setStretch(1, 1)
@@ -252,13 +248,13 @@ class Ui_mainWindow(object):
         self.verticalLayoutManufacturerDatabase.addLayout(self.horizontalLayoutDatabaseLeft)
 
 
-        self.verticalLayoutSpokeDatabase.addWidget(self.groupBoxManufacturer)
+        self.verticalLayoutSpokeDatabase.addWidget(self.groupBoxSpokeManufacturer)
 
         self.verticalSpacerDatabaseTop = QSpacerItem(20, 28, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayoutSpokeDatabase.addItem(self.verticalSpacerDatabaseTop)
 
-        self.groupBoxSpoke = QGroupBox(self.groupBoxSpokeDatabase)
+        self.groupBoxSpoke = QGroupBox(self.groupBoxCreateSpoke)
         self.groupBoxSpoke.setObjectName(u"groupBoxSpoke")
         self.verticalLayoutSelectSpokeDatabase = QVBoxLayout(self.groupBoxSpoke)
         self.verticalLayoutSelectSpokeDatabase.setObjectName(u"verticalLayoutSelectSpokeDatabase")
@@ -267,90 +263,90 @@ class Ui_mainWindow(object):
         self.groupBoxName.setEnabled(True)
         self.verticalLayoutEditNewSpokeName = QVBoxLayout(self.groupBoxName)
         self.verticalLayoutEditNewSpokeName.setObjectName(u"verticalLayoutEditNewSpokeName")
-        self.lineEditName = QLineEdit(self.groupBoxName)
-        self.lineEditName.setObjectName(u"lineEditName")
-        sizePolicy1.setHeightForWidth(self.lineEditName.sizePolicy().hasHeightForWidth())
-        self.lineEditName.setSizePolicy(sizePolicy1)
+        self.lineEditSpokeName = QLineEdit(self.groupBoxName)
+        self.lineEditSpokeName.setObjectName(u"lineEditName")
+        sizePolicy1.setHeightForWidth(self.lineEditSpokeName.sizePolicy().hasHeightForWidth())
+        self.lineEditSpokeName.setSizePolicy(sizePolicy1)
 
-        self.verticalLayoutEditNewSpokeName.addWidget(self.lineEditName)
+        self.verticalLayoutEditNewSpokeName.addWidget(self.lineEditSpokeName)
 
 
         self.verticalLayoutSelectSpokeDatabase.addWidget(self.groupBoxName)
 
         self.horizontalLayoutSpokeDefinitionsDatabase = QHBoxLayout()
         self.horizontalLayoutSpokeDefinitionsDatabase.setObjectName(u"horizontalLayoutSpokeDefinitionsDatabase")
-        self.groupBoxType = QGroupBox(self.groupBoxSpoke)
-        self.groupBoxType.setObjectName(u"groupBoxType")
-        sizePolicy1.setHeightForWidth(self.groupBoxType.sizePolicy().hasHeightForWidth())
-        self.groupBoxType.setSizePolicy(sizePolicy1)
-        self.groupBoxType.setMinimumSize(QSize(150, 0))
-        self.verticalLayoutTypeDatabase = QVBoxLayout(self.groupBoxType)
+        self.groupBoxSpokeType = QGroupBox(self.groupBoxSpoke)
+        self.groupBoxSpokeType.setObjectName(u"groupBoxSpokeType")
+        sizePolicy1.setHeightForWidth(self.groupBoxSpokeType.sizePolicy().hasHeightForWidth())
+        self.groupBoxSpokeType.setSizePolicy(sizePolicy1)
+        self.groupBoxSpokeType.setMinimumSize(QSize(150, 0))
+        self.verticalLayoutTypeDatabase = QVBoxLayout(self.groupBoxSpokeType)
         self.verticalLayoutTypeDatabase.setObjectName(u"verticalLayoutTypeDatabase")
-        self.comboBoxType = QComboBox(self.groupBoxType)
-        self.comboBoxType.setObjectName(u"comboBoxType")
+        self.comboBoxSpokeType = QComboBox(self.groupBoxSpokeType)
+        self.comboBoxSpokeType.setObjectName(u"comboBoxSpokeType")
         sizePolicy4 = QSizePolicy(QSizePolicy.Policy.MinimumExpanding, QSizePolicy.Policy.Maximum)
         sizePolicy4.setHorizontalStretch(0)
         sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.comboBoxType.sizePolicy().hasHeightForWidth())
-        self.comboBoxType.setSizePolicy(sizePolicy4)
+        sizePolicy4.setHeightForWidth(self.comboBoxSpokeType.sizePolicy().hasHeightForWidth())
+        self.comboBoxSpokeType.setSizePolicy(sizePolicy4)
 
-        self.verticalLayoutTypeDatabase.addWidget(self.comboBoxType)
+        self.verticalLayoutTypeDatabase.addWidget(self.comboBoxSpokeType)
 
 
-        self.horizontalLayoutSpokeDefinitionsDatabase.addWidget(self.groupBoxType)
+        self.horizontalLayoutSpokeDefinitionsDatabase.addWidget(self.groupBoxSpokeType)
 
         self.horizontalSpacerTypeDatabase = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayoutSpokeDefinitionsDatabase.addItem(self.horizontalSpacerTypeDatabase)
 
-        self.groupBoxGauge = QGroupBox(self.groupBoxSpoke)
-        self.groupBoxGauge.setObjectName(u"groupBoxGauge")
-        sizePolicy1.setHeightForWidth(self.groupBoxGauge.sizePolicy().hasHeightForWidth())
-        self.groupBoxGauge.setSizePolicy(sizePolicy1)
-        self.verticalLayoutGaugeDatabase = QVBoxLayout(self.groupBoxGauge)
+        self.groupBoxSpokeGauge = QGroupBox(self.groupBoxSpoke)
+        self.groupBoxSpokeGauge.setObjectName(u"groupBoxSpokeGauge")
+        sizePolicy1.setHeightForWidth(self.groupBoxSpokeGauge.sizePolicy().hasHeightForWidth())
+        self.groupBoxSpokeGauge.setSizePolicy(sizePolicy1)
+        self.verticalLayoutGaugeDatabase = QVBoxLayout(self.groupBoxSpokeGauge)
         self.verticalLayoutGaugeDatabase.setObjectName(u"verticalLayoutGaugeDatabase")
-        self.lineEditGauge = QLineEdit(self.groupBoxGauge)
-        self.lineEditGauge.setObjectName(u"lineEditGauge")
-        sizePolicy1.setHeightForWidth(self.lineEditGauge.sizePolicy().hasHeightForWidth())
-        self.lineEditGauge.setSizePolicy(sizePolicy1)
+        self.lineEditSpokeGauge = QLineEdit(self.groupBoxSpokeGauge)
+        self.lineEditSpokeGauge.setObjectName(u"lineEditSpokeGauge")
+        sizePolicy1.setHeightForWidth(self.lineEditSpokeGauge.sizePolicy().hasHeightForWidth())
+        self.lineEditSpokeGauge.setSizePolicy(sizePolicy1)
 
-        self.verticalLayoutGaugeDatabase.addWidget(self.lineEditGauge)
+        self.verticalLayoutGaugeDatabase.addWidget(self.lineEditSpokeGauge)
 
 
-        self.horizontalLayoutSpokeDefinitionsDatabase.addWidget(self.groupBoxGauge)
+        self.horizontalLayoutSpokeDefinitionsDatabase.addWidget(self.groupBoxSpokeGauge)
 
-        self.groupBoxWeight = QGroupBox(self.groupBoxSpoke)
-        self.groupBoxWeight.setObjectName(u"groupBoxWeight")
-        sizePolicy1.setHeightForWidth(self.groupBoxWeight.sizePolicy().hasHeightForWidth())
-        self.groupBoxWeight.setSizePolicy(sizePolicy1)
-        self.verticalLayoutWeightDatabase = QVBoxLayout(self.groupBoxWeight)
+        self.groupBoxSpokeWeight = QGroupBox(self.groupBoxSpoke)
+        self.groupBoxSpokeWeight.setObjectName(u"groupBoxSpokeWeight")
+        sizePolicy1.setHeightForWidth(self.groupBoxSpokeWeight.sizePolicy().hasHeightForWidth())
+        self.groupBoxSpokeWeight.setSizePolicy(sizePolicy1)
+        self.verticalLayoutWeightDatabase = QVBoxLayout(self.groupBoxSpokeWeight)
         self.verticalLayoutWeightDatabase.setObjectName(u"verticalLayoutWeightDatabase")
-        self.lineEditWeight = QLineEdit(self.groupBoxWeight)
-        self.lineEditWeight.setObjectName(u"lineEditWeight")
-        sizePolicy1.setHeightForWidth(self.lineEditWeight.sizePolicy().hasHeightForWidth())
-        self.lineEditWeight.setSizePolicy(sizePolicy1)
+        self.lineEditSpokeWeight = QLineEdit(self.groupBoxSpokeWeight)
+        self.lineEditSpokeWeight.setObjectName(u"lineEditSpokeWeight")
+        sizePolicy1.setHeightForWidth(self.lineEditSpokeWeight.sizePolicy().hasHeightForWidth())
+        self.lineEditSpokeWeight.setSizePolicy(sizePolicy1)
 
-        self.verticalLayoutWeightDatabase.addWidget(self.lineEditWeight)
+        self.verticalLayoutWeightDatabase.addWidget(self.lineEditSpokeWeight)
 
 
-        self.horizontalLayoutSpokeDefinitionsDatabase.addWidget(self.groupBoxWeight)
+        self.horizontalLayoutSpokeDefinitionsDatabase.addWidget(self.groupBoxSpokeWeight)
 
 
         self.verticalLayoutSelectSpokeDatabase.addLayout(self.horizontalLayoutSpokeDefinitionsDatabase)
 
-        self.groupBoxDimension = QGroupBox(self.groupBoxSpoke)
-        self.groupBoxDimension.setObjectName(u"groupBoxDimension")
-        self.verticalLayoutDimension = QVBoxLayout(self.groupBoxDimension)
+        self.groupBoxSpokeDimension = QGroupBox(self.groupBoxSpoke)
+        self.groupBoxSpokeDimension.setObjectName(u"groupBoxSpokeDimension")
+        self.verticalLayoutDimension = QVBoxLayout(self.groupBoxSpokeDimension)
         self.verticalLayoutDimension.setObjectName(u"verticalLayoutDimension")
-        self.lineEditDimension = QLineEdit(self.groupBoxDimension)
-        self.lineEditDimension.setObjectName(u"lineEditDimension")
-        sizePolicy1.setHeightForWidth(self.lineEditDimension.sizePolicy().hasHeightForWidth())
-        self.lineEditDimension.setSizePolicy(sizePolicy1)
+        self.lineEditSpokeDimension = QLineEdit(self.groupBoxSpokeDimension)
+        self.lineEditSpokeDimension.setObjectName(u"lineEditSpokeDimension")
+        sizePolicy1.setHeightForWidth(self.lineEditSpokeDimension.sizePolicy().hasHeightForWidth())
+        self.lineEditSpokeDimension.setSizePolicy(sizePolicy1)
 
-        self.verticalLayoutDimension.addWidget(self.lineEditDimension)
+        self.verticalLayoutDimension.addWidget(self.lineEditSpokeDimension)
 
 
-        self.verticalLayoutSelectSpokeDatabase.addWidget(self.groupBoxDimension)
+        self.verticalLayoutSelectSpokeDatabase.addWidget(self.groupBoxSpokeDimension)
 
         self.groupBoxSpokeComment = QGroupBox(self.groupBoxSpoke)
         self.groupBoxSpokeComment.setObjectName(u"groupBoxSpokeComment")
@@ -375,53 +371,53 @@ class Ui_mainWindow(object):
 
         self.horizontalLayoutSpokeButtonsDatabase = QHBoxLayout()
         self.horizontalLayoutSpokeButtonsDatabase.setObjectName(u"horizontalLayoutSpokeButtonsDatabase")
-        self.pushButtonUpdateSpoke = QPushButton(self.groupBoxSpokeDatabase)
-        self.pushButtonUpdateSpoke.setObjectName(u"pushButtonUpdateSpoke")
-        sizePolicy2.setHeightForWidth(self.pushButtonUpdateSpoke.sizePolicy().hasHeightForWidth())
-        self.pushButtonUpdateSpoke.setSizePolicy(sizePolicy2)
+        self.pushButtonSpokeUpdate = QPushButton(self.groupBoxCreateSpoke)
+        self.pushButtonSpokeUpdate.setObjectName(u"pushButtonSpokeUpdate")
+        sizePolicy2.setHeightForWidth(self.pushButtonSpokeUpdate.sizePolicy().hasHeightForWidth())
+        self.pushButtonSpokeUpdate.setSizePolicy(sizePolicy2)
         icon6 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentSave))
-        self.pushButtonUpdateSpoke.setIcon(icon6)
+        self.pushButtonSpokeUpdate.setIcon(icon6)
 
-        self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonUpdateSpoke)
+        self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonSpokeUpdate)
 
-        self.pushButtonSaveAsSpoke = QPushButton(self.groupBoxSpokeDatabase)
-        self.pushButtonSaveAsSpoke.setObjectName(u"pushButtonSaveAsSpoke")
-        sizePolicy2.setHeightForWidth(self.pushButtonSaveAsSpoke.sizePolicy().hasHeightForWidth())
-        self.pushButtonSaveAsSpoke.setSizePolicy(sizePolicy2)
-        self.pushButtonSaveAsSpoke.setIcon(icon5)
+        self.pushButtonSpokeSaveAs = QPushButton(self.groupBoxCreateSpoke)
+        self.pushButtonSpokeSaveAs.setObjectName(u"pushButtonSpokeSaveAs")
+        sizePolicy2.setHeightForWidth(self.pushButtonSpokeSaveAs.sizePolicy().hasHeightForWidth())
+        self.pushButtonSpokeSaveAs.setSizePolicy(sizePolicy2)
+        self.pushButtonSpokeSaveAs.setIcon(icon5)
 
-        self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonSaveAsSpoke)
+        self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonSpokeSaveAs)
 
-        self.pushButtonClearSpoke = QPushButton(self.groupBoxSpokeDatabase)
-        self.pushButtonClearSpoke.setObjectName(u"pushButtonClearSpoke")
-        sizePolicy2.setHeightForWidth(self.pushButtonClearSpoke.sizePolicy().hasHeightForWidth())
-        self.pushButtonClearSpoke.setSizePolicy(sizePolicy2)
+        self.pushButtonSpokeClear = QPushButton(self.groupBoxCreateSpoke)
+        self.pushButtonSpokeClear.setObjectName(u"pushButtonSpokeClear")
+        sizePolicy2.setHeightForWidth(self.pushButtonSpokeClear.sizePolicy().hasHeightForWidth())
+        self.pushButtonSpokeClear.setSizePolicy(sizePolicy2)
         icon7 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.DocumentNew))
-        self.pushButtonClearSpoke.setIcon(icon7)
+        self.pushButtonSpokeClear.setIcon(icon7)
 
-        self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonClearSpoke)
+        self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonSpokeClear)
 
-        self.pushButtonDeleteSpoke = QPushButton(self.groupBoxSpokeDatabase)
-        self.pushButtonDeleteSpoke.setObjectName(u"pushButtonDeleteSpoke")
-        sizePolicy2.setHeightForWidth(self.pushButtonDeleteSpoke.sizePolicy().hasHeightForWidth())
-        self.pushButtonDeleteSpoke.setSizePolicy(sizePolicy2)
+        self.pushButtonSpokeDelete = QPushButton(self.groupBoxCreateSpoke)
+        self.pushButtonSpokeDelete.setObjectName(u"pushButtonSpokeDelete")
+        sizePolicy2.setHeightForWidth(self.pushButtonSpokeDelete.sizePolicy().hasHeightForWidth())
+        self.pushButtonSpokeDelete.setSizePolicy(sizePolicy2)
         icon8 = QIcon(QIcon.fromTheme(QIcon.ThemeIcon.EditDelete))
-        self.pushButtonDeleteSpoke.setIcon(icon8)
+        self.pushButtonSpokeDelete.setIcon(icon8)
 
-        self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonDeleteSpoke)
+        self.horizontalLayoutSpokeButtonsDatabase.addWidget(self.pushButtonSpokeDelete)
 
 
         self.verticalLayoutSpokeDatabase.addLayout(self.horizontalLayoutSpokeButtonsDatabase)
 
 
-        self.horizontalLayoutDatabase.addWidget(self.groupBoxSpokeDatabase)
+        self.horizontalLayoutDatabase.addWidget(self.groupBoxCreateSpoke)
 
         self.horizontalLayoutDatabase.setStretch(0, 2)
-        self.horizontalLayoutDatabase.setStretch(2, 1)
+        self.horizontalLayoutDatabase.setStretch(1, 1)
 
         self.horizontalLayoutDatabaseTop.addLayout(self.horizontalLayoutDatabase)
 
-        self.tabWidget.addTab(self.databaseTab, "")
+        self.tabWidget.addTab(self.spokeTab, "")
         self.measurementTab = QWidget()
         self.measurementTab.setObjectName(u"measurementTab")
         self.horizontalLayoutMeasurementTop = QHBoxLayout(self.measurementTab)
@@ -436,7 +432,7 @@ class Ui_mainWindow(object):
         self.verticalLayoutManufacturer.setObjectName(u"verticalLayoutManufacturer")
         self.horizontalLayoutManufacturerLeft = QHBoxLayout()
         self.horizontalLayoutManufacturerLeft.setObjectName(u"horizontalLayoutManufacturerLeft")
-        self.tableWidgetMeasurements = CustomTableWidget(parent=self.groupBoxMeasurementLeft)
+        self.tableWidgetMeasurements = CustomTableWidget(self.groupBoxMeasurementLeft)
         self.tableWidgetMeasurements.setObjectName(u"tableWidgetMeasurements")
 
         self.horizontalLayoutManufacturerLeft.addWidget(self.tableWidgetMeasurements)
@@ -584,7 +580,7 @@ class Ui_mainWindow(object):
         self.verticalLayoutSelectedTensionValuesLeft = QVBoxLayout(self.groupBoxTensionValuesLeft)
         self.verticalLayoutSelectedTensionValuesLeft.setSpacing(6)
         self.verticalLayoutSelectedTensionValuesLeft.setObjectName(u"verticalLayoutSelectedTensionValuesLeft")
-        self.tableWidgetTensioningLeft = CustomTableWidget(parent=self.groupBoxTensionValuesLeft)
+        self.tableWidgetTensioningLeft = CustomTableWidget(self.groupBoxTensionValuesLeft)
         self.tableWidgetTensioningLeft.setObjectName(u"tableWidgetTensioningLeft")
 
         self.verticalLayoutSelectedTensionValuesLeft.addWidget(self.tableWidgetTensioningLeft)
@@ -663,7 +659,7 @@ class Ui_mainWindow(object):
         self.verticalLayoutSelectedTensionValuesRight = QVBoxLayout(self.groupBoxTensionValuesRight)
         self.verticalLayoutSelectedTensionValuesRight.setSpacing(6)
         self.verticalLayoutSelectedTensionValuesRight.setObjectName(u"verticalLayoutSelectedTensionValuesRight")
-        self.tableWidgetTensioningRight = CustomTableWidget(parent=self.groupBoxTensionValuesRight)
+        self.tableWidgetTensioningRight = CustomTableWidget(self.groupBoxTensionValuesRight)
         self.tableWidgetTensioningRight.setObjectName(u"tableWidgetTensioningRight")
 
         self.verticalLayoutSelectedTensionValuesRight.addWidget(self.tableWidgetTensioningRight)
@@ -1008,10 +1004,10 @@ class Ui_mainWindow(object):
 
         self.verticalLayoutRotationDirectionClockwise.addWidget(self.radioButtonRotationClockwise)
 
-        self.radioButtonRotationAnticlockwise = QRadioButton(self.groupBoxWheelRotationDirection)
-        self.radioButtonRotationAnticlockwise.setObjectName(u"radioButtonRotationAnticlockwise")
+        self.radioButtonRotationCounterclockwise = QRadioButton(self.groupBoxWheelRotationDirection)
+        self.radioButtonRotationCounterclockwise.setObjectName(u"radioButtonRotationCounterclockwise")
 
-        self.verticalLayoutRotationDirectionClockwise.addWidget(self.radioButtonRotationAnticlockwise)
+        self.verticalLayoutRotationDirectionClockwise.addWidget(self.radioButtonRotationCounterclockwise)
 
 
         self.verticalLayoutMeasurementDirection.addWidget(self.groupBoxWheelRotationDirection)
@@ -1201,29 +1197,29 @@ class Ui_mainWindow(object):
         self.actionAbout.setText(QCoreApplication.translate("mainWindow", u"About", None))
         self.actionMeasure_a_new_spoke.setText(QCoreApplication.translate("mainWindow", u"Measure a new spoke", None))
         self.actionBuild_a_wheel.setText(QCoreApplication.translate("mainWindow", u"Build a wheel", None))
-        self.groupBoxListSpokesDatabase.setTitle(QCoreApplication.translate("mainWindow", u"Spokes", None))
-        self.groupBoxListMeasurementsDatabase.setTitle(QCoreApplication.translate("mainWindow", u"Measurements", None))
+        self.groupBoxListSpoke.setTitle(QCoreApplication.translate("mainWindow", u"Spokes", None))
+        self.groupBoxListSpokeMeasurements.setTitle(QCoreApplication.translate("mainWindow", u"Measurements", None))
         self.pushButtonUseLeft.setText(QCoreApplication.translate("mainWindow", u"Use on the left", None))
         self.pushButtonUseRight.setText(QCoreApplication.translate("mainWindow", u"Use on the right", None))
         self.pushButtonNewMeasurement.setText(QCoreApplication.translate("mainWindow", u"Add", None))
         self.pushButtonEditMeasurement.setText(QCoreApplication.translate("mainWindow", u"Edit", None))
         self.pushButtonDeleteMeasurement.setText(QCoreApplication.translate("mainWindow", u"Remove", None))
-        self.groupBoxSpokeDatabase.setTitle(QCoreApplication.translate("mainWindow", u"Select or create a spoke", None))
-        self.groupBoxManufacturer.setTitle(QCoreApplication.translate("mainWindow", u"Manufacturer", None))
-        self.groupBoxNewManufacturer.setTitle(QCoreApplication.translate("mainWindow", u"New manufacturer", None))
-        self.pushButtonSaveAsManufacturer.setText(QCoreApplication.translate("mainWindow", u"Save as new", None))
+        self.groupBoxCreateSpoke.setTitle(QCoreApplication.translate("mainWindow", u"Select or create a spoke", None))
+        self.groupBoxSpokeManufacturer.setTitle(QCoreApplication.translate("mainWindow", u"Manufacturer", None))
+        self.groupBoxNewSpokeManufacturer.setTitle(QCoreApplication.translate("mainWindow", u"New manufacturer", None))
+        self.pushButtonSaveAsSpokeManufacturer.setText(QCoreApplication.translate("mainWindow", u"Save as new", None))
         self.groupBoxSpoke.setTitle(QCoreApplication.translate("mainWindow", u"Spoke", None))
         self.groupBoxName.setTitle(QCoreApplication.translate("mainWindow", u"Name", None))
-        self.groupBoxType.setTitle(QCoreApplication.translate("mainWindow", u"Type", None))
-        self.groupBoxGauge.setTitle(QCoreApplication.translate("mainWindow", u"Gauge", None))
-        self.groupBoxWeight.setTitle(QCoreApplication.translate("mainWindow", u"Weight", None))
-        self.groupBoxDimension.setTitle(QCoreApplication.translate("mainWindow", u"Dimension", None))
+        self.groupBoxSpokeType.setTitle(QCoreApplication.translate("mainWindow", u"Type", None))
+        self.groupBoxSpokeGauge.setTitle(QCoreApplication.translate("mainWindow", u"Gauge", None))
+        self.groupBoxSpokeWeight.setTitle(QCoreApplication.translate("mainWindow", u"Weight", None))
+        self.groupBoxSpokeDimension.setTitle(QCoreApplication.translate("mainWindow", u"Dimension", None))
         self.groupBoxSpokeComment.setTitle(QCoreApplication.translate("mainWindow", u"Comment", None))
-        self.pushButtonUpdateSpoke.setText(QCoreApplication.translate("mainWindow", u"Update", None))
-        self.pushButtonSaveAsSpoke.setText(QCoreApplication.translate("mainWindow", u"Save as new", None))
-        self.pushButtonClearSpoke.setText(QCoreApplication.translate("mainWindow", u"Clear", None))
-        self.pushButtonDeleteSpoke.setText(QCoreApplication.translate("mainWindow", u"Delete", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.databaseTab), QCoreApplication.translate("mainWindow", u"Browse the spoke database", None))
+        self.pushButtonSpokeUpdate.setText(QCoreApplication.translate("mainWindow", u"Update", None))
+        self.pushButtonSpokeSaveAs.setText(QCoreApplication.translate("mainWindow", u"Save as new", None))
+        self.pushButtonSpokeClear.setText(QCoreApplication.translate("mainWindow", u"Clear", None))
+        self.pushButtonSpokeDelete.setText(QCoreApplication.translate("mainWindow", u"Delete", None))
+        self.tabWidget.setTabText(self.tabWidget.indexOf(self.spokeTab), QCoreApplication.translate("mainWindow", u"Spokes", None))
         self.groupBoxMeasurementLeft.setTitle(QCoreApplication.translate("mainWindow", u"Measurement", None))
         self.groupBoxMeasurementComment.setTitle(QCoreApplication.translate("mainWindow", u"Comment", None))
         self.pushButtonPreviousMeasurement.setText(QCoreApplication.translate("mainWindow", u"Previous", None))
@@ -1273,7 +1269,7 @@ class Ui_mainWindow(object):
         self.groupBoxDirectionsSetup.setTitle(QCoreApplication.translate("mainWindow", u"Wheel tensioning", None))
         self.groupBoxWheelRotationDirection.setTitle(QCoreApplication.translate("mainWindow", u"Wheel rotation direction", None))
         self.radioButtonRotationClockwise.setText(QCoreApplication.translate("mainWindow", u"Clockwise", None))
-        self.radioButtonRotationAnticlockwise.setText(QCoreApplication.translate("mainWindow", u"Anticlockwise", None))
+        self.radioButtonRotationCounterclockwise.setText(QCoreApplication.translate("mainWindow", u"Counterclockwise", None))
         self.groupBoxWheelMeasurementType.setTitle(QCoreApplication.translate("mainWindow", u"Wheel measurement direction", None))
         self.radioButtonLeftRight.setText(QCoreApplication.translate("mainWindow", u"Left-Right", None))
         self.radioButtonSideBySide.setText(QCoreApplication.translate("mainWindow", u"Side by side", None))

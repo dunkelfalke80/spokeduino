@@ -10,7 +10,7 @@ class DatabaseModule:
     Handles all database interactions for the Spokeduino application.
     """
     def __init__(self, db_path: str) -> None:
-        self.db_path: str = db_path
+        self.__db_path: str = db_path
 
     def _get_line_info(self) -> str:
         return f"{inspect.stack()[1][2]}:{inspect.stack()[1][3]}"
@@ -21,8 +21,8 @@ class DatabaseModule:
         :param schema_file: Path to the SQL schema initialization file.
         :param data_file: Path to the SQL default data initialization file.
         """
-        if not os.path.exists(self.db_path):
-            logging.warning(f"Database file not found at {self.db_path}. "
+        if not os.path.exists(self.__db_path):
+            logging.warning(f"Database file not found at {self.__db_path}. "
                             f"Creating a new one.")
             self.recreate_database(schema_file, data_file)
         else:
@@ -38,7 +38,7 @@ class DatabaseModule:
         :return: True if the database is valid, False otherwise.
         """
         try:
-            with sqlite3.connect(self.db_path) as connection:
+            with sqlite3.connect(self.__db_path) as connection:
                 result = connection.execute(
                     "PRAGMA integrity_check;"
                     ).fetchone()
@@ -55,7 +55,7 @@ class DatabaseModule:
         :param data_file: Path to the SQL data file.
         """
         try:
-            with sqlite3.connect(self.db_path) as connection:
+            with sqlite3.connect(self.__db_path) as connection:
                 cursor = connection.cursor()
                 connection.execute("PRAGMA foreign_keys = ON;")
                 # Load schema
@@ -79,7 +79,7 @@ class DatabaseModule:
         Execute a SELECT query and return all results.
         """
         try:
-            with sqlite3.connect(self.db_path) as connection:
+            with sqlite3.connect(self.__db_path) as connection:
                 connection.execute("PRAGMA foreign_keys = ON;")
                 cursor: sqlite3.Cursor = connection.cursor()
                 if params is None:
@@ -97,7 +97,7 @@ class DatabaseModule:
         Execute an INSERT, UPDATE, or DELETE query and return the last row ID.
         """
         try:
-            with sqlite3.connect(self.db_path) as connection:
+            with sqlite3.connect(self.__db_path) as connection:
                 connection.execute("PRAGMA foreign_keys = ON;")
                 cursor: sqlite3.Cursor = connection.cursor()
                 cursor.execute(query, params)
@@ -114,7 +114,7 @@ class DatabaseModule:
         Optimize the database by running VACUUM.
         """
         try:
-            with sqlite3.connect(self.db_path) as connection:
+            with sqlite3.connect(self.__db_path) as connection:
                 connection.execute("VACUUM;")
                 logging.info("Database vacuumed successfully.")
         except sqlite3.Error as e:
