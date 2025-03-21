@@ -76,7 +76,6 @@ class Spokeduino(QMainWindow):
             db=self.db)
         self.messagebox = Messagebox(self, self.ui)
         self.tensiometer_module = TensiometerModule(
-            main_window=self,
             ui=self.ui,
             messagebox=self.messagebox,
             setup_module=self.setup_module,
@@ -85,10 +84,8 @@ class Spokeduino(QMainWindow):
             ui=self.ui,
             db=self.db,
             setup_module=self.setup_module,
-            unit_module=self.unit_module,
-            messagebox=self.messagebox)
+            unit_module=self.unit_module)
         self.measurement_module = MeasurementModule(
-            main_window=self,
             ui=self.ui,
             unit_module=self.unit_module,
             tensiometer_module=self.tensiometer_module,
@@ -108,8 +105,6 @@ class Spokeduino(QMainWindow):
             main_window=self,
             ui=self.ui,
             unit_module=self.unit_module,
-            tensiometer_module=self.tensiometer_module,
-            messagebox=self.messagebox,
             measurement_module=self.measurement_module,
             db=self.db,
             fitter=self.fitter,

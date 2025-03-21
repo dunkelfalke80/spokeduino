@@ -9,7 +9,6 @@ from PySide6.QtWidgets import QTableWidget
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtWidgets import QHeaderView
 from ui import Ui_mainWindow
-from setup_module import SetupModule
 from spokeduino_module import SpokeduinoModule, MeasurementMode, SpokeduinoState
 from helpers import Messagebox, Generics, TextChecker
 from customtablewidget import CustomTableWidget, NumericTableWidgetItem
@@ -24,7 +23,6 @@ from calculation_module import TensionDeflectionFitter, FitType
 class MeasurementModule:
 
     def __init__(self,
-                 main_window: QMainWindow,
                  ui: Ui_mainWindow,
                  unit_module: UnitModule,
                  tensiometer_module: TensiometerModule,
@@ -34,22 +32,20 @@ class MeasurementModule:
                  fitter: TensionDeflectionFitter,
                  chart: VisualisationModule,
                  canvas: PyQtGraphCanvas) -> None:
-        self.ui: Ui_mainWindow = ui
-        self.unit_module: UnitModule = unit_module
-        self.main_window: QMainWindow = main_window
-        self.setup_module = SetupModule
-        self.spokeduino_module: SpokeduinoModule = spokeduino_module
-        self.messagebox: Messagebox = messagebox
-        self.tensiometer_module: TensiometerModule = tensiometer_module
-        self.db: DatabaseModule = db
-        self.fitter: TensionDeflectionFitter = fitter
-        self.canvas: PyQtGraphCanvas = canvas
-        self.chart: VisualisationModule = chart
+        self.__ui: Ui_mainWindow = ui
+        self.__unit: UnitModule = unit_module
+        self.__tensio: TensiometerModule = tensiometer_module
+        self.__spokeduino: SpokeduinoModule = spokeduino_module
+        self.__msgbox: Messagebox = messagebox
+        self.__db: DatabaseModule = db
+        self.__fitter: TensionDeflectionFitter = fitter
+        self.__canvas: PyQtGraphCanvas = canvas
+        self.__chart: VisualisationModule = chart
         self.__add_row_signal_connected = False
 
 
     def __check_row_data(self, row: int) -> bool:
-        view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        view: CustomTableWidget = self.__ui.tableWidgetMeasurements
         for column in range(view.columnCount()):
             item: QTableWidgetItem | None= view.item(row, column)
             if item is None:
@@ -67,7 +63,7 @@ class MeasurementModule:
         Enable or disable measurement buttons based
         on the completeness of the current column.
         """
-        view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        view: CustomTableWidget = self.__ui.tableWidgetMeasurements
         row_count: int = view.rowCount()
         enable_button: bool = True
 
@@ -77,7 +73,7 @@ class MeasurementModule:
         if row_count == 1:
             enable_button = self.__check_row_data(0)
 
-        self.ui.pushButtonSaveMeasurement.setEnabled(enable_button)
+        self.__ui.pushButtonSaveMeasurement.setEnabled(enable_button)
         self.plot_measurements()
 
     def load_measurements(
@@ -95,11 +91,11 @@ class MeasurementModule:
         """
         if spoke_id is None:
             spoke_id = Generics.get_selected_row_id(
-                self.ui.tableWidgetSpokeSelection)
+                self.__ui.tableWidgetSpokeSelection)
 
         if tensiometer_id is None:
-            tensiometer_id = self.tensiometer_module.get_primary_tensiometer()
-        view: QTableWidget = self.ui.tableWidgetSpokeMeasurements
+            tensiometer_id = self.__tensio.get_primary_tensiometer()
+        view: QTableWidget = self.__ui.tableWidgetSpokeMeasurements
 
         if spoke_id < 0 or tensiometer_id < 0:
             view.clearContents()
@@ -107,7 +103,7 @@ class MeasurementModule:
             return None
 
         # Fetch measurement sets
-        measurement_sets: list[Any] = self.db.execute_select(
+        measurement_sets: list[Any] = self.__db.execute_select(
             query=SQLQueries.GET_MEASUREMENT_SETS,
             params=(spoke_id, tensiometer_id)
         )
@@ -122,7 +118,7 @@ class MeasurementModule:
         query_string: str = (f"{SQLQueries.GET_MEASUREMENTS} "
                              f"({', '.join('?' for _ in set_ids)})"
                              "ORDER BY tension ASC")
-        measurements: list[Any] = self.db.execute_select(
+        measurements: list[Any] = self.__db.execute_select(
             query=query_string,
             params=set_ids
         )
@@ -136,7 +132,7 @@ class MeasurementModule:
             return measurements
 
         # Prepare rows for the table
-        unit: UnitEnum = self.unit_module.get_unit()
+        unit: UnitEnum = self.__unit.get_unit()
 
         # Prepare set information and initialize the data structure
         set_info: dict[Any, Any] = {ms[0]: ms[1:] for ms in measurement_sets}
@@ -149,7 +145,7 @@ class MeasurementModule:
                 grouped_measurements[set_id] = []
             # Convert the tension to the selected unit
             converted_tensions: tuple[float, float, float] = \
-                self.unit_module.convert_units(
+                self.__unit.convert_units(
                     value=tension, source=UnitEnum.NEWTON)
             tension_converted: str = {
                 UnitEnum.NEWTON: f"{converted_tensions[0]:.0f} N",
@@ -197,26 +193,26 @@ class MeasurementModule:
         Deletes only if a valid measurement row is selected
         or if there's only one measurement.
         """
-        view: QTableWidget = self.ui.tableWidgetSpokeMeasurements
+        view: QTableWidget = self.__ui.tableWidgetSpokeMeasurements
         measurement_id: int = Generics.get_selected_row_id(view)
         if (measurement_id < 0):
             return
         # Execute the deletion query
         try:
-            if self.db.execute_query(
+            if self.__db.execute_query(
                 query=SQLQueries.DELETE_MEASUREMENT_SET,
                 params=(measurement_id,)
             ) is None:
-                self.messagebox.err("Failed to delete measurement")
+                self.__msgbox.err("Failed to delete measurement")
                 return
         except Exception as e:
-            self.messagebox.err(f"Failed to delete measurement: {str(e)}")
+            self.__msgbox.err(f"Failed to delete measurement: {str(e)}")
             return
 
         # Clear selection, update the table, and inform the user
         view.clearSelection()
         self.load_measurements(None, None, False)
-        self.messagebox.info("Measurement deleted.")
+        self.__msgbox.info("Measurement deleted.")
 
     def select_measurement_row(self, index: QModelIndex) -> None:
         """
@@ -227,7 +223,7 @@ class MeasurementModule:
             return
 
         row: int = index.row()
-        self.ui.tableWidgetSpokeMeasurements.selectRow(row)
+        self.__ui.tableWidgetSpokeMeasurements.selectRow(row)
 
     def setup_measurements_table(self) -> None:
         """
@@ -239,12 +235,12 @@ class MeasurementModule:
         - If self.__edit_mode is False and self.__custom_mode is True:
             Prepare an empty table with one editable row for custom entries.
         """
-        view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        view: CustomTableWidget = self.__ui.tableWidgetMeasurements
         view.clearContents()
         view.setRowCount(0)
         view.setColumnCount(0)
 
-        match self.spokeduino_module.get_mode():
+        match self.__spokeduino.get_mode():
             case MeasurementMode.DEFAULT:
                 self.populate_measurements_table_default(view)
             case MeasurementMode.EDIT:
@@ -262,7 +258,7 @@ class MeasurementModule:
             view.verticalHeader().sectionClicked.disconnect(
                 self.insert_empty_row_below)
         # Handle the measurement direction
-        if self.ui.radioButtonMeasurementDown.isChecked():
+        if self.__ui.radioButtonMeasurementDown.isChecked():
             tensions_newton = list(range(1600, 200, -100))
         else:
             tensions_newton = list(range(300, 1700, 100))
@@ -273,16 +269,16 @@ class MeasurementModule:
             UnitEnum.KGF: 1,
             UnitEnum.LBF: 2,
         }
-        unit_index: int = unit_index_map[self.unit_module.get_unit()]
+        unit_index: int = unit_index_map[self.__unit.get_unit()]
         tensions_converted: list[float] = [
-            self.unit_module.convert_units(
+            self.__unit.convert_units(
                 value=value,
                 source=UnitEnum.NEWTON)[unit_index]
             for value in tensions_newton
         ]
 
         # Set row headers
-        unit: UnitEnum = self.unit_module.get_unit()
+        unit: UnitEnum = self.__unit.get_unit()
         view.setRowCount(len(tensions_converted))
         for row in range(view.rowCount()):
             header_text: str = (
@@ -296,7 +292,7 @@ class MeasurementModule:
 
         # Populate column headers with selected tensiometers
         tensiometers: list[tuple[int, str]] = \
-            self.tensiometer_module.get_selected_tensiometers()
+            self.__tensio.get_selected_tensiometers()
         view.setColumnCount(len(tensiometers))
         for column, (
             tensiometer_id,
@@ -325,7 +321,7 @@ class MeasurementModule:
         for the selected measurement.
         """
         # Set the headers
-        unit: UnitEnum = self.unit_module.get_unit()
+        unit: UnitEnum = self.__unit.get_unit()
         view.setColumnCount(2)
         view.setHorizontalHeaderLabels([
             f"Tension ({unit.value})", "Deflection"])
@@ -354,7 +350,7 @@ class MeasurementModule:
                 tensiometer_id=None,
                 list_only=True)
             measurement_id: int = Generics.get_selected_row_id(
-                self.ui.tableWidgetSpokeMeasurements)
+                self.__ui.tableWidgetSpokeMeasurements)
             if measurement_id < 0 or not measurements:
                 return
 
@@ -380,15 +376,15 @@ class MeasurementModule:
             }
             unit_index: int = unit_index_map[unit]
 
-            self.ui.tableWidgetMeasurements.itemChanged.disconnect(
+            self.__ui.tableWidgetMeasurements.itemChanged.disconnect(
                 self.update_measurement_button_states)
-            self.ui.tableWidgetMeasurements.currentCellChanged.disconnect(
+            self.__ui.tableWidgetMeasurements.currentCellChanged.disconnect(
                 self.update_measurement_button_states)
 
             for row, (_, tension, deflection) in enumerate(
                  filtered_measurements):
                 # Convert tension to the selected unit
-                converted_tension: float = self.unit_module.convert_units(
+                converted_tension: float = self.__unit.convert_units(
                     tension,
                     UnitEnum.NEWTON)[unit_index]
 
@@ -431,9 +427,9 @@ class MeasurementModule:
             self.__add_row_signal_connected = True
             view.verticalHeader().sectionClicked.connect(
                 self.insert_empty_row_below)
-        self.ui.tableWidgetMeasurements.itemChanged.connect(
+        self.__ui.tableWidgetMeasurements.itemChanged.connect(
             self.update_measurement_button_states)
-        self.ui.tableWidgetMeasurements.currentCellChanged.connect(
+        self.__ui.tableWidgetMeasurements.currentCellChanged.connect(
             self.update_measurement_button_states)
 
         self.plot_measurements()
@@ -442,7 +438,7 @@ class MeasurementModule:
         """
         Insert an empty row below the clicked row header.
         """
-        view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        view: CustomTableWidget = self.__ui.tableWidgetMeasurements
         if not self.__check_row_data(row):
             return
         row += 1
@@ -452,7 +448,7 @@ class MeasurementModule:
         view.move_to_cell(row, 0)
 
     def on_cell_changing(self, row: int, column: int, value: str) -> None:
-        if self.spokeduino_module.get_mode() == MeasurementMode.DEFAULT:
+        if self.__spokeduino.get_mode() == MeasurementMode.DEFAULT:
             return
 
         try:
@@ -460,14 +456,14 @@ class MeasurementModule:
         except ValueError:
             return
 
-        view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        view: CustomTableWidget = self.__ui.tableWidgetMeasurements
         view.setSortingEnabled(False)
 
         if column == 0:
             converted_tensions: tuple[float, float, float] = \
-             self.unit_module.convert_units(
+             self.__unit.convert_units(
                 value=parsed_val,
-                source=self.unit_module.get_unit())
+                source=self.__unit.get_unit())
             tension_item = NumericTableWidgetItem(value)
             tension_item.setFlags(
                 Qt.ItemFlag.ItemIsEditable | Qt.ItemFlag.ItemIsEnabled)
@@ -499,7 +495,7 @@ class MeasurementModule:
         :param no_delay: If True, immediately move to the next cell.
                         Otherwise, introduce a slight delay.
         """
-        view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        view: CustomTableWidget = self.__ui.tableWidgetMeasurements
         row: int = view.currentRow()
         column: int = view.currentColumn()
 
@@ -509,8 +505,8 @@ class MeasurementModule:
             column = 0
             row += 1
         else:
-            if self.spokeduino_module.get_mode() == MeasurementMode.DEFAULT:
-                self.spokeduino_module.set_state(SpokeduinoState.WAITING)
+            if self.__spokeduino.get_mode() == MeasurementMode.DEFAULT:
+                self.__spokeduino.set_state(SpokeduinoState.WAITING)
                 return  # Already at the last cell
             time.sleep(0.05)
             self.insert_empty_row_below(row)
@@ -529,20 +525,20 @@ class MeasurementModule:
         Save measurement data for all columns in tableWidgetMeasurements.
         Handles different modes: DEFAULT, EDIT, and CUSTOM.
         """
-        view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        view: CustomTableWidget = self.__ui.tableWidgetMeasurements
 
         # Ensure a valid spoke ID is selected
         spoke_id: int = Generics.get_selected_row_id(
-            self.ui.tableWidgetSpokeSelection)
+            self.__ui.tableWidgetSpokeSelection)
         if spoke_id < 0:
-            self.messagebox.err("No spoke selected")
+            self.__msgbox.err("No spoke selected")
             return
 
         # Get the comment
-        comment: str = self.ui.lineEditMeasurementComment.text().strip()
+        comment: str = self.__ui.lineEditMeasurementComment.text().strip()
 
         # Check the mode and handle accordingly
-        match self.spokeduino_module.get_mode():
+        match self.__spokeduino.get_mode():
             case MeasurementMode.DEFAULT:
                 # Save default mode measurements
                 res: bool = self.__save_default_mode_measurements(
@@ -554,7 +550,7 @@ class MeasurementModule:
 
         # Notify the user
         if res:
-            self.messagebox.info("Measurements saved successfully")
+            self.__msgbox.info("Measurements saved successfully")
             self.load_measurements(None, None, False)
 
     def __save_default_mode_measurements(
@@ -570,12 +566,12 @@ class MeasurementModule:
             header_item: QTableWidgetItem | None = \
                 view.horizontalHeaderItem(column)
             if header_item is None:
-                self.messagebox.err(f"Column {column + 1}: Missing header")
+                self.__msgbox.err(f"Column {column + 1}: Missing header")
                 return False
 
             tensiometer_id = header_item.data(Qt.ItemDataRole.UserRole)
             if tensiometer_id is None:
-                self.messagebox.err(
+                self.__msgbox.err(
                     f"Column {column + 1}: Missing tensiometer ID")
                 return False
 
@@ -588,7 +584,7 @@ class MeasurementModule:
                     view.item(row, column)
 
                 if tension_item is None or deflection_item is None:
-                    self.messagebox.err(
+                    self.__msgbox.err(
                         f"Row {row + 1}: Missing data in column {column + 1}")
                     return False
 
@@ -608,7 +604,7 @@ class MeasurementModule:
 
                     data.append((tension, deflection))
                 except ValueError:
-                    self.messagebox.err(
+                    self.__msgbox.err(
                         f"Row {row + 1}, Column {column + 1}: Invalid data")
                     return False
 
@@ -631,9 +627,9 @@ class MeasurementModule:
         before saving new data.
         """
         # Fetch the tensiometer ID for the column
-        tensiometer_id: int = self.tensiometer_module.get_primary_tensiometer()
+        tensiometer_id: int = self.__tensio.get_primary_tensiometer()
         if tensiometer_id < 0:
-            self.messagebox.err("No tensiometer selected")
+            self.__msgbox.err("No tensiometer selected")
             return False
 
         # Validate and gather tension-deflection data
@@ -662,25 +658,25 @@ class MeasurementModule:
             return False
 
         # Handle EDIT mode: Delete the existing measurement set
-        if self.spokeduino_module.get_mode() == MeasurementMode.EDIT:
+        if self.__spokeduino.get_mode() == MeasurementMode.EDIT:
             # Get the current measurement set ID
             measurement_id: int = Generics.get_selected_row_id(
-                self.ui.tableWidgetSpokeMeasurements)
+                self.__ui.tableWidgetSpokeMeasurements)
             if measurement_id < 0:
-                self.messagebox.err("No measurement set selected to overwrite")
+                self.__msgbox.err("No measurement set selected to overwrite")
                 return False
 
             # Delete the existing measurement set
             try:
-                if self.db.execute_query(
+                if self.__db.execute_query(
                     query=SQLQueries.DELETE_MEASUREMENT_SET,
                     params=(measurement_id,)
                 ) is None:
-                    self.messagebox.err(
+                    self.__msgbox.err(
                         "Failed to delete previous measurement set:")
                     return False
             except Exception as ex:
-                self.messagebox.err(
+                self.__msgbox.err(
                     f"Failed to delete previous measurement set: {str(ex)}")
                 return False
 
@@ -698,26 +694,26 @@ class MeasurementModule:
         Save a single measurement set and its associated measurements.
         """
         # Save the measurement set
-        set_id: int | None = self.db.execute_query(
+        set_id: int | None = self.__db.execute_query(
             query=SQLQueries.ADD_MEASUREMENT_SET,
             params=(spoke_id, tensiometer_id, comment)
         )
         if set_id is None:
-            self.messagebox.err("Failed to save measurement set")
+            self.__msgbox.err("Failed to save measurement set")
             return False
 
         # Save each measurement
         for tension, deflection in data:
             try:
-                if self.db.execute_query(
+                if self.__db.execute_query(
                     query=SQLQueries.ADD_MEASUREMENT,
                     params=(set_id, tension, deflection)
                 ) is None:
-                    self.messagebox.err("Failed to save measurement")
+                    self.__msgbox.err("Failed to save measurement")
                     return False
 
             except Exception as ex:
-                self.messagebox.err(f"Failed to save measurement: {str(ex)}")
+                self.__msgbox.err(f"Failed to save measurement: {str(ex)}")
                 return False
         return True
 
@@ -727,11 +723,11 @@ class MeasurementModule:
         fits it, and plots inside the verticalLayoutMeasurementRight.
         """
         # Collect data from tableWidgetMeasurements
-        view: CustomTableWidget = self.ui.tableWidgetMeasurements
+        view: CustomTableWidget = self.__ui.tableWidgetMeasurements
         row_count: int = view.rowCount()
         data: list = []
         for row in range(row_count):
-            if self.spokeduino_module.get_mode() == MeasurementMode.DEFAULT:
+            if self.__spokeduino.get_mode() == MeasurementMode.DEFAULT:
                 tension_item: QTableWidgetItem | None = \
                     view.verticalHeaderItem(row)
                 deflection_item: QTableWidgetItem | None = view.item(row, 0)
@@ -761,10 +757,10 @@ class MeasurementModule:
 
         data.sort(key=lambda pair: pair[0])
         fit_type, header = self.get_fit()
-        fit_model = self.fitter.fit_data(data, fit_type)
+        fit_model = self.__fitter.fit_data(data, fit_type)
 
-        self.chart.update_fit_plot(
-            plot_widget=self.canvas.plot_widget,
+        self.__chart.update_fit_plot(
+            plot_widget=self.__canvas.plot_widget,
             fit_model=fit_model,
             data=data,
             step=10.0,
@@ -773,18 +769,18 @@ class MeasurementModule:
         )
 
     def get_fit(self) -> tuple[FitType, str]:
-        if self.ui.radioButtonFitQuadratic.isChecked():
+        if self.__ui.radioButtonFitQuadratic.isChecked():
             return FitType.QUADRATIC, "Quadratic"
-        if self.ui.radioButtonFitCubic.isChecked():
+        if self.__ui.radioButtonFitCubic.isChecked():
             return FitType.CUBIC, "Cubic"
-        if self.ui.radioButtonFitQuartic.isChecked():
+        if self.__ui.radioButtonFitQuartic.isChecked():
             return FitType.QUARTIC, "Quartic"
-        if self.ui.radioButtonFitSpline.isChecked():
+        if self.__ui.radioButtonFitSpline.isChecked():
             return FitType.SPLINE, "Spline"
-        if self.ui.radioButtonFitExponential.isChecked():
+        if self.__ui.radioButtonFitExponential.isChecked():
             return FitType.EXPONENTIAL, "Exponential"
-        if self.ui.radioButtonFitLogarithmic.isChecked():
+        if self.__ui.radioButtonFitLogarithmic.isChecked():
             return FitType.LOGARITHMIC, "Logarithmic"
-        if self.ui.radioButtonFitPowerLaw.isChecked():
+        if self.__ui.radioButtonFitPowerLaw.isChecked():
             return FitType.POWER_LAW, "Power law"
         return FitType.LINEAR, "Linear"

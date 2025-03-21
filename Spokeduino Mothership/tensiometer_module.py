@@ -3,7 +3,6 @@ from PySide6.QtCore import Qt
 from PySide6.QtCore import QAbstractItemModel
 from PySide6.QtGui import QStandardItemModel
 from PySide6.QtGui import QStandardItem
-from PySide6.QtWidgets import QMainWindow
 from setup_module import SetupModule
 from sql_queries import SQLQueries
 from helpers import Messagebox
@@ -14,16 +13,14 @@ from ui import Ui_mainWindow
 class TensiometerModule:
 
     def __init__(self,
-                 main_window: QMainWindow,
                  ui: Ui_mainWindow,
                  messagebox: Messagebox,
                  setup_module: SetupModule,
                  db: DatabaseModule) -> None:
-        self.ui: Ui_mainWindow = ui
-        self.main_window: QMainWindow = main_window
-        self.setup_module: SetupModule = setup_module
-        self.messagebox: Messagebox = messagebox
-        self.db: DatabaseModule = db
+        self.__ui: Ui_mainWindow = ui
+        self.__setup: SetupModule = setup_module
+        self.__msgbox: Messagebox = messagebox
+        self.__db: DatabaseModule = db
         self.__multi_tensiometer_enabled: bool = False
 
     def get_multi_state(self) -> bool:
@@ -37,18 +34,18 @@ class TensiometerModule:
         Load all tensiometers from the database
         and populate comboBoxTensiometer.
         """
-        tensiometers: list[Any] = self.db.execute_select(
+        tensiometers: list[Any] = self.__db.execute_select(
             query=SQLQueries.GET_TENSIOMETERS, params=None)
         if not tensiometers:
             return
 
-        self.ui.comboBoxTensiometer.clear()
+        self.__ui.comboBoxTensiometer.clear()
         for tensiometer in tensiometers:
-            self.ui.comboBoxTensiometer.addItem(tensiometer[1], tensiometer[0])
+            self.__ui.comboBoxTensiometer.addItem(tensiometer[1], tensiometer[0])
 
     def get_primary_tensiometer(self) -> int:
         # Fetch the primary tensiometer ID from settings
-        primary_tensiometer: list[Any] = self.db.execute_select(
+        primary_tensiometer: list[Any] = self.__db.execute_select(
             query=SQLQueries.GET_SINGLE_SETTING,
             params=("tensiometer_id",)
         )
@@ -62,7 +59,7 @@ class TensiometerModule:
         Retrieve the IDs and names of selected tensiometers based on the mode.
         :return: List of tuples with (ID, Name) for selected tensiometers.
         """
-        model: QAbstractItemModel = self.ui.comboBoxTensiometer.model()
+        model: QAbstractItemModel = self.__ui.comboBoxTensiometer.model()
         selected_tensiometers: list[Any] = []
 
         primary_tensiometer_id: int = self.get_primary_tensiometer()
@@ -79,15 +76,15 @@ class TensiometerModule:
                         selected_tensiometers.append(
                             (tensiometer_id, tensiometer_name))
             else:
-                self.messagebox.err("Model is not a QStandardItemModel; "
+                self.__msgbox.err("Model is not a QStandardItemModel; "
                                     "cannot retrieve selected items.")
         else:
             # Single-tensiometer mode: return the currently selected one
-            current_index: int = self.ui.comboBoxTensiometer.currentIndex()
+            current_index: int = self.__ui.comboBoxTensiometer.currentIndex()
             if current_index != -1:
-                tensiometer_id = self.ui.comboBoxTensiometer.itemData(
+                tensiometer_id = self.__ui.comboBoxTensiometer.itemData(
                     current_index)
-                tensiometer_name = self.ui.comboBoxTensiometer.currentText()
+                tensiometer_name = self.__ui.comboBoxTensiometer.currentText()
                 selected_tensiometers.append(
                     (tensiometer_id, tensiometer_name))
 
@@ -102,8 +99,8 @@ class TensiometerModule:
         Enable or disable pushButtonNewTensiometer based on the text in
         lineEditNewTensiometer.
         """
-        is_filled = bool(self.ui.lineEditNewTensiometer.text())
-        self.ui.pushButtonNewTensiometer.setEnabled(is_filled)
+        is_filled = bool(self.__ui.lineEditNewTensiometer.text())
+        self.__ui.pushButtonNewTensiometer.setEnabled(is_filled)
 
     def toggle_multi_tensiometer_mode(self) -> None:
         """
@@ -112,13 +109,13 @@ class TensiometerModule:
         if not self.__multi_tensiometer_enabled:
             # Enable multi-selection mode
             self.__multi_tensiometer_enabled = True
-            self.ui.pushButtonMultipleTensiometers.setChecked(True)
+            self.__ui.pushButtonMultipleTensiometers.setChecked(True)
 
             # Use a QStandardItemModel to allow checkboxes
-            model = QStandardItemModel(self.ui.comboBoxTensiometer)
-            self.ui.comboBoxTensiometer.setModel(model)  # Set the model early
+            model = QStandardItemModel(self.__ui.comboBoxTensiometer)
+            self.__ui.comboBoxTensiometer.setModel(model)  # Set the model early
 
-            for tensiometer in self.db.execute_select(
+            for tensiometer in self.__db.execute_select(
                     query=SQLQueries.GET_TENSIOMETERS, params=None):
                 item = QStandardItem(tensiometer[1])
                 item.setFlags(
@@ -129,53 +126,53 @@ class TensiometerModule:
                 model.appendRow(item)
 
             # Disable manual typing
-            self.ui.comboBoxTensiometer.setEditable(False)
+            self.__ui.comboBoxTensiometer.setEditable(False)
 
         else:
             # Disable multi-selection mode
-            self.ui.pushButtonMultipleTensiometers.setChecked(False)
+            self.__ui.pushButtonMultipleTensiometers.setChecked(False)
 
             # Restore single-selection mode
-            self.ui.comboBoxTensiometer.clear()
+            self.__ui.comboBoxTensiometer.clear()
             self.load_tensiometers()
 
             # Restore the original tensiometer selection
             primary_tensiometer: int = self.get_primary_tensiometer()
             if primary_tensiometer < 0:
                 return
-            index = self.ui.comboBoxTensiometer.findData(primary_tensiometer)
+            index = self.__ui.comboBoxTensiometer.findData(primary_tensiometer)
             if index != -1:
-                self.ui.comboBoxTensiometer.setCurrentIndex(index)
+                self.__ui.comboBoxTensiometer.setCurrentIndex(index)
             self.__multi_tensiometer_enabled = False
 
     def create_new_tensiometer(self) -> None:
         """
         Insert a new tensiometer into the tensiometers table.
         """
-        tensiometer_name: str = self.ui.lineEditNewTensiometer.text()
+        tensiometer_name: str = self.__ui.lineEditNewTensiometer.text()
         if not tensiometer_name:
             return
 
-        self.ui.lineEditNewTensiometer.clear()
-        _ = self.db.execute_query(
+        self.__ui.lineEditNewTensiometer.clear()
+        _ = self.__db.execute_query(
             query=SQLQueries.ADD_TENSIOMETER,
             params=(tensiometer_name,),
         )
         self.load_tensiometers()
 
-        index: int = self.ui.comboBoxTensiometer.findText(tensiometer_name)
+        index: int = self.__ui.comboBoxTensiometer.findText(tensiometer_name)
         if index != -1:
-            self.ui.comboBoxTensiometer.setCurrentIndex(index)
+            self.__ui.comboBoxTensiometer.setCurrentIndex(index)
 
     def save_tensiometer(self) -> None:
         if self.__multi_tensiometer_enabled:  # Runtime only
             return
 
-        current_index: int = self.ui.comboBoxTensiometer.currentIndex()
+        current_index: int = self.__ui.comboBoxTensiometer.currentIndex()
         if current_index < 0:
             return
 
-        tensiometer_id = self.ui.comboBoxTensiometer.itemData(current_index)
-        self.setup_module.save_setting(
+        tensiometer_id = self.__ui.comboBoxTensiometer.itemData(current_index)
+        self.__setup.save_setting(
             key="tensiometer_id",
             value=str(tensiometer_id))

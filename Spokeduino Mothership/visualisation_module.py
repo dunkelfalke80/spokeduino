@@ -1,5 +1,6 @@
 from typing import Any, cast
 import numpy as np
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QWidget, QVBoxLayout
 import pyqtgraph as pg
 from PySide6.QtCore import QRectF
@@ -44,14 +45,13 @@ class VisualisationModule:
         self.__legend_added = False
         self.__clockwise: bool = True
         self.__deviation_viewbox: pg.ViewBox
-        self.__legend: pg.LegendItem | Any
+        self.__legend: pg.LegendItem
 
     def __predict_deflection(
         self,
         fit_type: FitType,
         model: Any,
-        tensions: np.ndarray,
-        fit_model: dict
+        tensions: np.ndarray
     ) -> np.ndarray:
         """
         Calculate deflection values from a range of tension values,
@@ -168,7 +168,7 @@ class VisualisationModule:
         # Generate tension values (X) and predicted deflections (Y)
         tensions = np.arange(t_min, t_max + step, step)
         deflections = self.__predict_deflection(
-            fit_type, model, tensions, fit_model)
+            fit_type, model, tensions)
 
         # Calculate deviations
         measured_tensions, measured_deflections = zip(*data)
@@ -317,7 +317,7 @@ class VisualisationModule:
                 circle_x, circle_y,
                 pen=pg.mkPen(
                     color=color,
-                    style=pg.QtCore.Qt.PenStyle.DashLine,
+                    style=Qt.PenStyle.DashLine,
                     width=2,
                     name=name))
         else:
@@ -325,7 +325,7 @@ class VisualisationModule:
                 circle_x, circle_y,
                 pen=pg.mkPen(
                     color="black",
-                    style=pg.QtCore.Qt.PenStyle.SolidLine,
+                    style=Qt.PenStyle.SolidLine,
                     width=1))
 
         circle_item._static_element = True
@@ -348,7 +348,7 @@ class VisualisationModule:
                 [0, x + offset_x], [0, y + offset_y],
                 pen=pg.mkPen(
                     color="gray",
-                    style=pg.QtCore.Qt.PenStyle.DotLine,
+                    style=Qt.PenStyle.DotLine,
                     width=1),
                 name=None,  # Do not add spoke lines to the legend
             )
@@ -378,7 +378,7 @@ class VisualisationModule:
                 x_coords, y_coords,
                 pen=pg.mkPen(
                     color=color,
-                    style=pg.QtCore.Qt.PenStyle.DashLine,
+                    style=Qt.PenStyle.DashLine,
                     width=1),
             )
             polygon_item._static_element = True  # Tag as static
@@ -452,12 +452,12 @@ class VisualisationModule:
             legend.addItem(
                 pg.PlotDataItem(pen=pg.mkPen(
                     color="red",
-                    style=pg.QtCore.Qt.PenStyle.DashLine)),
+                    style=Qt.PenStyle.DashLine)),
                 "Left Target Tension",)
             legend.addItem(
                 pg.PlotDataItem(pen=pg.mkPen(
                     color="blue",
-                    style=pg.QtCore.Qt.PenStyle.DashLine)),
+                    style=Qt.PenStyle.DashLine)),
                 "Right Target Tension",)
             self.__legend_added = True
 

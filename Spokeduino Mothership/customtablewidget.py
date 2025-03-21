@@ -39,18 +39,17 @@ class NumericTableWidgetItem(QTableWidgetItem):
 
         if self_value is not None and other_value is not None:
             return float(self_value) < float(other_value)
-        elif self_value is not None:
+        if self_value is not None:
             return True  # self has data, other does not
-        elif other_value is not None:
+        if other_value is not None:
             return False  # other has data, self does not
-        else:
-            # Both have no UserRole, compare text
-            try:
-                return float(self.text().replace(",", ".")) \
-                    < float(other.text().replace(",", "."))
-            except ValueError:
-                # If either text is non-numeric, fall back to string comparison
-                return self.text() < other.text()
+        # Both have no UserRole, compare text
+        try:
+            return float(self.text().replace(",", ".")) \
+                < float(other.text().replace(",", "."))
+        except ValueError:
+            # If either text is non-numeric, fall back to string comparison
+            return self.text() < other.text()
 
 
 class CustomTableWidget(QTableWidget):
