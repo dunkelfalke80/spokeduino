@@ -16,8 +16,8 @@ class TensiometerModule:
     def __init__(self,
                  main_window: QMainWindow,
                  ui: Ui_mainWindow,
-                 setup_module: SetupModule,
                  messagebox: Messagebox,
+                 setup_module: SetupModule,
                  db: DatabaseModule) -> None:
         self.ui: Ui_mainWindow = ui
         self.main_window: QMainWindow = main_window
@@ -75,7 +75,7 @@ class TensiometerModule:
                     item: QStandardItem = model.item(row)
                     if item and item.checkState() == Qt.CheckState.Checked:
                         tensiometer_id = item.data(Qt.ItemDataRole.UserRole)
-                        tensiometer_name = item.text()
+                        tensiometer_name: str = item.text()
                         selected_tensiometers.append(
                             (tensiometer_id, tensiometer_name))
             else:
@@ -87,8 +87,7 @@ class TensiometerModule:
             if current_index != -1:
                 tensiometer_id = self.ui.comboBoxTensiometer.itemData(
                     current_index)
-                tensiometer_name: str = \
-                    self.ui.comboBoxTensiometer.currentText()
+                tensiometer_name = self.ui.comboBoxTensiometer.currentText()
                 selected_tensiometers.append(
                     (tensiometer_id, tensiometer_name))
 

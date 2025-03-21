@@ -78,7 +78,6 @@ class CustomTableWidget(QTableWidget):
                                                Defaults to the internal
                                                __move_to_previous_cell_default.
         """
-        ...
         super().__init__(*args, **kwargs)
         # Configure table behavior
         self.__select_rows: QAbstractItemView.SelectionBehavior = \
@@ -269,13 +268,13 @@ class CustomTableWidget(QTableWidget):
 
         # Estimate row height and font size
         row_height: int = layout_height // row_count
-        font_size = row_height // 3  # Adjust font size relative to row height
+        font_size: int = row_height // 3  # Adjust font size relative to row height
 
         # Ensure minimum font size
-        font_size: int = max(font_size, 8)
+        font_size = max(font_size, 8)
 
         # Ensure maximum font size
-        font_size: int = min(font_size, 12)
+        font_size = min(font_size, 12)
 
         # Set font for the table
         font: QFont = self.font()

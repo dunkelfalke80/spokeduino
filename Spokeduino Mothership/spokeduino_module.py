@@ -49,8 +49,8 @@ class SpokeduinoModule:
         self.setup_module: SetupModule = setup_module
         self.unit_module: UnitModule = unit_module
         self.messagebox: Messagebox = messagebox
-        self.waiting_event = threading.Event()
-        self.th_spokeduino = None
+        self.waiting_event: threading.Event = threading.Event()
+        self.th_spokeduino: threading.Thread
         self.serial_port = serial.Serial()
         self.first_start: bool = True
         self.__spokeduino_state: SpokeduinoState = SpokeduinoState.WAITING
@@ -169,8 +169,7 @@ class SpokeduinoModule:
         Start the Spokeduino handler thread.
         """
         self.th_spokeduino = threading.Thread(
-            target=self.spokeduino_thread, daemon=True
-        )
+            target=self.spokeduino_thread, daemon=True)
         self.th_spokeduino.start()
 
     def spokeduino_thread(self) -> None:
@@ -227,7 +226,7 @@ class SpokeduinoModule:
         try:
             table: CustomTableWidget = self.ui.tableWidgetMeasurements
             column: int = table.currentColumn()
-            if (column != target):
+            if column != target:
                 return
             item = NumericTableWidgetItem(
                 TextChecker.check_text(str(data)))
@@ -247,7 +246,7 @@ class SpokeduinoModule:
 
         match self.get_state():
             case SpokeduinoState.MEASURING:
-                if (self.get_mode() == MeasurementMode.DEFAULT):
+                if self.get_mode() == MeasurementMode.DEFAULT:
                     self.insert_measurement(data, data, 0)
                 else:
                     self.insert_measurement(data, data, 1)
@@ -274,7 +273,7 @@ class SpokeduinoModule:
             case SpokeduinoState.TENSIONING:
                 print("TBD")
 
-    def process_pedal(self, data: int) -> None:
+    def process_pedal(self, data: float) -> None:
         """
         Process serial data for the tension gauge.
         """

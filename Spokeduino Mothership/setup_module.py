@@ -168,7 +168,7 @@ class SetupModule:
         if rotation_direction == "clockwise":
             self.ui.radioButtonRotationClockwise.setChecked(True)
         else:
-            self.ui.radioButtonRotationAnticlockwise.setChecked(True)
+            self.ui.radioButtonRotationCounterclockwise.setChecked(True)
 
         measurement_type: str = settings_dict.get(
             "measurement_type", "side_by_side")

@@ -76,9 +76,8 @@ class TensioningModule:
                 self.ui.lineEditSpokeAmountLeft
             view: CustomTableWidget = self.ui.tableWidgetTensioningLeft
         else:
-            line_edit_spoke_amount: QLineEdit = \
-                self.ui.lineEditSpokeAmountRight
-            view: CustomTableWidget = self.ui.tableWidgetTensioningRight
+            line_edit_spoke_amount = self.ui.lineEditSpokeAmountRight
+            view = self.ui.tableWidgetTensioningRight
 
         # Get spoke amount and target tension
         try:
@@ -175,7 +174,7 @@ class TensioningModule:
         try:
             target: float = float(line_edit.text())
         except ValueError:
-            target: float = 0.0
+            target = 0.0
 
         newton, _, _ = self.unit_module.convert_units(
             value=target,
@@ -292,14 +291,14 @@ class TensioningModule:
             value = value.replace(",", ".")
             deflection: float = float(value)
         else:
-            deflection: float = 0.0
+            deflection = 0.0
 
         if is_left:
             tension: float = self.calculate_tension(
                 fit_model=self.__fit_left,
                 deflection=deflection)
         else:
-            tension: float = self.calculate_tension(
+            tension = self.calculate_tension(
                 fit_model=self.__fit_right,
                 deflection=deflection)
 
@@ -326,7 +325,7 @@ class TensioningModule:
                 else self.__spoke_amount_left - row)
             self.__tensions_left[spoke_no - 1] = tension
         else:
-            spoke_no: int = (
+            spoke_no = (
                 row + 1 if self.__clockwise
                 else self.__spoke_amount_right - row)
             self.__tensions_right[spoke_no - 1] = tension
@@ -338,12 +337,12 @@ class TensioningModule:
         and save the formula for the spoke based
         on the selected or first measurement.
         """
-        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
+        view: QTableWidget = self.ui.tableWidgetSpokeSelection
         spoke_id: int = Generics.get_selected_row_id(view)
         if spoke_id < 0:
             return
 
-        view: QTableWidget = self.ui.tableWidgetMeasurementList
+        view = self.ui.tableWidgetSpokeMeasurements
         measurement_id: int = Generics.get_selected_row_id(view)
         if measurement_id == -1:
             return
@@ -352,8 +351,8 @@ class TensioningModule:
             return
 
         spoke_name: str = (
-            f"{self.ui.comboBoxManufacturer.currentText()} "
-            f"{self.ui.lineEditName.text()}"
+            f"{self.ui.comboBoxSpokeManufacturer.currentText()} "
+            f"{self.ui.lineEditSpokeName.text()}"
         )
         spoke_details: str = (
             f"{spoke_name}\n"
@@ -371,12 +370,12 @@ class TensioningModule:
         if is_left:
             self.ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
             self.main_window.status_label_spoke_left.setText(
-                f"<- {spoke_name} {self.ui.lineEditDimension.text()}")
+                f"<- {spoke_name} {self.ui.lineEditSpokeDimension.text()}")
             self.__fit_left = fit_model
         else:
             self.ui.plainTextEditSelectedSpokeRight.setPlainText(spoke_details)
             self.main_window.status_label_spoke_right.setText(
-                f"{spoke_name} {self.ui.lineEditDimension.text()} ->")
+                f"{spoke_name} {self.ui.lineEditSpokeDimension.text()} ->")
             self.__fit_right = fit_model
 
         if self.__fit_left is not None and self.__fit_right is not None:

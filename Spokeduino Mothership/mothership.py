@@ -10,7 +10,9 @@ from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QLabel
 from ui import Ui_mainWindow
-from spokeduino_module import SpokeduinoModule, SpokeduinoState, MeasurementMode
+from spokeduino_module import SpokeduinoModule
+from spokeduino_module import SpokeduinoState
+from spokeduino_module import MeasurementMode
 from database_module import DatabaseModule
 from setup_module import SetupModule
 from spoke_module import SpokeModule
@@ -101,8 +103,7 @@ class Spokeduino(QMainWindow):
             ui=self.ui,
             measurement_module=self.measurement_module,
             messagebox=self.messagebox,
-            db=self.db,
-            current_path=self.current_path)
+            db=self.db)
         self.tensioning_module = TensioningModule(
             main_window=self,
             ui=self.ui,
@@ -144,7 +145,7 @@ class Spokeduino(QMainWindow):
         custom_tension_table_left.setObjectName("tableWidgetTensionsLeft")
 
         # Replace the widget in the layout
-        layout: QLayout | None = cast(
+        layout = cast(
             QGroupBox,
             self.ui.tableWidgetTensioningLeft.parent()).layout()
         if layout:
@@ -164,7 +165,7 @@ class Spokeduino(QMainWindow):
         custom_tension_table_right.setObjectName("tableWidgetTensionsRight")
 
         # Replace the widget in the layout
-        layout: QLayout | None = cast(
+        layout = cast(
             QGroupBox,
             self.ui.tableWidgetTensioningRight.parent()).layout()
         if layout:
@@ -219,55 +220,53 @@ class Spokeduino(QMainWindow):
         self.ui.tabWidget.currentChanged.connect(self.tab_index_changed)
 
         # Spoke buttons
-        self.ui.pushButtonUpdateSpoke.clicked.connect(
+        self.ui.pushButtonSpokeUpdate.clicked.connect(
             self.spoke_module.update_spoke)
-        self.ui.pushButtonDeleteSpoke.clicked.connect(
+        self.ui.pushButtonSpokeDelete.clicked.connect(
             self.spoke_module.delete_spoke)
-        self.ui.pushButtonClearSpoke.clicked.connect(
+        self.ui.pushButtonSpokeClear.clicked.connect(
             self.spoke_module.clear_spoke_details)
-        self.ui.pushButtonSaveAsSpoke.clicked.connect(
+        self.ui.pushButtonSpokeSaveAs.clicked.connect(
             self.spoke_module.save_as_spoke)
 
         # Synchronize spoke fields and spoke buttons
-        self.ui.lineEditName.textChanged.connect(
+        self.ui.lineEditSpokeName.textChanged.connect(
             self.spoke_module.toggle_spoke_related_buttons)
-        self.ui.comboBoxType.currentIndexChanged.connect(
+        self.ui.comboBoxSpokeType.currentIndexChanged.connect(
             self.spoke_module.toggle_spoke_related_buttons)
-        self.ui.lineEditGauge.textChanged.connect(
+        self.ui.lineEditSpokeGauge.textChanged.connect(
             self.spoke_module.toggle_spoke_related_buttons)
-        self.ui.lineEditWeight.textChanged.connect(
+        self.ui.lineEditSpokeWeight.textChanged.connect(
             self.spoke_module.toggle_spoke_related_buttons)
-        self.ui.lineEditDimension.textChanged.connect(
+        self.ui.lineEditSpokeDimension.textChanged.connect(
             self.spoke_module.toggle_spoke_related_buttons)
 
         # Spoke table-related signals
-        self.ui.tableWidgetSpokesDatabase.currentCellChanged.connect(
+        self.ui.tableWidgetSpokeSelection.currentCellChanged.connect(
             self.spoke_module.load_spoke_details)
-        self.ui.tableWidgetSpokesDatabase.currentCellChanged.connect(
+        self.ui.tableWidgetSpokeSelection.currentCellChanged.connect(
             self.spoke_module.toggle_spoke_related_buttons)
 
         # Spoke table filters
-        self.ui.lineEditFilterName.textChanged.connect(
+        self.ui.lineEditFilterSpokeName.textChanged.connect(
             self.spoke_module.filter_spoke_table)
-        self.ui.comboBoxFilterType.currentTextChanged.connect(
+        self.ui.comboBoxFilterSpokeType.currentTextChanged.connect(
             self.spoke_module.filter_spoke_table)
-        self.ui.lineEditFilterGauge.textChanged.connect(
+        self.ui.lineEditFilterSpokeGauge.textChanged.connect(
             self.spoke_module.filter_spoke_table)
-        header = self.ui.tableWidgetSpokesDatabase.horizontalHeader()
+        header: QHeaderView = self.ui.tableWidgetSpokeSelection.horizontalHeader()
         header.sectionResized.connect(
             self.spoke_module.align_filters_with_table)
         header.sectionMoved.connect(
             self.spoke_module.align_filters_with_table)
-        header: QHeaderView = \
-            self.ui.tableWidgetSpokesDatabase.horizontalHeader()
         header.sectionClicked.connect(self.spoke_module.sort_by_column)
 
         # Manufacturer-related buttons and combo boxes
-        self.ui.lineEditNewManufacturer.textChanged.connect(
+        self.ui.lineEditNewSpokeManufacturer.textChanged.connect(
             self.spoke_module.toggle_spoke_related_buttons)
-        self.ui.pushButtonSaveAsManufacturer.clicked.connect(
+        self.ui.pushButtonSaveAsSpokeManufacturer.clicked.connect(
             self.spoke_module.create_new_manufacturer)
-        self.ui.comboBoxManufacturer.\
+        self.ui.comboBoxSpokeManufacturer.\
             currentIndexChanged.connect(
                 self.spoke_module.load_spokes)
 
@@ -288,9 +287,9 @@ class Spokeduino(QMainWindow):
             self.update_statusbar_tensiometer)
 
         # Measurement-related signals
-        self.ui.tableWidgetMeasurementList.clicked.connect(
+        self.ui.tableWidgetSpokeMeasurements.clicked.connect(
             self.measurement_module.select_measurement_row)
-        self.ui.tableWidgetMeasurementList.clicked.connect(
+        self.ui.tableWidgetSpokeMeasurements.clicked.connect(
             self.spoke_module.toggle_spoke_related_buttons)
         self.ui.pushButtonDeleteMeasurement.clicked.connect(
             self.measurement_module.delete_measurement)
@@ -386,7 +385,7 @@ class Spokeduino(QMainWindow):
                 self.setup_module.save_setting(
                     "rotation_direction",
                     "clockwise") if checked else None)
-        self.ui.radioButtonRotationAnticlockwise.toggled.connect(
+        self.ui.radioButtonRotationCounterclockwise.toggled.connect(
             lambda checked:
                 self.setup_module.save_setting(
                     "rotation_direction",
@@ -474,7 +473,7 @@ class Spokeduino(QMainWindow):
                 self.ui.tableWidgetTensioningRight.setEnabled(False)
                 self.tensioning_module.setup_table(True)
                 self.tensioning_module.setup_table(False)
-            case self.ui.databaseTab:
+            case self.ui.spokeTab:
                 self.spokeduino_module.set_state(SpokeduinoState.WAITING)
                 self.chart.clear_fit_plot(self.measurement_canvas.plot_widget)
                 self.spokeduino_module.set_mode(
@@ -532,7 +531,7 @@ class Spokeduino(QMainWindow):
             self.setup_module.save_setting("spokeduino_enabled", "1")
             self.spokeduino_module.restart_spokeduino_port()
         else:
-            spokeduino_status: str = "Not connected"
+            spokeduino_status = "Not connected"
             self.setup_module.save_setting("spokeduino_enabled", "0")
             self.spokeduino_module.close_serial_port()
         self.status_label_port.setText(

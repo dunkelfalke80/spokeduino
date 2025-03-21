@@ -95,11 +95,11 @@ class MeasurementModule:
         """
         if spoke_id is None:
             spoke_id = Generics.get_selected_row_id(
-                self.ui.tableWidgetSpokesDatabase)
+                self.ui.tableWidgetSpokeSelection)
 
         if tensiometer_id is None:
             tensiometer_id = self.tensiometer_module.get_primary_tensiometer()
-        view: QTableWidget = self.ui.tableWidgetMeasurementList
+        view: QTableWidget = self.ui.tableWidgetSpokeMeasurements
 
         if spoke_id < 0 or tensiometer_id < 0:
             view.clearContents()
@@ -143,7 +143,7 @@ class MeasurementModule:
         data: list[tuple[Any, list[str]]] = []
 
         # Organize measurements by set and sort by tension
-        grouped_measurements = {}
+        grouped_measurements: dict = {}
         for set_id, tension, deflection in measurements:
             if set_id not in grouped_measurements:
                 grouped_measurements[set_id] = []
@@ -197,7 +197,7 @@ class MeasurementModule:
         Deletes only if a valid measurement row is selected
         or if there's only one measurement.
         """
-        view: QTableWidget = self.ui.tableWidgetMeasurementList
+        view: QTableWidget = self.ui.tableWidgetSpokeMeasurements
         measurement_id: int = Generics.get_selected_row_id(view)
         if (measurement_id < 0):
             return
@@ -227,7 +227,7 @@ class MeasurementModule:
             return
 
         row: int = index.row()
-        self.ui.tableWidgetMeasurementList.selectRow(row)
+        self.ui.tableWidgetSpokeMeasurements.selectRow(row)
 
     def setup_measurements_table(self) -> None:
         """
@@ -354,7 +354,7 @@ class MeasurementModule:
                 tensiometer_id=None,
                 list_only=True)
             measurement_id: int = Generics.get_selected_row_id(
-                self.ui.tableWidgetMeasurementList)
+                self.ui.tableWidgetSpokeMeasurements)
             if measurement_id < 0 or not measurements:
                 return
 
@@ -379,6 +379,11 @@ class MeasurementModule:
                 UnitEnum.LBF: 2,
             }
             unit_index: int = unit_index_map[unit]
+
+            self.ui.tableWidgetMeasurements.itemChanged.disconnect(
+                self.update_measurement_button_states)
+            self.ui.tableWidgetMeasurements.currentCellChanged.disconnect(
+                self.update_measurement_button_states)
 
             for row, (_, tension, deflection) in enumerate(
                  filtered_measurements):
@@ -426,6 +431,11 @@ class MeasurementModule:
             self.__add_row_signal_connected = True
             view.verticalHeader().sectionClicked.connect(
                 self.insert_empty_row_below)
+        self.ui.tableWidgetMeasurements.itemChanged.connect(
+            self.update_measurement_button_states)
+        self.ui.tableWidgetMeasurements.currentCellChanged.connect(
+            self.update_measurement_button_states)
+
         self.plot_measurements()
 
     def insert_empty_row_below(self, row: int) -> None:
@@ -523,7 +533,7 @@ class MeasurementModule:
 
         # Ensure a valid spoke ID is selected
         spoke_id: int = Generics.get_selected_row_id(
-            self.ui.tableWidgetSpokesDatabase)
+            self.ui.tableWidgetSpokeSelection)
         if spoke_id < 0:
             self.messagebox.err("No spoke selected")
             return
@@ -539,7 +549,7 @@ class MeasurementModule:
                     view, spoke_id, comment)
             case MeasurementMode.EDIT | MeasurementMode.CUSTOM:
                 # Save edit or custom mode measurements
-                res: bool = self.__save_custom_mode_measurements(
+                res = self.__save_custom_mode_measurements(
                     view, spoke_id, comment)
 
         # Notify the user
@@ -655,7 +665,7 @@ class MeasurementModule:
         if self.spokeduino_module.get_mode() == MeasurementMode.EDIT:
             # Get the current measurement set ID
             measurement_id: int = Generics.get_selected_row_id(
-                self.ui.tableWidgetMeasurementList)
+                self.ui.tableWidgetSpokeMeasurements)
             if measurement_id < 0:
                 self.messagebox.err("No measurement set selected to overwrite")
                 return False
@@ -719,17 +729,15 @@ class MeasurementModule:
         # Collect data from tableWidgetMeasurements
         view: CustomTableWidget = self.ui.tableWidgetMeasurements
         row_count: int = view.rowCount()
-        if row_count < 3:
-            return  # Too few measurements to draw a plot
-        data = []
+        data: list = []
         for row in range(row_count):
             if self.spokeduino_module.get_mode() == MeasurementMode.DEFAULT:
                 tension_item: QTableWidgetItem | None = \
                     view.verticalHeaderItem(row)
                 deflection_item: QTableWidgetItem | None = view.item(row, 0)
             else:
-                tension_item: QTableWidgetItem | None = view.item(row, 0)
-                deflection_item: QTableWidgetItem | None = view.item(row, 1)
+                tension_item = view.item(row, 0)
+                deflection_item = view.item(row, 1)
 
             if tension_item is None or deflection_item is None:
                 continue
@@ -749,9 +757,6 @@ class MeasurementModule:
                 continue
 
         if not data:
-            return
-
-        if len(data) < 3:  # not enough entries for a meaningful plot
             return
 
         data.sort(key=lambda pair: pair[0])

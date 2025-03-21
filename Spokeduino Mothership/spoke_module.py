@@ -24,16 +24,13 @@ class SpokeModule:
                  main_window: "Spokeduino",
                  measurement_module: MeasurementModule,
                  messagebox: Messagebox,
-                 db: DatabaseModule,
-                 current_path: str) -> None:
-        self.ui: Ui_mainWindow = ui
-        self.main_window: Spokeduino = main_window
-        self.current_path: str = current_path
-        self.translator = QTranslator()
-        self.current_language = "en"
-        self.db: DatabaseModule = db
-        self.measurement_module: MeasurementModule = measurement_module
-        self.messagebox: Messagebox = messagebox
+                 db: DatabaseModule) -> None:
+        self.__ui: Ui_mainWindow = ui
+        self.__main_window: Spokeduino = main_window
+        self.__db: DatabaseModule = db
+        self.__measurement: MeasurementModule = measurement_module
+        self.__msgbox: Messagebox = messagebox
+        self.__current_spokes: list[tuple[Any, list[Any]]]
         self.__spoke_headers: list[str] = [
                 "Name",
                 "Type",
@@ -48,16 +45,16 @@ class SpokeModule:
         If no spoke is provided, clear the fields.
         """
         if spoke:
-            self.ui.lineEditName.setText(str(spoke[0]))
-            self.ui.comboBoxType.setCurrentText(str(spoke[1]))
-            self.ui.lineEditGauge.setText(str(spoke[2]))
-            self.ui.lineEditWeight.setText(str(spoke[3]))
-            self.ui.lineEditDimension.setText(str(spoke[4]))
-            self.ui.lineEditSpokeComment.setText(str(spoke[5]))
-            self.main_window.status_label_spoke.setText(
-                f"{self.ui.comboBoxManufacturer.currentText()} "
-                f"{self.ui.lineEditName.text()} "
-                f"{self.ui.lineEditDimension.text()}")
+            self.__ui.lineEditSpokeName.setText(str(spoke[0]))
+            self.__ui.comboBoxSpokeType.setCurrentText(str(spoke[1]))
+            self.__ui.lineEditSpokeGauge.setText(str(spoke[2]))
+            self.__ui.lineEditSpokeWeight.setText(str(spoke[3]))
+            self.__ui.lineEditSpokeDimension.setText(str(spoke[4]))
+            self.__ui.lineEditSpokeComment.setText(str(spoke[5]))
+            self.__main_window.status_label_spoke.setText(
+                f"{self.__ui.comboBoxSpokeManufacturer.currentText()} "
+                f"{self.__ui.lineEditSpokeName.text()} "
+                f"{self.__ui.lineEditSpokeDimension.text()}")
         else:
             self.clear_spoke_details()
 
@@ -66,27 +63,27 @@ class SpokeModule:
         Clear all spoke detail fields on both tabs.
         """
         for widget in [
-            self.ui.lineEditName,
-            self.ui.lineEditGauge,
-            self.ui.lineEditWeight,
-            self.ui.lineEditDimension,
-            self.ui.lineEditSpokeComment,
+            self.__ui.lineEditSpokeName,
+            self.__ui.lineEditSpokeGauge,
+            self.__ui.lineEditSpokeWeight,
+            self.__ui.lineEditSpokeDimension,
+            self.__ui.lineEditSpokeComment,
         ]:
             widget.clear()
 
-        self.ui.comboBoxType.setCurrentIndex(-1)
-        self.main_window.status_label_spoke.setText("")
+        self.__ui.comboBoxSpokeType.setCurrentIndex(-1)
+        self.__main_window.status_label_spoke.setText("")
 
     def load_spoke_details(self) -> None:
         """
         Update the spoke details fields when a spoke is selected.
         """
-        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
+        view: QTableWidget = self.__ui.tableWidgetSpokeSelection
         spoke_id: int = Generics.get_selected_row_id(view)
         if spoke_id < 0:
             return
 
-        spokes: list[Any] = self.db.execute_select(
+        spokes: list[Any] = self.__db.execute_select(
             query=SQLQueries.GET_SPOKES_BY_ID,
             params=(spoke_id,))
 
@@ -94,7 +91,7 @@ class SpokeModule:
             return
 
         self.update_fields(spokes[0][1:])
-        self.measurement_module.load_measurements(spoke_id, None, False)
+        self.__measurement.load_measurements(spoke_id, None, False)
 
     def load_manufacturers(self) -> None:
         """
@@ -102,50 +99,50 @@ class SpokeModule:
         the dropdowns. Automatically loads spokes for the first manufacturer.
         """
         # Load manufacturers
-        manufacturers: list[Any] = self.db.execute_select(
+        manufacturers: list[Any] = self.__db.execute_select(
             query=SQLQueries.GET_SPOKE_MANUFACTURERS, params=None)
         if not manufacturers:
             return
 
-        self.ui.comboBoxManufacturer.clear()
+        self.__ui.comboBoxSpokeManufacturer.clear()
         for manufacturer in manufacturers:
-            self.ui.comboBoxManufacturer.addItem(
+            self.__ui.comboBoxSpokeManufacturer.addItem(
                 manufacturer[1], manufacturer[0])
 
         # Load types
-        spoke_types: list[Any] = self.db.execute_select(
+        spoke_types: list[Any] = self.__db.execute_select(
             query=SQLQueries.GET_SPOKE_TYPES, params=None)
         if not spoke_types:
             return
 
-        self.ui.comboBoxType.clear()
+        self.__ui.comboBoxSpokeType.clear()
         for spoke_type in spoke_types:
-            self.ui.comboBoxType.addItem(
+            self.__ui.comboBoxSpokeType.addItem(
                 spoke_type[1], spoke_type[0])
 
         # Automatically load spokes for the first manufacturer
         if manufacturers:
-            self.ui.comboBoxManufacturer.setCurrentIndex(0)
+            self.__ui.comboBoxSpokeManufacturer.setCurrentIndex(0)
             self.load_spokes()
 
     def load_spokes(self) -> None:
         """
         Load all spokes for the currently selected manufacturer
-        and populate the tableWidgetSpokesDatabase
+        and populate the tableWidgetSpokeSelection
         """
         manufacturer_id: int | None = \
-            self.ui.comboBoxManufacturer.currentData()
+            self.__ui.comboBoxSpokeManufacturer.currentData()
 
         if manufacturer_id is None:
             return
         manufacturer_id = int(manufacturer_id)
 
         # Fetch spokes from the database
-        spokes: list[Any] = self.db.execute_select(
+        spokes: list[Any] = self.__db.execute_select(
             query=SQLQueries.GET_SPOKES_BY_MANUFACTURER,
             params=(manufacturer_id,)
         )
-        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
+        view: QTableWidget = self.__ui.tableWidgetSpokeSelection
         view.clearContents()  # Clear existing data
         view.setColumnCount(6)  # Set column count for your table structure
 
@@ -155,14 +152,14 @@ class SpokeModule:
             return
 
         # Store current spokes with their IDs
-        self.current_spokes: list[tuple[Any, list[Any]]] = [
+        self.__current_spokes = [
             (spoke[0], list(spoke[1:]))
             for spoke in spokes
         ]
         view.setRowCount(len(spokes))  # Set row count
 
         # Populate the table widget
-        for row_idx, (spoke_id, spoke_data) in enumerate(self.current_spokes):
+        for row_idx, (spoke_id, spoke_data) in enumerate(self.__current_spokes):
             for col_idx, cell_data in enumerate(spoke_data):
                 item = QTableWidgetItem(str(cell_data))
                 item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
@@ -196,21 +193,21 @@ class SpokeModule:
 
     def populate_filter_type(self) -> None:
         """
-        Populate comboBoxFilterType with unique spoke types applicable
+        Populate comboBoxFilterSpokeType with unique spoke types applicable
         to the current dataset in database order.
         """
         # Extract applicable types from current spokes
         type_ids_in_use: set[Any] = {
             spoke[1][1]
-            for spoke in self.current_spokes}
+            for spoke in self.__current_spokes}
 
         # Fetch all types from the database
-        types: list[Any] = self.db.execute_select(
+        types: list[Any] = self.__db.execute_select(
             SQLQueries.GET_SPOKE_TYPES, None)
         if not types:
             return
-        combo: QComboBox = self.ui.comboBoxFilterType
-        # Populate comboBoxFilterType with applicable types
+        combo: QComboBox = self.__ui.comboBoxFilterSpokeType
+        # Populate comboBoxFilterSpokeType with applicable types
         combo.clear()
         # Empty means no filter is set
         combo.addItem("")
@@ -218,20 +215,20 @@ class SpokeModule:
         for type_id, type_name in types:
             if type_name in type_ids_in_use:
                 combo.addItem(type_name, type_id)
-        self.ui.lineEditFilterName.clear()
-        self.ui.lineEditFilterGauge.clear()
+        self.__ui.lineEditFilterSpokeName.clear()
+        self.__ui.lineEditFilterSpokeGauge.clear()
         combo.setCurrentIndex(0)
 
     def filter_spoke_table(self) -> None:
         """
-        Filter tableWidgetSpokesDatabase based on filter inputs.
+        Filter tableWidgetSpokeSelection based on filter inputs.
         """
-        name_filter: str = self.ui.lineEditFilterName.text().lower()
-        type_filter: str = self.ui.comboBoxFilterType.currentText().lower()
-        gauge_filter: str = self.ui.lineEditFilterGauge.text().lower()
+        name_filter: str = self.__ui.lineEditFilterSpokeName.text().lower()
+        type_filter: str = self.__ui.comboBoxFilterSpokeType.currentText().lower()
+        gauge_filter: str = self.__ui.lineEditFilterSpokeGauge.text().lower()
 
         filtered_spokes: list[tuple[int, list[str]]] = [
-            spoke for spoke in self.current_spokes
+            spoke for spoke in self.__current_spokes
             if (name_filter in spoke[1][0].lower()) and  # Match Name
             (type_filter == spoke[1][1].lower()
              if type_filter else True) and  # Match Type
@@ -239,7 +236,7 @@ class SpokeModule:
              if gauge_filter else True)  # Match Gauge
         ]
 
-        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
+        view: QTableWidget = self.__ui.tableWidgetSpokeSelection
         view.clearContents()
         view.setRowCount(len(filtered_spokes))
 
@@ -259,9 +256,9 @@ class SpokeModule:
 
     def align_filters_with_table(self) -> None:
         """
-        Align filter fields with the columns of tableWidgetSpokesDatabase.
+        Align filter fields with the columns of tableWidgetSpokeSelection.
         """
-        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
+        view: QTableWidget = self.__ui.tableWidgetSpokeSelection
         if not view.isVisible():
             return
 
@@ -275,9 +272,9 @@ class SpokeModule:
 
         # Align each filter to its corresponding column
         filter_fields = [
-            self.ui.lineEditFilterName,
-            self.ui.comboBoxFilterType,
-            self.ui.lineEditFilterGauge,
+            self.__ui.lineEditFilterSpokeName,
+            self.__ui.comboBoxFilterSpokeType,
+            self.__ui.lineEditFilterSpokeGauge,
         ]
 
         for col_idx, widget in enumerate(filter_fields):
@@ -290,22 +287,22 @@ class SpokeModule:
 
     def sort_by_column(self, column: int) -> None:
         """
-        Sort the tableWidgetSpokesDatabase by the specified column.
+        Sort the tableWidgetSpokeSelection by the specified column.
         """
-        self.current_spokes.sort(key=lambda x: x[1][column])
-        self.ui.tableWidgetSpokesDatabase.model().layoutChanged.emit()
+        self.__current_spokes.sort(key=lambda x: x[1][column])
+        self.__ui.tableWidgetSpokeSelection.model().layoutChanged.emit()
 
     def get_spoke_data(self) -> tuple[int, int, float, str, str, str]:
         """
         DRY helper
         """
         try:
-            return int(self.ui.comboBoxType.currentData()), \
-                int(self.ui.lineEditGauge.text() or 0), \
-                float(self.ui.lineEditWeight.text() or 0.0), \
-                self.ui.lineEditName.text() or "", \
-                self.ui.lineEditDimension.text() or "", \
-                self.ui.lineEditSpokeComment.text() or ""
+            return int(self.__ui.comboBoxSpokeType.currentData()), \
+                int(self.__ui.lineEditSpokeGauge.text() or 0), \
+                float(self.__ui.lineEditSpokeWeight.text() or 0.0), \
+                self.__ui.lineEditSpokeName.text() or "", \
+                self.__ui.lineEditSpokeDimension.text() or "", \
+                self.__ui.lineEditSpokeComment.text() or ""
         except ValueError as e:
             logging.error(f"Invalid data provided: {e}")
             raise
@@ -314,7 +311,7 @@ class SpokeModule:
         """
         Update the selected spoke with new values from the detail fields.
         """
-        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
+        view: QTableWidget = self.__ui.tableWidgetSpokeSelection
         spoke_id: int = Generics.get_selected_row_id(view)
         if spoke_id < 0:
             return
@@ -323,7 +320,7 @@ class SpokeModule:
             spoke_name, dimension, comment = \
             self.get_spoke_data()
 
-        _ = self.db.execute_query(
+        _ = self.__db.execute_query(
             query=SQLQueries.MODIFY_SPOKE,
             params=(spoke_name, type_id, gauge, weight,
                     dimension, comment, spoke_id),
@@ -334,13 +331,13 @@ class SpokeModule:
         """
         Delete the currently selected spoke from the spokes table.
         """
-        view: QTableWidget = self.ui.tableWidgetSpokesDatabase
+        view: QTableWidget = self.__ui.tableWidgetSpokeSelection
         spoke_id: int = Generics.get_selected_row_id(view)
         if spoke_id < 0:
-            self.messagebox.err("spoke not selected")
+            self.__msgbox.err("spoke not selected")
             return
 
-        _ = self.db.execute_query(
+        _ = self.__db.execute_query(
             query=SQLQueries.DELETE_SPOKE,
             params=(spoke_id,)
         )
@@ -351,7 +348,7 @@ class SpokeModule:
         Insert a new spoke into the spokes table for the selected manufacturer.
         """
         manufacturer_id: int | None = \
-            self.ui.comboBoxManufacturer.currentData()
+            self.__ui.comboBoxSpokeManufacturer.currentData()
 
         if manufacturer_id is None:
             return
@@ -361,7 +358,7 @@ class SpokeModule:
             spoke_name, dimension, comment = \
             self.get_spoke_data()
 
-        new_spoke_id: int | None = self.db.execute_query(
+        new_spoke_id: int | None = self.__db.execute_query(
             query=SQLQueries.ADD_SPOKE,
             params=(manufacturer_id, spoke_name,
                     type_id, gauge, weight, dimension, comment),
@@ -376,24 +373,24 @@ class SpokeModule:
         """
         Insert a new manufacturer into the manufacturers table and select it.
         """
-        manufacturer_name: str = self.ui.lineEditNewManufacturer.text()
+        manufacturer_name: str = self.__ui.lineEditNewSpokeManufacturer.text()
         if not manufacturer_name:
             return
 
-        new_manufacturer_id: int | None = self.db.execute_query(
+        new_manufacturer_id: int | None = self.__db.execute_query(
             query=SQLQueries.ADD_SPOKE_MANUFACTURER,
             params=(manufacturer_name,),
         )
 
-        self.ui.lineEditNewManufacturer.clear()
+        self.__ui.lineEditNewSpokeManufacturer.clear()
         self.load_manufacturers()
 
         if new_manufacturer_id is None:
             return
         new_manufacturer_id = int(new_manufacturer_id)
 
-        self.ui.comboBoxManufacturer.setCurrentIndex(
-            self.ui.comboBoxManufacturer.findData(
+        self.__ui.comboBoxSpokeManufacturer.setCurrentIndex(
+            self.__ui.comboBoxSpokeManufacturer.findData(
                 new_manufacturer_id))
 
     def toggle_spoke_related_buttons(self) -> None:
@@ -401,29 +398,29 @@ class SpokeModule:
         Enable or disable spoke related buttons
         based on spoke detail fields.
         """
-        self.ui.pushButtonSaveAsManufacturer.setEnabled(
-            len(self.ui.lineEditNewManufacturer.text()) > 0)
+        self.__ui.pushButtonSaveAsSpokeManufacturer.setEnabled(
+            len(self.__ui.lineEditNewSpokeManufacturer.text()) > 0)
 
         required_fields_save_spoke: bool = all([
-            self.ui.lineEditName.text(),
-            self.ui.comboBoxType.currentIndex() >= 0,
-            self.ui.lineEditGauge.text(),
-            self.ui.lineEditWeight.text(),
-            self.ui.lineEditDimension.text()])
+            self.__ui.lineEditSpokeName.text(),
+            self.__ui.comboBoxSpokeType.currentIndex() >= 0,
+            self.__ui.lineEditSpokeGauge.text(),
+            self.__ui.lineEditSpokeWeight.text(),
+            self.__ui.lineEditSpokeDimension.text()])
         current_spoke_row: int = \
-            Generics.get_selected_row_id(self.ui.tableWidgetSpokesDatabase)
+            Generics.get_selected_row_id(self.__ui.tableWidgetSpokeSelection)
         current_measurement_row: int = \
-            Generics.get_selected_row_id(self.ui.tableWidgetMeasurementList)
-        self.ui.tableWidgetSpokesDatabase.currentRow()
-        self.ui.pushButtonUpdateSpoke.setEnabled(required_fields_save_spoke
-                                                 and current_spoke_row >= 0)
-        self.ui.pushButtonDeleteSpoke.setEnabled(current_spoke_row >= 0)
-        self.ui.pushButtonSaveAsSpoke.setEnabled(required_fields_save_spoke)
-        self.ui.pushButtonUseLeft.setEnabled(current_measurement_row >= 0)
-        self.ui.pushButtonUseRight.setEnabled(current_measurement_row >= 0)
-        self.ui.pushButtonDeleteMeasurement.setEnabled(
+            Generics.get_selected_row_id(self.__ui.tableWidgetSpokeMeasurements)
+        self.__ui.tableWidgetSpokeSelection.currentRow()
+        self.__ui.pushButtonSpokeUpdate.setEnabled(
+            required_fields_save_spoke and current_spoke_row >= 0)
+        self.__ui.pushButtonSpokeDelete.setEnabled(current_spoke_row >= 0)
+        self.__ui.pushButtonSpokeSaveAs.setEnabled(required_fields_save_spoke)
+        self.__ui.pushButtonUseLeft.setEnabled(current_measurement_row >= 0)
+        self.__ui.pushButtonUseRight.setEnabled(current_measurement_row >= 0)
+        self.__ui.pushButtonDeleteMeasurement.setEnabled(
             current_measurement_row >= 0)
-        self.ui.measurementTab.setEnabled(current_spoke_row >= 0)
-        self.ui.pushButtonNewMeasurement.setEnabled(current_spoke_row >= 0)
-        self.ui.pushButtonEditMeasurement.setEnabled(
+        self.__ui.measurementTab.setEnabled(current_spoke_row >= 0)
+        self.__ui.pushButtonNewMeasurement.setEnabled(current_spoke_row >= 0)
+        self.__ui.pushButtonEditMeasurement.setEnabled(
             current_measurement_row >= 0)

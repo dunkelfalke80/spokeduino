@@ -43,6 +43,8 @@ class VisualisationModule:
         self.fitter: TensionDeflectionFitter = fitter
         self.__legend_added = False
         self.__clockwise: bool = True
+        self.__deviation_viewbox: pg.ViewBox
+        self.__legend: pg.LegendItem | Any
 
     def __predict_deflection(
         self,
@@ -99,31 +101,13 @@ class VisualisationModule:
             safe_tensions = np.where(tensions < 0, np.nan, tensions)
             return a * (safe_tensions ** b)
 
-        elif fit_type == FitType.CHEBYSHEV:
-            # model = poly coefficients in ascending order
-            # Check scaling_params for domain transformation
-            coefs = model
-            scaling_params = fit_model.get("scaling_params", None)
-            if not scaling_params:
-                # If missing, interpret coefs as standard poly
-                poly = np.poly1d(coefs)
-                return poly(tensions)
-            else:
-                t_min, t_max = scaling_params
-                # Transform tensions -> normalized in [-1, 1]
-                # normalized_t = 2*(t - t_min)/(t_max - t_min) - 1
-                denom = (t_max - t_min) if (t_max - t_min) != 0 else 1
-                normalized_t = 2.0 * (tensions - t_min) / denom - 1.0
-                poly = np.poly1d(coefs)  # coefs are in ascending order
-                return poly(normalized_t)
-
         else:
             # Unsupported or unknown fit type => return all zeros or NaNs
             return np.full_like(tensions, np.nan)
 
     def clear_fit_plot(self, plot_widget: pg.PlotWidget) -> None:
-        if hasattr(self, "_deviation_viewbox"):
-            self._deviation_viewbox.clear()
+        if hasattr(self, "__deviation_viewbox"):
+            self.__deviation_viewbox.clear()
         plot_widget.clear()
 
     def update_fit_plot(
@@ -157,23 +141,23 @@ class VisualisationModule:
         plot_widget.enableAutoRange(axis=pg.ViewBox.XYAxes, enable=False)
 
         # Create (or retrieve) a second ViewBox for deviation data
-        if not hasattr(self, "_deviation_viewbox"):
-            self._deviation_viewbox = pg.ViewBox()
+        if not hasattr(self, "__deviation_viewbox"):
+            self.__deviation_viewbox = pg.ViewBox()
             # Show the right axis in the main PlotItem
             plot_item.showAxis("right")
             plot_item.getAxis("right").setLabel("Deviation (N)", color="green")
             # Add the second ViewBox to the PlotItem's scene
-            plot_item.scene().addItem(self._deviation_viewbox)
+            plot_item.scene().addItem(self.__deviation_viewbox)
             # Link the right axis to the new ViewBox
-            plot_item.getAxis("right").linkToView(self._deviation_viewbox)
+            plot_item.getAxis("right").linkToView(self.__deviation_viewbox)
         else:
-            self._deviation_viewbox.clear()
+            self.__deviation_viewbox.clear()
 
         # Link the second ViewBox's X-axis to the main view box
         main_vb = plot_item.getViewBox()
         if main_vb is None:
             raise RuntimeError("No default ViewBox found in the PlotItem.")
-        self._deviation_viewbox.setXLink(main_vb)
+        self.__deviation_viewbox.setXLink(main_vb)
 
         # Extract fit_model info
         t_min = fit_model["t_min"]
@@ -227,20 +211,20 @@ class VisualisationModule:
             symbolBrush="green",
             name="Deviation"
         )
-        self._deviation_viewbox.addItem(deviation_curve)
+        self.__deviation_viewbox.addItem(deviation_curve)
 
         # Labels, Title, Legend
         plot_item.setLabel("left", "Deflection (mm)", color="blue")
         plot_item.setLabel("bottom", "Tension (N)", color="black")
         plot_item.setTitle(header, color="black", size="12pt")
 
-        if not hasattr(self, "_legend"):
-            self._legend = plot_item.addLegend(offset=(10, 10))
+        if not hasattr(self, "__legend"):
+            self.__legend = plot_item.addLegend(offset=(10, 10))
 
         # Sync second ViewBox with main ViewBox
         def update_views():
             """Keep second ViewBox geometry in sync with main one."""
-            self._deviation_viewbox.setGeometry(main_vb.sceneBoundingRect())
+            self.__deviation_viewbox.setGeometry(main_vb.sceneBoundingRect())
 
         try:
             main_vb.sigResized.disconnect()
@@ -272,7 +256,7 @@ class VisualisationModule:
         plot_widget.setYRange(y_min - y_margin, y_max + y_margin)
 
         # And fix the second axis range for deviations
-        self._deviation_viewbox.setYRange(
+        self.__deviation_viewbox.setYRange(
             deviation_range[0], deviation_range[1])
         deviation_curve = pg.PlotDataItem(
             x=measured_tensions,
@@ -282,7 +266,7 @@ class VisualisationModule:
             symbolBrush="green",
             name="Deviation"
         )
-        self._deviation_viewbox.addItem(deviation_curve)
+        self.__deviation_viewbox.addItem(deviation_curve)
 
     @staticmethod
     def __prepare_radar_data(
@@ -327,8 +311,8 @@ class VisualisationModule:
                 color: str = "red"
                 name: str = "Left target tension"
             else:
-                color: str = "blue"
-                name: str = "Right target tension"
+                color = "blue"
+                name = "Right target tension"
             circle_item = plot_widget.plot(
                 circle_x, circle_y,
                 pen=pg.mkPen(
