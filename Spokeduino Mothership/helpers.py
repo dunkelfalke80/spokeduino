@@ -1,3 +1,4 @@
+from enum import Enum
 from typing import Any
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QLocale
@@ -95,3 +96,38 @@ class Generics:
         if measurement_id is None:
             return -1
         return int(measurement_id)
+
+
+class SpokeduinoState(Enum):
+    WAITING = 1
+    MEASURING = 2
+    TENSIONING = 3
+
+
+class MeasurementMode(Enum):
+    DEFAULT = 0
+    EDIT = 1
+    CUSTOM = 2
+
+
+class StateMachine:
+
+    def __init__(self) -> None:
+        self.__state: SpokeduinoState = SpokeduinoState.WAITING
+        self.__mode: MeasurementMode = MeasurementMode.DEFAULT
+
+    def get_mode(self) -> MeasurementMode:
+        return self.__mode
+
+    def set_mode(self, mode: MeasurementMode) -> None:
+        self.__mode = mode
+
+    def get_state(self) -> SpokeduinoState:
+        return self.__state
+
+    def set_state(self, state: SpokeduinoState) -> None:
+        """
+        Update the Spokeduino state and control the waiting_event.
+        """
+        self.__state = state
+        print(f"State machine switched to {self.get_state()}")

@@ -4,13 +4,16 @@ from typing import Any, cast
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QModelIndex
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QMainWindow
 from PySide6.QtWidgets import QTableWidget
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtWidgets import QHeaderView
 from ui import Ui_mainWindow
-from spokeduino_module import SpokeduinoModule, MeasurementMode, SpokeduinoState
-from helpers import Messagebox, Generics, TextChecker
+from helpers import Messagebox
+from helpers import Generics
+from helpers import TextChecker
+from helpers import StateMachine
+from helpers import SpokeduinoState
+from helpers import MeasurementMode
 from customtablewidget import CustomTableWidget, NumericTableWidgetItem
 from sql_queries import SQLQueries
 from unit_module import UnitEnum, UnitModule
@@ -25,8 +28,8 @@ class MeasurementModule:
     def __init__(self,
                  ui: Ui_mainWindow,
                  unit_module: UnitModule,
+                 state_machine: StateMachine,
                  tensiometer_module: TensiometerModule,
-                 spokeduino_module: SpokeduinoModule,
                  messagebox: Messagebox,
                  db: DatabaseModule,
                  fitter: TensionDeflectionFitter,
@@ -34,8 +37,8 @@ class MeasurementModule:
                  canvas: PyQtGraphCanvas) -> None:
         self.__ui: Ui_mainWindow = ui
         self.__unit: UnitModule = unit_module
+        self.__state_machine: StateMachine = state_machine
         self.__tensio: TensiometerModule = tensiometer_module
-        self.__spokeduino: SpokeduinoModule = spokeduino_module
         self.__msgbox: Messagebox = messagebox
         self.__db: DatabaseModule = db
         self.__fitter: TensionDeflectionFitter = fitter
@@ -240,7 +243,7 @@ class MeasurementModule:
         view.setRowCount(0)
         view.setColumnCount(0)
 
-        match self.__spokeduino.get_mode():
+        match self.__state_machine.get_mode():
             case MeasurementMode.DEFAULT:
                 self.populate_measurements_table_default(view)
             case MeasurementMode.EDIT:
@@ -448,7 +451,7 @@ class MeasurementModule:
         view.move_to_cell(row, 0)
 
     def on_cell_changing(self, row: int, column: int, value: str) -> None:
-        if self.__spokeduino.get_mode() == MeasurementMode.DEFAULT:
+        if self.__state_machine.get_mode() == MeasurementMode.DEFAULT:
             return
 
         try:
@@ -505,8 +508,8 @@ class MeasurementModule:
             column = 0
             row += 1
         else:
-            if self.__spokeduino.get_mode() == MeasurementMode.DEFAULT:
-                self.__spokeduino.set_state(SpokeduinoState.WAITING)
+            if self.__state_machine.get_mode() == MeasurementMode.DEFAULT:
+                self.__state_machine.set_state(SpokeduinoState.WAITING)
                 return  # Already at the last cell
             time.sleep(0.05)
             self.insert_empty_row_below(row)
@@ -538,7 +541,7 @@ class MeasurementModule:
         comment: str = self.__ui.lineEditMeasurementComment.text().strip()
 
         # Check the mode and handle accordingly
-        match self.__spokeduino.get_mode():
+        match self.__state_machine.get_mode():
             case MeasurementMode.DEFAULT:
                 # Save default mode measurements
                 res: bool = self.__save_default_mode_measurements(
@@ -658,7 +661,7 @@ class MeasurementModule:
             return False
 
         # Handle EDIT mode: Delete the existing measurement set
-        if self.__spokeduino.get_mode() == MeasurementMode.EDIT:
+        if self.__state_machine.get_mode() == MeasurementMode.EDIT:
             # Get the current measurement set ID
             measurement_id: int = Generics.get_selected_row_id(
                 self.__ui.tableWidgetSpokeMeasurements)
@@ -727,7 +730,7 @@ class MeasurementModule:
         row_count: int = view.rowCount()
         data: list = []
         for row in range(row_count):
-            if self.__spokeduino.get_mode() == MeasurementMode.DEFAULT:
+            if self.__state_machine.get_mode() == MeasurementMode.DEFAULT:
                 tension_item: QTableWidgetItem | None = \
                     view.verticalHeaderItem(row)
                 deflection_item: QTableWidgetItem | None = view.item(row, 0)

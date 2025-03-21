@@ -11,8 +11,6 @@ from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QLabel
 from ui import Ui_mainWindow
 from spokeduino_module import SpokeduinoModule
-from spokeduino_module import SpokeduinoState
-from spokeduino_module import MeasurementMode
 from database_module import DatabaseModule
 from setup_module import SetupModule
 from spoke_module import SpokeModule
@@ -22,6 +20,9 @@ from measurement_module import MeasurementModule
 from unit_module import UnitModule, UnitEnum
 from customtablewidget import CustomTableWidget
 from helpers import Messagebox
+from helpers import StateMachine
+from helpers import SpokeduinoState
+from helpers import MeasurementMode
 from calculation_module import TensionDeflectionFitter
 from visualisation_module import PyQtGraphCanvas, VisualisationModule
 
@@ -67,7 +68,7 @@ class Spokeduino(QMainWindow):
             self.measurement_canvas)
         self.ui.verticalLayoutWheelDiagram.addWidget(
             self.tensioning_canvas)
-
+        self.state_machine: StateMachine = StateMachine()
         self.unit_module = UnitModule(self.ui)
         self.setup_module = SetupModule(
             main_window=self,
@@ -80,16 +81,11 @@ class Spokeduino(QMainWindow):
             messagebox=self.messagebox,
             setup_module=self.setup_module,
             db=self.db)
-        self.spokeduino_module = SpokeduinoModule(
-            ui=self.ui,
-            db=self.db,
-            setup_module=self.setup_module,
-            unit_module=self.unit_module)
         self.measurement_module = MeasurementModule(
             ui=self.ui,
             unit_module=self.unit_module,
+            state_machine=self.state_machine,
             tensiometer_module=self.tensiometer_module,
-            spokeduino_module=self.spokeduino_module,
             messagebox=self.messagebox,
             db=self.db,
             fitter=self.fitter,
@@ -104,12 +100,20 @@ class Spokeduino(QMainWindow):
         self.tensioning_module = TensioningModule(
             main_window=self,
             ui=self.ui,
+            state_machine=self.state_machine,
             unit_module=self.unit_module,
             measurement_module=self.measurement_module,
             db=self.db,
             fitter=self.fitter,
             chart=self.chart,
             canvas=self.tensioning_canvas)
+        self.spokeduino_module = SpokeduinoModule(
+            ui=self.ui,
+            db=self.db,
+            state_machine=self.state_machine,
+            tensioning_module=self.tensioning_module,
+            setup_module=self.setup_module,
+            unit_module=self.unit_module)
 
         # Replace the tableWidgetMeasurements with the custom widget
         custom_table = CustomTableWidget(
@@ -204,7 +208,10 @@ class Spokeduino(QMainWindow):
         self.update_statusbar_tensiometer()
         self.update_statusbar_spokeduino()
         self.update_statusbar_fit()
-        self.spokeduino_module.set_mode(MeasurementMode.DEFAULT)
+        if self.ui.radioButtonMeasurementCustom.isChecked():
+            self.state_machine.set_mode(MeasurementMode.DEFAULT)
+        else:
+            self.state_machine.set_mode(MeasurementMode.CUSTOM)
         self.ui.tensioningTab.setEnabled(False)
 
     def setup_signals_and_slots(self) -> None:
@@ -288,14 +295,20 @@ class Spokeduino(QMainWindow):
             self.spoke_module.toggle_spoke_related_buttons)
         self.ui.pushButtonDeleteMeasurement.clicked.connect(
             self.measurement_module.delete_measurement)
-        self.ui.pushButtonNewMeasurement.clicked.connect(
-            lambda: self.spokeduino_module.set_mode(
-                MeasurementMode.DEFAULT))
+        if self.ui.radioButtonMeasurementCustom.isChecked():
+            self.ui.pushButtonNewMeasurement.clicked.connect(
+                lambda: self.state_machine.set_mode(
+                    MeasurementMode.DEFAULT))
+        else:
+            self.ui.pushButtonNewMeasurement.clicked.connect(
+                lambda: self.state_machine.set_mode(
+                    MeasurementMode.CUSTOM))
+
         self.ui.pushButtonNewMeasurement.clicked.connect(
             lambda: self.ui.tabWidget.setCurrentIndex(
                 self.ui.tabWidget.indexOf(self.ui.measurementTab)))
         self.ui.pushButtonEditMeasurement.clicked.connect(
-            lambda: self.spokeduino_module.set_mode(
+            lambda: self.state_machine.set_mode(
                 MeasurementMode.EDIT))
         self.ui.pushButtonEditMeasurement.clicked.connect(
             lambda: self.ui.tabWidget.setCurrentIndex(
@@ -309,7 +322,7 @@ class Spokeduino(QMainWindow):
         self.ui.pushButtonNextMeasurement.clicked.connect(
             lambda: self.ui.tableWidgetMeasurements.move_to_next_cell(False))
         self.ui.pushButtonSaveMeasurement.clicked.connect(
-            lambda: self.spokeduino_module.set_state(
+            lambda: self.state_machine.set_state(
                 SpokeduinoState.WAITING))
         self.ui.pushButtonSaveMeasurement.clicked.connect(
             self.measurement_module.save_measurements)
@@ -413,9 +426,9 @@ class Spokeduino(QMainWindow):
         self.ui.pushButtonStartTensioning.clicked.connect(
             self.tensioning_module.start_tensioning)
         self.ui.pushButtonPreviousSpoke.clicked.connect(
-            self.ui.tableWidgetMeasurements.move_to_previous_cell)
+            self.tensioning_module.previous_cell)
         self.ui.pushButtonNextSpoke.clicked.connect(
-            lambda: self.ui.tableWidgetMeasurements.move_to_next_cell(False))
+            lambda: self.tensioning_module.next_cell(False))
 
         # Left tensioning table
         self.ui.pushButtonUseLeft.clicked.connect(
@@ -458,30 +471,36 @@ class Spokeduino(QMainWindow):
             case self.ui.measurementTab:
                 self.measurement_module.setup_measurements_table()
                 self.ui.tableWidgetMeasurements.stop_sorting()
-                self.spokeduino_module.set_state(SpokeduinoState.MEASURING)
+                self.state_machine.set_state(SpokeduinoState.MEASURING)
             case self.ui.tensioningTab:
                 self.chart.clear_fit_plot(self.measurement_canvas.plot_widget)
-                self.spokeduino_module.set_mode(
-                    MeasurementMode.DEFAULT)
+                if self.ui.radioButtonMeasurementCustom.isChecked():
+                    self.state_machine.set_mode(MeasurementMode.DEFAULT)
+                else:
+                    self.state_machine.set_mode(MeasurementMode.CUSTOM)
                 self.ui.pushButtonStartTensioning.setText("Start")
                 self.ui.tableWidgetTensioningLeft.setEnabled(False)
                 self.ui.tableWidgetTensioningRight.setEnabled(False)
                 self.tensioning_module.setup_table(True)
                 self.tensioning_module.setup_table(False)
             case self.ui.spokeTab:
-                self.spokeduino_module.set_state(SpokeduinoState.WAITING)
+                self.state_machine.set_state(SpokeduinoState.WAITING)
                 self.chart.clear_fit_plot(self.measurement_canvas.plot_widget)
-                self.spokeduino_module.set_mode(
-                    MeasurementMode.DEFAULT)
+                if self.ui.radioButtonMeasurementCustom.isChecked():
+                    self.state_machine.set_mode(MeasurementMode.DEFAULT)
+                else:
+                    self.state_machine.set_mode(MeasurementMode.CUSTOM)
                 self.spoke_module.load_spoke_details()
                 QTimer.singleShot(
                     50,
                     self.spoke_module.align_filters_with_table)
             case self.ui.setupTab:
-                self.spokeduino_module.set_state(SpokeduinoState.WAITING)
+                self.state_machine.set_state(SpokeduinoState.WAITING)
                 self.chart.clear_fit_plot(self.measurement_canvas.plot_widget)
-                self.spokeduino_module.set_mode(
-                    MeasurementMode.DEFAULT)
+                if self.ui.radioButtonMeasurementCustom.isChecked():
+                    self.state_machine.set_mode(MeasurementMode.DEFAULT)
+                else:
+                    self.state_machine.set_mode(MeasurementMode.CUSTOM)
 
     def measurement_custom(self) -> None:
         if self.ui.radioButtonMeasurementCustom.isChecked():
@@ -489,14 +508,14 @@ class Spokeduino(QMainWindow):
             self.setup_module.save_setting(
                 "measaurement_custom",
                 "1")
-            self.spokeduino_module.set_mode(
+            self.state_machine.set_mode(
                 MeasurementMode.CUSTOM)
         else:
             self.ui.pushButtonMultipleTensiometers.setEnabled(True)
             self.setup_module.save_setting(
                 "measaurement_custom",
                 "0")
-            self.spokeduino_module.set_mode(
+            self.state_machine.set_mode(
                 MeasurementMode.DEFAULT)
 
     def update_statusbar_unit(self) -> None:

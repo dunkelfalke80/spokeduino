@@ -1,19 +1,19 @@
-import numpy as np
 from typing import TYPE_CHECKING, Any
+import numpy as np
 from PySide6.QtCore import Qt
 from PySide6.QtCore import QTimer
 from PySide6.QtWidgets import QTableWidget
 from PySide6.QtWidgets import QTableWidgetItem
 from PySide6.QtWidgets import QHeaderView
 from PySide6.QtWidgets import QLineEdit
-from setup_module import SetupModule
-from helpers import Messagebox
 from customtablewidget import CustomTableWidget, NumericTableWidgetItem
 from unit_module import UnitEnum, UnitModule
 from database_module import DatabaseModule
-from tensiometer_module import TensiometerModule
 from measurement_module import MeasurementModule
-from helpers import TextChecker, Generics
+from helpers import TextChecker
+from helpers import Generics
+from helpers import StateMachine
+from helpers import SpokeduinoState
 from ui import Ui_mainWindow
 from calculation_module import TensionDeflectionFitter
 from visualisation_module import PyQtGraphCanvas, VisualisationModule
@@ -28,6 +28,7 @@ class TensioningModule:
     def __init__(self,
                  main_window: "Spokeduino",
                  ui: Ui_mainWindow,
+                 state_machine: StateMachine,
                  unit_module: UnitModule,
                  measurement_module: MeasurementModule,
                  db: DatabaseModule,
@@ -38,6 +39,7 @@ class TensioningModule:
         self.__unit: UnitModule = unit_module
         self.__main_window: Spokeduino = main_window
         self.__measurement: MeasurementModule = measurement_module
+        self.__state_machine: StateMachine = state_machine
         self.__db: DatabaseModule = db
         self.__fitter: TensionDeflectionFitter = fitter
         self.__chart: VisualisationModule = chart
@@ -57,6 +59,8 @@ class TensioningModule:
         self.__ui.tableWidgetTensioningLeft.setEnabled(False)
         self.__ui.tableWidgetTensioningRight.setEnabled(False)
 
+    def get_left(self) -> bool:
+        return self.__is_left
 
     def setup_table(self, is_left: bool) -> None:
         """
@@ -69,9 +73,13 @@ class TensioningModule:
             line_edit_spoke_amount: QLineEdit = \
                 self.__ui.lineEditSpokeAmountLeft
             view: CustomTableWidget = self.__ui.tableWidgetTensioningLeft
+            self.__ui.lineEditSpokeAmountRight.setText(
+                line_edit_spoke_amount.text())
         else:
             line_edit_spoke_amount = self.__ui.lineEditSpokeAmountRight
             view = self.__ui.tableWidgetTensioningRight
+            self.__ui.lineEditSpokeAmountLeft.setText(
+                line_edit_spoke_amount.text())
 
         # Get spoke amount and target tension
         try:
@@ -182,6 +190,7 @@ class TensioningModule:
     def start_tensioning(self) -> None:
         if self.__ui.tableWidgetTensioningLeft.isEnabled() and \
          self.__ui.tableWidgetTensioningLeft.isEnabled():
+            self.__state_machine.set_state(SpokeduinoState.WAITING)
             self.__ui.pushButtonStartTensioning.setText("Start")
             self.__ui.tableWidgetTensioningLeft.setEnabled(False)
             self.__ui.tableWidgetTensioningRight.setEnabled(False)
@@ -213,7 +222,7 @@ class TensioningModule:
                 lambda: self.__ui.tableWidgetTensioningRight.move_to_cell(
                     row=0,
                     column=0))
-
+        self.__state_machine.set_state(SpokeduinoState.TENSIONING)
 
     def next_cell(self, no_delay: bool) -> None:
         this_view: CustomTableWidget
@@ -245,10 +254,6 @@ class TensioningModule:
                 this_row += 1
 
         self.__is_left = other_view == self.__ui.tableWidgetTensioningLeft
-        if self.__is_left:
-            print("going left")
-        else:
-            print("going right")
 
         QTimer.singleShot(
             50,
@@ -356,12 +361,12 @@ class TensioningModule:
             f"{item.text()}"
         )
 
-        fit_type, header = self.__measurement.get_fit()
+        fit_type, _ = self.__measurement.get_fit()
         measurements: list[tuple[float, float]] = self.__db.execute_select(
             query=SQLQueries.GET_MEASUREMENTS_BY_ID,
             params=(measurement_id,))
 
-        fit_model = self.__fitter.fit_data(measurements, fit_type)
+        fit_model: dict = self.__fitter.fit_data(measurements, fit_type)
 
         if is_left:
             self.__ui.plainTextEditSelectedSpokeLeft.setPlainText(spoke_details)
