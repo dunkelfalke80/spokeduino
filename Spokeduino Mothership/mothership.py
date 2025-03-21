@@ -439,6 +439,14 @@ class Spokeduino(QMainWindow):
         self.ui.lineEditTargetTensionRight.textChanged.connect(
             lambda: self.tensioning_module.setup_table(False))
 
+        # Help
+        self.ui.actionMeasure_a_new_spoke.triggered.connect(
+            self.show_help_measure_new_spoke)
+        self.ui.actionBuild_a_wheel.triggered.connect(
+            self.show_help_build_wheel)
+        self.ui.actionAbout.triggered.connect(
+            self.show_about_dialog)
+
     @override
     def resizeEvent(self, event) -> None:
         """
@@ -537,6 +545,26 @@ class Spokeduino(QMainWindow):
             self.spokeduino_module.close_serial_port()
         self.status_label_port.setText(
             f"Spokeduino: {spokeduino_status}")
+
+    def show_help_measure_new_spoke(self) -> None:
+        self.messagebox.info(
+            "To measure a new spoke, go to the 'Measure a new spoke' tab, "
+            "choose the spoke and tensiometer, enter measurements, and click Save."
+        )
+
+    def show_help_build_wheel(self) -> None:
+        self.messagebox.info(
+            "To build a wheel, use the 'Tension a wheel' tab. Enter the number of spokes "
+            "and target tension, then start the tensioning process with the selected spoke profiles."
+        )
+
+    def show_about_dialog(self) -> None:
+        self.messagebox.info(
+            "Spokeduino Mothership\nVersion 0.1\n\n"
+            "Developed by Roman Galperin, 2025.\n"
+            "Licensed under the MIT License."
+        )
+
 
 
 def trace_calls(frame, event, arg):
