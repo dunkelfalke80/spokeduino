@@ -561,14 +561,41 @@ class Spokeduino(QMainWindow):
 
     def show_help_measure_new_spoke(self) -> None:
         self.messagebox.info(
-            "To measure a new spoke, go to the 'Measure a new spoke' tab, "
-            "choose the spoke and tensiometer, enter measurements, and click Save."
+            "Measuring a spoke\n\n"
+            "Go to the 'Spokes' tab.\n"
+            "Select or create a spoke profile.\n"
+            "Fill in the Name, Type, Gauge, Weight, and Dimensions.\n"
+            "Select the spoke in the table.\n"
+            "Click 'Add' to start a new measurement.\n"
+            "You will be taken to the 'Measure a new spoke' tab.\n"
+            "Choose between Default or Custom measurement type:\n"
+            "- Default: Predefined tension values; you enter deflection.\n"
+            "- Custom: Enter free-form tension/deflection pairs.\n"
+            "Use keyboard or pedal to advance cells. If Spokeduino is connected, values will be entered automatically.\n"
+            "Optionally enter a comment.\n"
+            "Rows with empty cells will be discarded.\n"
+            "Click 'Save' to store the measurement set.\n\n"
+            "Editing a measurement\n\n"
+            "In the 'Spokes' tab, select a spoke, and then the measurement set.\n"
+            "Click 'Edit' to open it in the measurement tab.\n"
+            "Rows with empty cells will be discarded.\n"
+            "Make your changes, then click 'Save'."
         )
 
     def show_help_build_wheel(self) -> None:
         self.messagebox.info(
-            "To build a wheel, use the 'Tension a wheel' tab. Enter the number of spokes "
-            "and target tension, then start the tensioning process with the selected spoke profiles."
+            "Tensioning a wheel\n\n"
+            "In the 'Spokes' tab, select a spoke, and then the measurement set.\n"
+            "Click 'Use on the left' or 'Use on the right' to assign the spoke.\n"
+            "Both sides must be assigned before tensioning.\n"
+            "Go to the 'Tension a wheel' tab.\n"
+            "Enter spoke counts and target tensions for each side.\n"
+            "Click 'Start'.\n"
+            "The system will enable the tables and radar diagram. Measurements begin at spoke 1 (or opposite depending on rotation direction).\n"
+            "Enter deflection (manually or from Spokeduino). Tension is calculated and plotted.\n"
+            "Use the pedal or the 'Next spoke' button to move forward.\n"
+            "Radar chart shows tension balance and deviations.\n"
+            "When done, click 'Stop'."
         )
 
     def show_about_dialog(self) -> None:
@@ -577,7 +604,6 @@ class Spokeduino(QMainWindow):
             "Developed by Roman Galperin, 2025.\n"
             "Licensed under the MIT License."
         )
-
 
 
 def trace_calls(frame, event, arg):
